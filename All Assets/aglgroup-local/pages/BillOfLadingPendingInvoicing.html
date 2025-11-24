@@ -1,0 +1,633 @@
+<!DOCTYPE html><html class="js no-flexbox flexbox-legacy canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers no-applicationcache svg inlinesvg smil svgclippaths wf-nunitosans-n4-active wf-nunitosans-n7-active wf-active"><head>
+    <meta charset="utf-8">
+    <title>Ipaki Extranet</title>
+    <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon">
+
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0">
+
+    <link href="../assets/css/dataTables.css" rel="stylesheet">
+
+    <link href="../assets/css/bootstrap.css" rel="stylesheet">
+<link href="../assets/css/bootstrap_rtl.css" rel="stylesheet">
+
+    <link href="../assets/css/bootstrap-icons_min.css" rel="stylesheet">
+
+    
+    <link href="../assets/css/bootstrap-datetimepicker.css" rel="stylesheet">
+
+    <link href="../assets/css/captcha-stylesheet.css" rel="stylesheet">
+
+    <link href="../assets/css/fontawesome-all.css" rel="stylesheet">
+<link href="../assets/css/sassStyle.css" rel="stylesheet">
+<link href="../assets/css/perfect-scrollbar.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js" type="text/javascript" async=""></script><script src="../assets/js/modernizr-2_5_3.js"></script>
+
+    <script src="../assets/js/jquery-1_11_0.js"></script>
+<script src="../assets/js/jquery-3_7_1.js"></script>
+
+    <script src="../assets/js/bootstrap_bundle_min.js"></script>
+<script src="../assets/js/bootstrap-datetimepicker.js"></script>
+<script src="../assets/js/bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/resources_en-US.js"></script>
+
+    <script src="../assets/js/respond.js"></script>
+
+    <script src="../assets/js/bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/spin.js"></script><style type="text/css"></style>
+<script src="../assets/js/jquery_spin.js"></script>
+
+    <script src="../assets/js/moment.js"></script>
+
+    <script src="../assets/js/generalFunctions.js"></script>
+<script src="../assets/js/Validations.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,700&amp;subset=latin" media="all"><script src="../assets/js/js-cookie.js"></script>
+<script src="../assets/js/perfect-scrollbar_jquery.js"></script>
+<script src="../assets/js/perfect-scrollbar.js"></script>
+
+    <script src="../assets/js/dataTables_min.js"></script>
+
+    <script src="../assets/js/bootstrap-datetimepicker_fr.js"></script>
+
+
+    <script>
+        if (window.top !== window.self) {
+			window.location.href = '/Error/FrameError';
+		}
+    </script>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-md navbar-inverse fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarFlagsMenu" aria-controls="navbarFlagsMenu" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <div class="logo-version">
+                    <a class="navbar-brand fontBalnc" href="/ATLCIVP/Home"> </a>
+                </div>
+            </div>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarFlagsMenu">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+
+
+<form action="/ATLCIVP/LogOff?LoginActionName=CustomerLogin" id="logoutForm" method="post">            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle fontBalnc menuUser" data-bs-toggle="dropdown"><span class="glyphicon glyphicon-user paddIcon"></span>Daouda COULIBALY<b class="caret"></b></a>
+                    <ul class="dropdown-menu menuUser">
+                            <li>
+                                <a id="linkMyProfile" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#ProfileModal" href="/ATLCIVP/Customer/MyProfile">
+                                    <span class="bi bi-person-fill" aria-hidden="true"></span> Mon Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/ATLCIVP/Payment/History">
+                                    <span class="bi bi-clock" aria-hidden="true"></span> Historique de paiement
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/ATLCIVP/Account/ChangePassword">
+                                    <span class="bi bi-lock-fill" aria-hidden="true"></span> Changer le mot de passe
+                                </a>
+                            </li>
+                                <li>
+                                    <a class="dropdown-item" id="supportButton" data-bs-toggle="modal" data-bs-target="#supportDialog" href="/ATLCIVP/Support/ShowSupportDialog">
+                                        <div><span class="bi bi-envelope-fill" aria-hidden="true"></span> Demander de l'assistance</div>
+                                    </a>
+                                </li>
+                        <li>
+                            <input name="__RequestVerificationToken" type="hidden" value="LE6gcAGo7XSiyaXBPxEh1dgJm5Hf89KJppjklHoSZOGRhGRdhFW6HJ1T0K7tV1pL0EXSzqIp081PFYDO5e_2ZX6O0ds3hMYdFU6T_uN5q3ibBejn_y028tIJywswmlVXqbS4P-DFw3lMPklkS6AbGA2">
+                            <a href="javascript:document.getElementById('logoutForm').submit()" class="dropdown-item"><span class="bi bi-box-arrow-right" aria-hidden="true"></span> Déconnecter</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+</form><script>
+    $('#supportButton').click(function () {
+        $('#supportDialogContent').load(this.href, function () {
+            $('#supportDialog').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    $('#linkMyProfile').click(function () {
+        $('#ProfileModalContent').load(this.href, function () {
+            $('#ProfileModal').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    
+
+</script>
+
+
+                        <div class="d-none d-md-block float-start">
+<form action="/Default/SetCulture" id="SetCultureForm" method="post"><span class="posFlags">
+                                    <span class="btn-group btn-group-xs">
+                                        <button type="submit" name="culture" id="en-us" value="en-us" class="btn btn-primary btn-sm">Anglais</button>
+                                        <button type="submit" name="culture" id="fr" value="fr" class="btn btn-primary btn-sm">Français</button>
+                                    </span>
+                                </span>
+</form>                        </div>
+
+                    </li>
+                </ul>
+            </div>
+            <div class="hidden-sm d-md-none d-lg-none">
+<form action="/Default/SetCulture" method="post"><span class="posFlags posFlagsCustomer">
+                        <span class="btn-group btn-group-xs">
+                                <button type="submit" name="culture" id="en-us" value="en-us" class="btn btn-primary btnLangMobile">EN</button>
+                        </span>
+                    </span>
+</form>            </div>
+        </div>
+    </nav>
+
+    <div id="supportDialog" class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="supportModal" aria-hidden="true">
+        <div id="supportDialogContent" class="modal-dialog"></div>
+    </div>
+
+    <div id="ProfileModal" class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="myProfileModal" aria-hidden="true">
+        <div id="ProfileModalContent" class="modal-dialog"></div>
+    </div>
+
+    <div class="jumbotronCustomer hidden-xs" style="background-image: url(/Images/img_puerto.jpg);">
+        <div class="container transpCustomer">
+                <h2>ATL - Abidjan Terminal</h2>
+                <h4>ATL (Production)</h4>
+        </div>
+        <div style="text-align:right;">
+        </div>
+    </div>
+
+    <div id="supportAlerts">
+        
+
+
+
+    </div>
+
+    <div class="container FondBlanc content">
+        
+
+<div id="wrapper" class="toggled">
+
+    <div id="page-content-wrapper">
+        
+
+
+
+<div id="divError" class="alert alert-danger alrt_pad" role="alert" style="display:none;">
+	<div class="d-flex justify-content-between">
+		<div>
+			<span class="fas fa-exclamation-circle" aria-hidden="true"></span>
+			<b>Attention!</b>
+			<span id="spanError"></span>
+		</div>
+		<div>
+			<button type="button" class="btn-close" aria-label="Close" onclick="$('#divError').hide();"></button>
+		</div>
+	</div>
+</div>
+
+        
+
+        <input name="__RequestVerificationToken" type="hidden" value="wC5fat_wWy8wmqhDJccgmJRimT_21FbUH0QmNmBCDr2VIxM1AsOF1XCwZbbQragvO99eZzJeBe-IdzGEui1hyl6k27Ao3gqugY4JuPR_Cl2XRQbxnXtfaLvk3NFSxIyWuuhdO_y-1VZIwMrpCfwB8A2">
+        <div>
+            
+            <div class="header_bl4">
+                <div class="row">
+                    <div class="col-lg-8 col-md-8 col-sm-6 col-7 num_Bl">
+                        <h2 class="tit_bl left-padding titleBlSummaryMobile">BL EBKG08737243</h2>
+                    </div>
+                    <div class="col-lg-4 col-md-4 col-sm-5 col-5 Bl_hist_btn side-padding" style=" cursor:pointer;">
+                        <a href="/ATLCIVP/Home" title="Retour à la Recherche" class="text-decoration-none">
+                            <h4 class="col_link fs-5 ">
+                                <span class="fas fa-arrow-circle-left" aria-hidden="true"></span>
+                                <span class="d-none d-sm-inline-block">Retour à la Recherche</span>
+                            </h4>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <div id="blSummaryButtonsContent" class="row pb-4">
+<nav>
+    <a class="btn btn-default blnavbar_btn " href="/ATLCIVP/Customer/BillOfLadingDetails?blNumber=EBKG08737243" title="Détails du BL" onclick="$.blockScreen();">
+       Détails du BL
+    </a>
+    <a class="btn btn-default blnavbar_btn " href="/ATLCIVP/Customer/BillOfLadingInvoices?blNumber=EBKG08737243" title="Factures" onclick="$.blockScreen();">
+       Factures
+    </a>
+    <a class="btn btn-default blnavbar_btn active" href="/ATLCIVP/Customer/BillOfLadingPendingInvoicing?blId=424822&amp;blNumber=EBKG08737243" title="Eléments à Facturer " onclick="$.blockScreen();">
+       Eléments à Facturer 
+    </a>
+    <a class="btn btn-default blnavbar_btn " href="/ATLCIVP/Customer/BillOfLadingYITrakingInfo?blId=424822&amp;blNumber=EBKG08737243" title="Suivi" onclick="$.blockScreen();">
+       Suivi
+    </a>
+</nav>
+
+            </div>
+                <hr style="opacity:0.1">
+            <div>
+                        <button id="btnAddEvent" type="button" class="btn btn-primary float-start autoWidth pendingInvoicing_btn" disabled="disabled">
+                            <i class="fas fa-plus"></i> Service
+                        </button>
+                                    <button type="button" data-button="generateProformaBtn" class="btn btn-primary float-start autoWidth pendingInvoicing_btn" disabled="">
+                        <i class="fas fa-file-alt"></i> Générer proforma 
+                    </button>
+            </div>
+
+        </div>
+
+        
+
+        
+        <div id="pendingInvoicingDataTable_wrapper" class="dt-container"><div class="dt-layout-row"><div class="dt-layout-cell dt-layout-start"></div><div class="dt-layout-cell dt-layout-end"></div></div><div class="dt-layout-row dt-layout-table"><div class="dt-layout-cell  dt-layout-full"><div class="dt-scroll"><div class="dt-scroll-head" style="overflow: hidden; position: relative; border: 0px; width: 100%;"><div class="dt-scroll-headInner" style="box-sizing: content-box; width: 1296px; padding-right: 0px;"><table width="100%" class="display table-striped tabla dataTable" cellspacing="0" style="width: 1296px; margin-left: 0px;"><thead>
+                <tr class="header_tabla"><th class="sel_Col_width sorting_disabled checkbox-alignment dt-orderable-none" data-dt-column="0" rowspan="1" colspan="1" aria-label=""><span class="dt-column-title"><input name="sel" id="selectAll" type="checkbox" value=""></span><span class="dt-column-order"></span></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="1" rowspan="1" colspan="1" aria-label="Numéro de Yard Item: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Numéro de Yard Item</span><span class="dt-column-order"></span></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="2" rowspan="1" colspan="1" aria-label="Type: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Type</span><span class="dt-column-order"></span></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="3" rowspan="1" colspan="1" aria-label="Détail: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Détail</span><span class="dt-column-order"></span></th><th class="invoice-header no-sort dt-orderable-none" data-dt-column="4" rowspan="1" colspan="1" aria-label="
+                            Événements
+                        "><span class="dt-column-title">
+                            <span class="eventTitle">Événements</span>
+                        </span><span class="dt-column-order"></span></th></tr>
+            </thead><colgroup><col data-dt-column="0" style="width: 64.775px;"><col data-dt-column="1" style="width: 499.062px;"><col data-dt-column="2" style="width: 203.188px;"><col data-dt-column="3" style="width: 223.338px;"><col data-dt-column="4" style="width: 305.238px;"></colgroup></table></div></div><div class="dt-scroll-body" style="position: relative; overflow: auto; width: 100%;"><table width="100%" class="display table-striped tabla dataTable" id="pendingInvoicingDataTable" cellspacing="0" style="width: 100%;"><colgroup><col data-dt-column="0" style="width: 64.775px;"><col data-dt-column="1" style="width: 499.062px;"><col data-dt-column="2" style="width: 203.188px;"><col data-dt-column="3" style="width: 223.338px;"><col data-dt-column="4" style="width: 305.238px;"></colgroup><tfoot class="tfoot_BL footer_tabla">
+                <tr><th class="fontWeigthNormal" data-dt-column="0" rowspan="1" colspan="1"><div class="dt-scroll-sizing"><span class="dt-column-title"></span></div></th><th class="fontWeigthNormal" data-dt-column="1" rowspan="1" colspan="1"><div class="dt-scroll-sizing"><span class="dt-column-title">Numéro de Yard Item</span></div></th><th class="fontWeigthNormal" data-dt-column="2" rowspan="1" colspan="1"><div class="dt-scroll-sizing"><span class="dt-column-title">Type</span></div></th><th class="fontWeigthNormal" data-dt-column="3" rowspan="1" colspan="1"><div class="dt-scroll-sizing"><span class="dt-column-title">Détail</span></div></th><th class="fontWeigthNormal" data-dt-column="4" rowspan="1" colspan="1"><div class="dt-scroll-sizing"><span class="dt-column-title">Événements</span></div></th></tr>
+            </tfoot><thead>
+                <tr class="header_tabla"><th class="sel_Col_width sorting_disabled checkbox-alignment dt-orderable-none" data-dt-column="0" rowspan="1" colspan="1" aria-label=""><div class="dt-scroll-sizing"><span class="dt-column-title"><input name="sel" type="checkbox" value=""></span><span class="dt-column-order"></span></div></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="1" rowspan="1" colspan="1" aria-label="Numéro de Yard Item: Activate to sort"><div class="dt-scroll-sizing"><span class="dt-column-title" role="button">Numéro de Yard Item</span><span class="dt-column-order"></span></div></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="2" rowspan="1" colspan="1" aria-label="Type: Activate to sort"><div class="dt-scroll-sizing"><span class="dt-column-title" role="button">Type</span><span class="dt-column-order"></span></div></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="3" rowspan="1" colspan="1" aria-label="Détail: Activate to sort"><div class="dt-scroll-sizing"><span class="dt-column-title" role="button">Détail</span><span class="dt-column-order"></span></div></th><th class="invoice-header no-sort dt-orderable-none" data-dt-column="4" rowspan="1" colspan="1" aria-label="
+                            Événements
+                        "><div class="dt-scroll-sizing"><span class="dt-column-title">
+                            <span class="eventTitle">Événements</span>
+                        </span><span class="dt-column-order"></span></div></th></tr>
+            </thead>
+            
+
+            <tbody role="alert" aria-live="polite" aria-relevant="all"><tr><td colspan="5" class="dt-empty">Il n'y a pas d'éléments à facturer</td></tr></tbody>
+            
+        </table></div><div class="dt-scroll-foot" style="overflow: hidden; border: 0px; width: 100%;"><div class="dt-scroll-footInner" style="width: 1296px; padding-right: 0px;"><table width="100%" class="display table-striped tabla dataTable" cellspacing="0" style="width: 1296px; margin-left: 0px;"><tfoot class="tfoot_BL footer_tabla">
+                <tr><th class="fontWeigthNormal" data-dt-column="0" rowspan="1" colspan="1"><span class="dt-column-title"></span></th><th class="fontWeigthNormal" data-dt-column="1" rowspan="1" colspan="1"><span class="dt-column-title">Numéro de Yard Item</span></th><th class="fontWeigthNormal" data-dt-column="2" rowspan="1" colspan="1"><span class="dt-column-title">Type</span></th><th class="fontWeigthNormal" data-dt-column="3" rowspan="1" colspan="1"><span class="dt-column-title">Détail</span></th><th class="fontWeigthNormal" data-dt-column="4" rowspan="1" colspan="1"><span class="dt-column-title">Événements</span></th></tr>
+            </tfoot><colgroup><col data-dt-column="0" style="width: 64.775px;"><col data-dt-column="1" style="width: 499.062px;"><col data-dt-column="2" style="width: 203.188px;"><col data-dt-column="3" style="width: 223.338px;"><col data-dt-column="4" style="width: 305.238px;"></colgroup></table></div></div></div></div></div><div class="dt-layout-row"><div class="dt-layout-cell dt-layout-start"></div><div class="dt-layout-cell dt-layout-end"></div></div></div>
+        
+    </div>
+
+</div>
+
+<div class="modal fade" id="EventsModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div id="EventModalContent" class="modal-dialog"></div>
+</div>
+
+<div id="dialogDiv" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div id="dialogContent" class="modal-dialog"></div>
+</div>
+
+
+<script type="text/javascript">
+
+    var invoiceToAddEvents = "";
+    var BindForm; //this var it's use as a communicator between proformageneration and this page to access your controls
+
+    $(document).ready(function () {
+
+        $('#pendingInvoicingDataTable').dataTable({
+            bFilter: false,
+            bInfo: false,
+            "aaSorting": [],
+            "aoColumnDefs": [
+                { "bSortable": false, "aTargets": [0, 4] },
+            ],
+            "bPaginate": false,
+            "oLanguage": {
+                "sEmptyTable": "Il n&#39;y a pas d&#39;&#233;l&#233;ments &#224; facturer"
+            },
+            scrollX: true,
+            responsive: true
+        });
+    });
+
+    $('#selectAll').click(function (e) {
+        var checkboxes = $('td input:checkbox', $('#pendingInvoicingDataTable'));
+        checkboxes.prop('checked', this.checked);
+        enableGenerateProforma();
+    });
+
+    $('.selectableRow').change(function () {
+        enableGenerateProforma();
+    });
+
+    $('#EventsModal').on('show.bs.modal', function (event) {
+        var tableId = "#pendingInvoicingDataTable";
+        var rowClass = ".selectableRow";
+        if (invoiceToAddEvents != "") {
+            tableId = "#invoiceTable_" + invoiceToAddEvents;
+            rowClass = ".selectableRowInvoice";
+        }
+
+        copyDataFromInvoicingTable(tableId, rowClass);
+        $.unblockScreen();
+    });
+
+    $('#btnAddEvent, #btnAddEventResponsive').click(function () {
+        $.blockScreen();
+        invoiceToAddEvents = "";
+        var selectedIDs = getSelectedYardItems();
+        OpenAddEventsModal(selectedIDs);
+    });
+
+    $('[data-button="generateProformaBtn"]').click(function () {
+            $('#dialogContent').load(("/ATLCIVP/Invoice/GenerateProforma?billOfLadingId=424822"), function () {
+                //workaround to fix the modal error in the view when the session is lost
+                try {
+                    var dialogDivModal = new bootstrap.Modal(document.getElementById('dialogDiv'));
+                    var options = {
+                        backdrop: 'static',
+                        keyboard: false
+                    };
+                    dialogDivModal.show(options);
+
+					bindForm(this);
+					bindClientDataToModel_YardItemsJSON(getYardItemsToInvoice()); //this function is implemented in the proformageneration
+				} catch (e) {
+					location.reload();
+				}
+            });
+    });
+
+    BindForm = bindForm; //assign the bind
+
+    function enableGenerateProforma() {
+        var $generateProformaBtn = $('[data-button="generateProformaBtn"]');
+        var $btnAddEvent = $('#btnAddEvent');
+
+
+        var checkedCount = $('.selectableRow:checked').length;
+
+        var draftSelected = $('.selectableRow:checked').filter(function () { return $(this).data('isdraft') == 'True' })
+
+        if (checkedCount > 0) {
+
+            $generateProformaBtn.removeAttr("disabled");
+
+            if (draftSelected.length == 0) {
+                $btnAddEvent.removeAttr("disabled");
+            }
+        }
+        else {
+            if ('False' == 'False') {
+                $generateProformaBtn.attr("disabled", "disabled");
+            }
+            $btnAddEvent.attr("disabled", "disabled");
+        }
+    }
+
+    function OpenAddEventsModal(selectedIDs) {
+        var url = "/ATLCIVP/Event/_Add?yardItemIds=ids&blNumber=EBKG08737243";
+        url = url.replace("ids", selectedIDs);
+        $.get(url, function (data) {
+            if (data['Message'] === undefined) {
+                $('#EventModalContent').html(data);
+                var EventsModal = new bootstrap.Modal(document.getElementById('EventsModal'));
+                var options = {
+                    backdrop: 'static',
+                    keyboard: false
+                };
+                EventsModal.show(options);
+            } else {
+                var divError = $('#divError');
+
+                var spanError = $('#spanError');
+
+                spanError.html(data['Message']);
+                divError.show();
+                $.unblockScreen();
+            }
+
+        });
+    }
+
+    function enableAddEventsExtend(invoiceId) {
+        var $btnAddEvent = $('#btnAddEvent_' + invoiceId);
+        var checkedCount = $('.selectableRowInvoice:checked').length;
+
+        var $container = $btnAddEvent.closest('[data-sliding-menu="container"]');
+
+        if (checkedCount > 0) {
+
+            var draftSelected = $('.selectableRowInvoice:checked').filter(function () { return $(this).data('isdraft') == 'True' })
+
+            if (draftSelected.length == 0) {
+
+                $btnAddEvent.removeAttr("disabled");
+            }
+
+            openMenu($container);
+        }
+        else {
+            $btnAddEvent.attr("disabled", "disabled");
+            closeMenu($container);
+        }
+    }
+
+    function removeEvent(eventId, classname) {
+        var token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/ATLCIVP/Event/Remove',
+            data: { __RequestVerificationToken: token, eventId: eventId },
+            type: 'POST',
+            async: false,
+            cache: false,
+            success: function (result) {
+                if (result.success) {
+                    var popoverId = $("#ContentPopover-" + eventId).parent().parent().prop("id");
+                    $('#' + popoverId).remove();
+                    $("#divEvent" + eventId).remove();
+                }
+            },
+            error: function (message) {
+                var divError = $('#divError');
+                var spanError = $('#spanError');
+                spanError.html(message);
+                divError.show();
+            }
+        }).always(function () {
+            $('.popover').popover('hide');
+        });
+
+        return false;
+    }
+
+    function getSelectedYardItems() {
+        var selectedIDs = [];
+        $(".selectableRow").each(function () {
+            if ($(this).prop('checked') == true) {
+                selectedIDs.push($(this).val());
+            }
+        });
+
+        return selectedIDs;
+    }
+
+    function getBlItemsToInvoice() {
+        var selectedIDs;
+        if ('False' == 'True') {
+            selectedIDs = $.map($(".selectableRow"), function (blitem, i) { return $(blitem).val(); });
+        }
+        else {
+            selectedIDs = getSelectedYardItems();
+        }
+
+        return selectedIDs;
+    }
+
+    function getYardItemsToInvoice() {
+        var selectedYIs;
+        if ('False' == 'True') {
+            selectedYIs = $.map($(".selectableRow"), function (item, i) {
+                return { yardItemNumber: $(item).data('yarditemnumber'), yardItemId: $(item).val()};
+            });
+        }
+        else {
+            selectedYIs = [];
+            $(".selectableRow").each(function () {
+                if ($(this).prop('checked') == true) {
+                    selectedYIs.push({ yardItemNumber: $(this).data('yarditemnumber').toString(), yardItemId: $(this).val()});
+                }
+            });
+        }
+
+        return selectedYIs;
+    }
+
+    function copyDataFromInvoicingTable(tableId, rowClass) {
+        var tableList = [];
+        $(tableId + " > tbody tr").each(function (index, item) {
+            var rowList = [];
+            if ($(item).find(rowClass).prop("checked")) {
+                rowList.push($($(item).find("td")[1]).text());
+                rowList.push($($(item).find("td")[2]).text());
+                rowList.push($($(item).find("td")[3]).text());
+            }
+
+            if (rowList.length > 0) {
+                tableList.push(rowList);
+            }
+        });
+
+        if (tableList.length > 0) {
+            populateInvoicingTable(tableList);
+        }
+    }
+
+    function populateInvoicingTable(yardItems) {
+        var yardItemsTable = $('#yardItemsEventsTable').dataTable({
+            bFilter: false,
+            bInfo: false,
+            "bPaginate": false,          
+            "aoColumnDefs": [
+                { "sClass": "hidden-xs", "aTargets": [2] }
+            ],
+        });
+
+        var table = $('#yardItemsEventsTable').DataTable();
+        table.clear();
+        table.rows.add(yardItems);
+        table.draw();       
+    }
+
+    function bindForm(dialog) {
+        $('form', dialog).submit(function () {
+            $.blockScreen();
+
+            $('#btnGenerateProformaClose,#btnGenerateProformaSubmit').attr('disabled', 'disabled');
+            $.ajax({
+                url: this.action,
+                type: this.method,
+                data: $(this).serialize(),
+				success: function (result, textStatus, jqXHR) {
+                    if (result.success) {
+                        $('#dialogDiv').modal('hide');
+                        window.location.href = result.redirectTo;
+                    } else {
+                        //workaround to fix the workflow when the session is  lost
+                        var contentType = jqXHR.getResponseHeader('Content-Type');
+                        if (contentType && contentType.includes('text/html') && result.indexOf("<!DOCTYPE html>") !== -1) {
+							document.open();
+							document.write(result);
+							document.close();
+                        } else {
+							$('#dialogContent').html(result);
+							bindForm($('#dialogContent'));
+                        }
+						$.unblockScreen();
+                    }
+                },
+				error: function (xhr, ajaxOptions, thrownError) {
+					if (xhr.status === 403) {
+						var response = JSON.parse(xhr.responseText);
+						if (response.isRedirect) {
+							window.location.href = response.redirectUrl;
+						}
+					}
+				}
+            });
+            return false;
+        });
+    }
+
+    document.addEventListener('click', function (e) {
+        var popoverElements = document.querySelectorAll('[data-bs-toggle="popover"]');
+        popoverElements.forEach(function (popoverElement) {
+            if (popoverElement !== e.target && !popoverElement.contains(e.target)) {
+                var popover = bootstrap.Popover.getInstance(popoverElement);
+                if (popover) {
+                    popover.hide();
+                }
+            }
+        });
+    });
+</script>
+
+    </div>
+    <footer class="container FondBlanc pt-3">
+        <hr>
+        <p class="logo">© 2025 AGL Group<img src="../assets/images/ipk_logo2.jpg" class="logoFooter"></p>
+    </footer>
+    
+
+    <script>
+        $(document).ready(function () {
+            bindCartCount();
+        });
+
+        function bindCartCount() {
+            $.ajax({
+                type: 'POST',
+                url: '/ATLCIVP/Cart/GetCurrentUserCartCount',
+                cache: false,
+                datatype: 'json',
+                contentType: 'application/json',
+                success: function (result) {
+                    $('#lblCartCount').text(result['ItemCount']);
+                },
+                error: function (message) {
+                    $('#lblCartCount').text('0');
+                }
+            });
+        }
+    </script>
+
+
+
+
+</body></html>

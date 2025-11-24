@@ -1,0 +1,67 @@
+<html><head></head><body><div class="modal-content">
+<form action="/TICTC/Customer/MyProfile/formMyProfile" method="post">        <div class="modal-header d-flex justify-content-between">
+            <h4 class="modal-title" id="modalLabel"><span class="bi bi-person-fill" aria-hidden="true"></span>  Mon Profile</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div id="divError" class="alert alert-danger alert-dismissible justify-content-between" role="alert" style="display: none;">
+                <div>
+                    <span class="bi-exclamation-circle-fill" aria-hidden="true"></span> <b>Rappeler!</b>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" role="alert" onclick="$('#formMyProfile #divError').hide()">
+                        <span class="sr-only">Close</span>
+                    </button>
+                </div>
+                <div>
+                    <p id="spanError"></p>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-3">
+                    <label class="txt_modal" for="FirstName">Prénom:</label>
+                </div>
+                <div class="col-9">
+                    <input class="form-control" disabled="disabled" id="FirstName" name="FirstName" type="text" value="Elloh">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-3">
+                    <label class="txt_modal" for="LastName">Nom:</label>
+                </div>
+                <div class="col-9">
+                    <input class="form-control" disabled="disabled" id="LastName" name="LastName" type="text" value="ASSOUMAN">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-3">
+                    <label class="txt_modal" for="PhoneNumber">Numéro de téléphone:</label>
+                </div>
+                <div class="col-9">
+                    <input class="form-control" disabled="disabled" id="PhoneNumber" name="PhoneNumber" type="text" value="0000000000">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-3">
+                    <label class="txt_modal" for="CompanyName">Nom de la société:</label>
+                </div>
+                <div class="col-9">
+                    <input class="form-control" disabled="disabled" id="CompanyName" name="CompanyName" type="text" value="Ascens Services">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-3">
+                    <label class="txt_modal" for="CompanyAddress">Adresse de la société:</label>
+                </div>
+                <div class="col-9">
+                    <input class="form-control" disabled="disabled" id="CompanyAddress" name="CompanyAddress" type="text" value="Ascens Services">
+                </div>
+            </div>
+
+        </div>
+        <div class="modal-footer">
+            <button id="btnMyProfileClose" type="button" class="btn btn-default actionButton" data-bs-dismiss="modal">Fermer</button>
+        </div>
+<input type="hidden" name="as_sfid" value="AAAAAAWwVyB0a3vkL7owsjxbVqWh_cMYJ7lAl3wmiuDcexWqRZ_BGyXZRHBG-2jknLaH6f3mC9bE-5T6d6PcqzRbRtW6UJwZc5ts_H95iu5zUMdZ8S6DCuRfhEnmILVfa5B8QMgHgIBPrpuiHYGMW6lXMY4eDj4neaMrA6QqYE66hcUT0Q=="><input type="hidden" name="as_fid" value="2b277f824f84f80047a9cc2aa46af952ad34a466"></form></div>
+
+
+
+</body></html>

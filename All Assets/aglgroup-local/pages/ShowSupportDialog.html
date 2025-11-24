@@ -1,0 +1,80 @@
+<html><head></head><body><div class="modal-content">
+<form action="/TICTC/Support/SendSupportEmail" class="modal-form" id="supportForm" method="post">        <div id="mainForm">
+            <div class="modal-header d-flex justify-content-between">
+                <h4 class="modal-title" id="modalLabel"><span class="bi bi-envelope-fill" aria-hidden="true"></span>  Demander de l'assistance</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                
+
+                <div id="divError" class="alert alert-danger alert-dismissible justify-content-between" role="alert" style="display: none;">
+                    <div>
+                        <span class="bi-exclamation-circle-fill" aria-hidden="true"></span> <b>Attention!</b>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" role="alert" onclick="$('#divError').hide();">
+                            <span class="sr-only">Close</span>
+                        </button>
+                    </div>
+                    <div>
+                        <p id="spanError"></p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-3 txt_modal_support"><label>Objet :</label></div>
+                    <div class="col-9">
+                        <select class="form-select" id="subjectDropdown" name="Subject"><option value="Actualiser mes coordonnées">Actualiser mes coordonnées</option>
+<option value="Autres">Autres</option>
+</select>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-3 txt_modal_support"><label>Message :</label></div>
+                    <div class="col-9">
+                        <textarea class="form-control" cols="20" id="emailBody" name="Body" rows="10"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default actionButton" data-bs-dismiss="modal">Annuler</button>
+                    <div class="btn-group" role="group" aria-label="...">
+                        <button type="button" id="sendButton" class="btn btn-primary" data-changestate="false">Envoyer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+<input type="hidden" name="as_sfid" value="AAAAAAV6vGl3k11IdQpLpeDGDK0o_zK-T28XEU_0fkWdN1ZdruD8DESML3ztIVxuyGUk3cpUO950_YOT3Rmod2YLMqQLXwdRRei4htMth9aswqHSALEWGMesECnRQNw9aJJEAr-ImMXAEBCDwVJyvMieXSg7RzobTDR3_O66jqNq54efnA=="><input type="hidden" name="as_fid" value="9e0a56c5c42ebaf5443db4fc3d012bd86804dec3"></form></div>
+
+<script>
+    $('#sendButton').click(function () {
+        var emailData = {
+            "Subject": $('#subjectDropdown').val(),
+            "Body": $('#emailBody').val()
+        };
+        $.blockScreen();
+        $.ajax({
+            url: '/TICTC/Support/SendSupportEmail',
+            type: 'POST',
+            contentType: "application/json",
+            data: JSON.stringify(emailData),
+            success: function (result) {
+                if (result.success) {
+                    window.location.href = '/TICTC/Home';
+                }
+                else {
+                    $('#supportDialogContent').html(result);
+                }
+            },
+            error: function () {
+                var divError = $('#divError');
+                var spanError = $('#spanError');
+                spanError.html("Votre message ne peut pas &#234;tre envoy&#233; pour l&#39;instant, veuillez r&#233;essayer plus tard");
+                divError.show();
+            },
+            complete: function () {                
+                $.unblockScreen();
+            }
+
+        });
+    });
+</script></body></html>

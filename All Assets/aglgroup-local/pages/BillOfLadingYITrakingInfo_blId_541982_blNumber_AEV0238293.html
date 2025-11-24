@@ -1,0 +1,758 @@
+<!DOCTYPE html><html class="js no-flexbox flexbox-legacy canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers no-applicationcache svg inlinesvg smil svgclippaths wf-nunitosans-n4-active wf-nunitosans-n7-active wf-active"><head>
+    <meta charset="utf-8">
+    <title>Ipaki Extranet</title>
+    <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon">
+
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0">
+
+    <link href="../assets/css/dataTables.css" rel="stylesheet">
+
+    <link href="../assets/css/bootstrap.css" rel="stylesheet">
+<link href="../assets/css/bootstrap_rtl.css" rel="stylesheet">
+
+    <link href="../assets/css/bootstrap-icons_min.css" rel="stylesheet">
+
+    
+    <link href="../assets/css/bootstrap-datetimepicker.css" rel="stylesheet">
+
+    <link href="../assets/css/captcha-stylesheet.css" rel="stylesheet">
+
+    <link href="../assets/css/fontawesome-all.css" rel="stylesheet">
+<link href="../assets/css/sassStyle.css" rel="stylesheet">
+<link href="../assets/css/perfect-scrollbar.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js" type="text/javascript" async=""></script><script src="../assets/js/modernizr-2_5_3.js"></script>
+
+    <script src="../assets/js/jquery-1_11_0.js"></script>
+<script src="../assets/js/jquery-3_7_1.js"></script>
+
+    <script src="../assets/js/bootstrap_bundle_min.js"></script>
+<script src="../assets/js/bootstrap-datetimepicker.js"></script>
+<script src="../assets/js/bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/resources_en-US.js"></script>
+
+    <script src="../assets/js/respond.js"></script>
+
+    <script src="../assets/js/bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/spin.js"></script><style type="text/css"></style>
+<script src="../assets/js/jquery_spin.js"></script>
+
+    <script src="../assets/js/moment.js"></script>
+
+    <script src="../assets/js/generalFunctions.js"></script>
+<script src="../assets/js/Validations.js"></script>
+<script src="../assets/js/js-cookie.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,700&amp;subset=latin" media="all"><script src="../assets/js/perfect-scrollbar_jquery.js"></script>
+<script src="../assets/js/perfect-scrollbar.js"></script>
+
+    <script src="../assets/js/dataTables_min.js"></script>
+
+    <script src="../assets/js/bootstrap-datetimepicker_fr.js"></script>
+
+
+    <script>
+        if (window.top !== window.self) {
+			window.location.href = '/Error/FrameError';
+		}
+    </script>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-md navbar-inverse fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarFlagsMenu" aria-controls="navbarFlagsMenu" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <div class="logo-version">
+                    <a class="navbar-brand fontBalnc" href="/ATLCIVP/Home"> </a>
+                </div>
+            </div>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarFlagsMenu">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+
+
+<form action="/ATLCIVP/LogOff?LoginActionName=CustomerLogin" id="logoutForm" method="post">            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle fontBalnc menuUser" data-bs-toggle="dropdown"><span class="glyphicon glyphicon-user paddIcon"></span>Daouda COULIBALY<b class="caret"></b></a>
+                    <ul class="dropdown-menu menuUser">
+                            <li>
+                                <a id="linkMyProfile" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#ProfileModal" href="/ATLCIVP/Customer/MyProfile">
+                                    <span class="bi bi-person-fill" aria-hidden="true"></span> Mon Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/ATLCIVP/Payment/History">
+                                    <span class="bi bi-clock" aria-hidden="true"></span> Historique de paiement
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/ATLCIVP/Account/ChangePassword">
+                                    <span class="bi bi-lock-fill" aria-hidden="true"></span> Changer le mot de passe
+                                </a>
+                            </li>
+                                <li>
+                                    <a class="dropdown-item" id="supportButton" data-bs-toggle="modal" data-bs-target="#supportDialog" href="/ATLCIVP/Support/ShowSupportDialog">
+                                        <div><span class="bi bi-envelope-fill" aria-hidden="true"></span> Demander de l'assistance</div>
+                                    </a>
+                                </li>
+                        <li>
+                            <input name="__RequestVerificationToken" type="hidden" value="rd8_wDzE7RW-dMktPmNOmCjS3e2GY0oWRnBn7XNhoiOgwdwXCawMckzGQXwzfKHzbqGwnamDhrS5WBsk8q99mz28mJyd4JzCyplUZ7YPU-5il7gJvOGhQosLcEDa0vO4hm5Lhfw_4_BUD8kBv3z3xA2">
+                            <a href="javascript:document.getElementById('logoutForm').submit()" class="dropdown-item"><span class="bi bi-box-arrow-right" aria-hidden="true"></span> Déconnecter</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+</form><script>
+    $('#supportButton').click(function () {
+        $('#supportDialogContent').load(this.href, function () {
+            $('#supportDialog').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    $('#linkMyProfile').click(function () {
+        $('#ProfileModalContent').load(this.href, function () {
+            $('#ProfileModal').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    
+
+</script>
+
+
+                        <div class="d-none d-md-block float-start">
+<form action="/Default/SetCulture" id="SetCultureForm" method="post"><span class="posFlags">
+                                    <span class="btn-group btn-group-xs">
+                                        <button type="submit" name="culture" id="en-us" value="en-us" class="btn btn-primary btn-sm">Anglais</button>
+                                        <button type="submit" name="culture" id="fr" value="fr" class="btn btn-primary btn-sm">Français</button>
+                                    </span>
+                                </span>
+</form>                        </div>
+
+                    </li>
+                </ul>
+            </div>
+            <div class="hidden-sm d-md-none d-lg-none">
+<form action="/Default/SetCulture" method="post"><span class="posFlags posFlagsCustomer">
+                        <span class="btn-group btn-group-xs">
+                                <button type="submit" name="culture" id="en-us" value="en-us" class="btn btn-primary btnLangMobile">EN</button>
+                        </span>
+                    </span>
+</form>            </div>
+        </div>
+    </nav>
+
+    <div id="supportDialog" class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="supportModal" aria-hidden="true">
+        <div id="supportDialogContent" class="modal-dialog"></div>
+    </div>
+
+    <div id="ProfileModal" class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="myProfileModal" aria-hidden="true">
+        <div id="ProfileModalContent" class="modal-dialog"></div>
+    </div>
+
+    <div class="jumbotronCustomer hidden-xs" style="background-image: url(/Images/img_puerto.jpg);">
+        <div class="container transpCustomer">
+                <h2>ATL - Abidjan Terminal</h2>
+                <h4>ATL (Production)</h4>
+        </div>
+        <div style="text-align:right;">
+        </div>
+    </div>
+
+    <div id="supportAlerts">
+        
+
+
+
+    </div>
+
+    <div class="container FondBlanc content">
+        
+
+<script src="../assets/js/jszip.js"></script>
+<script src="../assets/js/FileSaver.js"></script>
+<script src="../assets/js/delivery-note-downloader.js"></script>
+
+<div id="wrapper" class="toggled">
+    <div id="page-content-wrapper">
+        <div>
+
+
+
+<div id="divError" class="alert alert-danger alrt_pad" role="alert" style="display:none;">
+	<div class="d-flex justify-content-between">
+		<div>
+			<span class="fas fa-exclamation-circle" aria-hidden="true"></span>
+			<b>Attention!</b>
+			<span id="spanError"></span>
+		</div>
+		<div>
+			<button type="button" class="btn-close" aria-label="Close" onclick="$('#divError').hide();"></button>
+		</div>
+	</div>
+</div>
+
+
+            <input name="__RequestVerificationToken" type="hidden" value="NOXR_UsMBchgYG6YApvcJJo-COjVqi1i-D27ztr4HZK7jBa6jNxuSHsOApEUhvywbvRXeWkLDyO8I-P-WcEmsdju3lbts9Sw7P8jUP6iGVLPYT_usaLzAzNKV0I_Qfa-fLSq9jj8Li84thbg56RTsA2">
+            <div class="header_bl4">
+                <div class="row">
+                    <div class="col-10 num_Bl">
+                        <h2 class="tit_bl left-padding titleBlSummaryMobile">BL AEV0238293</h2>
+                    </div>
+                    <div class="col-2 Bl_hist_btn side-padding" style=" cursor:pointer;">
+                        <a href="/ATLCIVP/Home" title="Retour à la Recherche">
+                            <h4 class="col_link">
+                                <span class="fas fa-arrow-circle-left" aria-hidden="true"></span>
+                                <span class="d-none d-lg-inline">Retour à la Recherche</span>
+                            </h4>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row pb-4" style="flex:auto; display:flex">
+            <div id="blSummaryButtonsContent" class="col">
+<nav>
+    <a class="btn btn-default blnavbar_btn " href="/ATLCIVP/Customer/BillOfLadingDetails?blNumber=AEV0238293" title="Détails du BL" onclick="$.blockScreen();">
+       Détails du BL
+    </a>
+    <a class="btn btn-default blnavbar_btn " href="/ATLCIVP/Customer/BillOfLadingInvoices?blNumber=AEV0238293" title="Factures" onclick="$.blockScreen();">
+       Factures
+    </a>
+    <a class="btn btn-default blnavbar_btn " href="/ATLCIVP/Customer/BillOfLadingPendingInvoicing?blId=541982&amp;blNumber=AEV0238293" title="Eléments à Facturer " onclick="$.blockScreen();">
+       Eléments à Facturer 
+    </a>
+    <a class="btn btn-default blnavbar_btn active" href="/ATLCIVP/Customer/BillOfLadingYITrakingInfo?blId=541982&amp;blNumber=AEV0238293" title="Suivi" onclick="$.blockScreen();">
+       Suivi
+    </a>
+</nav>
+
+            </div>
+            <div class="col-12 col-lg-2 download-dns-tracking" style="float:right">
+                <button class="btn btn-primary d-none blnavbar_btn" dn-button="true" aria-hidden="true" type="button" disabled="disabled" style="float:right">
+                    <span class="fas fa-download"></span> DNs
+                </button>
+            </div>
+        </div>
+
+            <div id="TrackingInfoContent">
+<div class="pad_BLGroup">
+    <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+
+
+<div class="panel panel-default panel-tracking" id="trackingInfo" data-filter="TrackingInfo" data-filter-id="1260889" data-yarditemnumber="CMAU8669553" data-sliding-menu="container" data-dnprintable="False">
+    <div class="panel-heading" role="tab" id="ph1260889" style="padding: 10px;">
+        <div class="row align-items-center">
+            <div class="col-10 col-md-8 col-lg-10">
+				<div class="row row-cols-1 row-cols-lg-5">
+					<div class="col" style="max-width: 30px;">
+						<input class="selectableRowTracking" name="check_1260889" type="checkbox" value="1260889" data-isdraft="False" data-yarditemnumber="CMAU8669553">
+					</div>
+					<div class="col">
+						<h5 class="panel-title">
+							<a class="collapsed whiteOnHover" data-bs-toggle="collapse" href="#dc1260889" aria-expanded="false" aria-controls="" data-collapse-icon="" id="loadTableButton">
+								<i class="fas fa-caret-down"></i><span data-sliding-menu="title">YI CMAU8669553</span>
+							</a>
+						</h5>
+					</div>
+					<div class="col">
+					</div>
+					<div class="col">
+					</div>
+					<div class="col">
+					</div>
+				</div>
+            </div>
+			<div class="col-2 col-md-4 col-lg-2">
+			</div>
+        </div>
+    </div>
+	<div id="dc1260889" class="collapse" data-loaded="false">
+	</div>
+</div>
+
+
+    <script>
+        function isYITrackingInfoCurrentPositionFieldVisible() {
+            return false
+        }
+    </script>
+    </div>
+</div>
+
+<script>
+    $("a[data-dnbutton-tracking='true']").each(function (index) {
+        $(this).click(function () {
+            $.blockScreen();
+            $.ajax({
+                url: this.href,
+                type: 'POST',
+                contentType: "application/json",
+                success: function (result) {
+                    $('#printDeliveryNoteDialogContent').html(result);
+                    $('#printDeliveryNoteDialog').modal({
+                        backdrop: 'static',
+                        keyboard: true
+                    }, 'show');
+                },
+                complete: function () {
+                    $.unblockScreen();
+                }
+            });
+            return false;
+        })
+    });
+</script>
+            </div>
+    </div>
+</div>
+
+<div id="printDeliveryNoteDialog" class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="deliveryNoteModal" aria-hidden="true">
+    <div id="printDeliveryNoteDialogContent" class="modal-dialog"></div>
+</div>
+
+<div id="deliveryNoteWrongPinDialog" class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="deliveryNoteWrongPinModal" aria-hidden="true">
+    <div id="deliveryNoteWrongPinDialogContent" class="modal-dialog"></div>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        var canPrintDNs = 'True' === 'True';
+        checkConditionsToViewMultipleDNPrintButton(canPrintDNs);
+    });
+
+    $("button[dn-button='true']").click(function () {
+        $.blockScreen();
+        var zip = new JSZip();
+        var selectedYINumbers = getSelectedYardItemNumbers();
+
+        if (selectedYINumbers.length != 0) {
+            getZippedDeliveryNotes(
+                selectedYINumbers,
+                "/ATLCIVP/Customer/PrintDeliveryNoteWithtout2Fa?YardItemNumber=number&BillOfLadingNumber=AEV0238293",
+                "number",
+                (results) => {
+                    if (results.length != 0) {
+                        results.forEach(
+                            (result) => {
+                                zip.file(result.fileName, result.arrayBuffer, { binary: true })
+                            });
+                            zip.generateAsync({ type: "blob" }).then(function (blob) {
+                                saveAs(blob, "AEV0238293" + "_DNs.zip");
+                            });
+                    }
+                    $.unblockScreen();
+                },
+                () => {
+                    var divError = $('#divError');
+                    var spanError = $('#spanError');
+                    spanError.html("Au moins un des bon de livraison n'a pas pu être imprimé. Veuillez contacter le service client.");
+                    divError.show();
+                    $.unblockScreen();
+                }
+            );
+        }
+    });
+
+    function checkConditionsToViewMultipleDNPrintButton(canPrintDNs) {
+        var printableYardItems = $('.print_dn_button').length;
+        if (printableYardItems >= 2 && canPrintDNs) {
+            $("button[dn-button='true']").removeClass('d-none');
+        }
+    }
+
+    function checkConditionsToEnableMultipleDNPrintButton() {
+        var selectedYIIds = getSelectedYardItemIds();
+
+        if (selectedYIIds.length >= 2) {
+            if (selectedYIIds.every((x) => {
+                return $("input[value=" + x + "]").closest('#trackingInfo').attr("data-DNPrintable").toLowerCase() === 'true';
+            })) {
+                $("button[dn-button='true']").removeAttr('disabled');
+            } else {
+                $("button[dn-button='true']").attr("disabled", "disabled");
+            }
+        } else {
+            $("button[dn-button='true']").attr("disabled", "disabled");
+        }
+    }
+
+    function getSelectedYardItemIds() {
+        var selectedIDs = [];
+        $(".selectableRowTracking").each(function () {
+            if ($(this).prop('checked') == true) {
+                selectedIDs.push($(this).val());
+            }
+        });
+        return selectedIDs;
+    }
+
+    $('.selectableRowTracking').change(function () {
+		var selectedYIIds = getSelectedYardItemIds();
+
+		if (selectedYIIds.length >= 2) {
+			if (selectedYIIds.every((x) => {
+				return $("input[value=" + x + "]").closest('#trackingInfo').attr("data-DNPrintable").toLowerCase() === 'true';
+			})) {
+				$("button[dn-button='true']").removeAttr('disabled');
+			} else {
+				$("button[dn-button='true']").attr("disabled", "disabled");
+			}
+		} else {
+			$("button[dn-button='true']").attr("disabled", "disabled");
+		}
+    });
+
+	function getSelectedYardItemNumbers() {
+		var selectedYINumbers = [];
+		$(".selectableRowTracking").each(function () {
+			if ($(this).prop('checked') == true) {
+				selectedYINumbers.push($(this).attr("data-yarditemnumber"));
+			}
+		});
+		return selectedYINumbers;
+    }
+
+    $('.selectableRowTracking').change(function () {
+        checkConditionsToEnableMultipleDNPrintButton();
+    });
+
+    function PaintTrackingTable(idTable) {
+		$('#TrackingTable' + idTable).DataTable({
+            "aaSorting": [],
+            "oLanguage": {
+                "sEmptyTable": "Aucun &#233;v&#233;nement trouv&#233;"
+            },
+			"aoColumnDefs": [{ "bSortable": false, "aTargets": ['no-sort'] }],
+			"bFilter": false,
+			"bInfo": false,
+            "bPaginate": false,
+            "fnInitComplete": function (oSettings, json) {
+                if (oSettings.aoData.length == 0) {
+                    $('#TrackingTable').parents('.dataTables_wrapper').first().find('thead').hide();
+                }
+            }
+        });
+    }
+
+     //handle click on each yardItem in TrackingInfo partial view
+	$('div[id="trackingInfo"] [data-bs-toggle="collapse"]').click(function (data) {
+        var yardItemId;
+        var control = data.target;
+
+        if (control.attributes["data-print-dn"] != undefined) {
+            return;
+        }
+
+        yardItemId = $(control).closest('#trackingInfo').data('filter-id');
+
+        //first evalueate if the content is not loaded
+        if ($("#dc" + yardItemId).attr("data-loaded") != "true") {
+
+            //block the screen
+            $.blockScreen();
+
+            //call the controller
+            var request = $.ajax({
+                data: { yardItemId: yardItemId },
+                url: "../TrackingInfo/ListYardItemEvents",
+                method: "GET",
+                dataType: "json"
+            });
+
+            request.done(function (data) {
+                // check if the response is success (TRACKINGINFO ERRORS)
+				if (!data.success) {
+					var divError = $('#divError');
+					var spanError = $('#spanError');
+					spanError.html(data.message);
+                    divError.show();
+
+				} else {
+					var divError = $('#divError');
+					divError.hide();
+
+                    //build the header
+					var innerHtml = "<div id='dc" + yardItemId + "' class='collapse show' role='tabpanel' aria-labelledby='ph" + yardItemId + "'>";
+                    innerHtml += "<div class='panel-body'>";
+                    innerHtml += "<table width='100%' class='display table-striped tabla' id='TrackingTable" + yardItemId + "' cellspacing='0'>";
+                    innerHtml += "<thead class='thead_BL'><tr role='row'>";
+                    innerHtml += "<th class='no-sort'>Date/Heure</th><th>&#201;v&#233;nement</th>";
+
+                    if (isYITrackingInfoCurrentPositionFieldVisible()) {
+                        innerHtml += "<th>Position</th>";
+                    }
+                    else {
+                        innerHtml += "<th style='background: unset'></th>";
+                    }
+                    innerHtml += "<th style='background: unset' class='no-sort'></th></tr>";
+                    innerHtml += "</tr></thead>";
+                    innerHtml += "<tbody>";
+                    
+                    //build each item
+                    for (var a = 0; a < data.yardItemList.length; a++) {
+                        innerHtml += "<tr role='row'><td class='ancho_colt'>" + data.yardItemList[a].Date + "</td>";
+                        innerHtml += "<td class='ancho_colt'>" + data.yardItemList[a].EventTypeName + "</td>";
+
+                        if (isYITrackingInfoCurrentPositionFieldVisible()) {
+                            innerHtml += "<td class='ancho_colt'>" + data.yardItemList[a].Position + "</td>";
+                        }
+                        else {
+                            innerHtml += "<td class='ancho_colt'></td>";
+                        }
+                        if (data.yardItemList[a].CreatedByIES == 'True') {
+							innerHtml += "<td><button id='btnDeleteEvent' type='button' class='btn btn-danger btn_event d-none d-sm-block' data-yievent ='" + JSON.stringify(data.yardItemList[a]) + "' onClick='RemoveIpakiEvent(event)'>" + "Enlever" + "</button></td>";
+                        } else {
+                            innerHtml += "<td class='ancho_colt'></td>";
+                        }
+
+                        innerHtml += "</tr>";
+                    }
+
+                    //build the footer
+                    innerHtml += "</tbody></table></div></div>";
+
+                    $("#dc" + yardItemId).html(innerHtml);
+
+                    //at last change set this flag as true
+                    $("#dc" + yardItemId).attr("data-loaded", "true");
+
+                    //change the icon
+                    if (control.className == "") {
+                        $(control).find('i').toggleClass('fa-caret-down fa-caret-up');
+                        $("#ph" + yardItemId).toggleClass('selectedPanel');
+                        $("#ph" + yardItemId).find('.panel-title').find('.collapsed').toggleClass('whiteOnHover2');
+                        $("#ph" + yardItemId).find('.glyphicon.pad_ico2, .glyphicon.pad_ico').toggleClass('pad_ico pad_ico2');
+
+                        var icon = $("#ico" + yardItemId);
+
+                        if (icon.hasClass('Img_vehicle') || icon.hasClass('Img_vehicle2')) {
+                            $("#ico" + yardItemId).toggleClass('Img_vehicle Img_vehicle2');
+                        }
+
+                        if (icon.hasClass('Img_bulk') || icon.hasClass('Img_bulk2')) {
+                            $("#ico" + yardItemId).toggleClass('Img_bulk Img_bulk2');
+                        }
+
+                        if (icon.hasClass('Img_container') || icon.hasClass('Img_container2')) {
+                            $("#ico" + yardItemId).toggleClass('Img_container Img_container2');
+                        }
+                    }
+                    else {
+                        $(control).find('i').toggleClass('fa-caret-down fa-caret-up');
+                        $("#ph" + yardItemId).toggleClass('selectedPanel');
+                        $("#ph" + yardItemId).find('.glyphicon.pad_ico2, .glyphicon.pad_ico').toggleClass('pad_ico pad_ico2');
+
+                        var icon = $("#ico" + yardItemId);
+
+                        if (icon.hasClass('Img_vehicle') || icon.hasClass('Img_vehicle2')) {
+                            $("#ico" + yardItemId).toggleClass('Img_vehicle Img_vehicle2');
+                        }
+
+                        if (icon.hasClass('Img_bulk') || icon.hasClass('Img_bulk2')) {
+                            $("#ico" + yardItemId).toggleClass('Img_bulk Img_bulk2');
+                        }
+
+                        if (icon.hasClass('Img_container') || icon.hasClass('Img_container2')) {
+                            $("#ico" + yardItemId).toggleClass('Img_container Img_container2');
+                        }
+                    }
+
+                    PaintTrackingTable(yardItemId);
+				}
+
+                //unblock the screen
+                $.unblockScreen();
+
+            });
+
+            request.fail(function (jqXHR, textStatus) {
+                window.location.href='/ATLCIVP/Login';
+            });
+        } else {
+
+            //change the icon
+            if (control.className == "") {
+                $(control).find('i').toggleClass('fa-caret-down fa-caret-up');
+                $("#ph" + yardItemId).toggleClass('selectedPanel');
+                $("#ph" + yardItemId).find('.glyphicon.pad_ico2, .glyphicon.pad_ico').toggleClass('pad_ico pad_ico2');
+
+                var icon = $("#ico" + yardItemId);
+
+                if (icon.hasClass('Img_vehicle') || icon.hasClass('Img_vehicle2')) {
+                    $("#ico" + yardItemId).toggleClass('Img_vehicle Img_vehicle2');
+                }
+
+                if (icon.hasClass('Img_bulk') || icon.hasClass('Img_bulk2')) {
+                    $("#ico" + yardItemId).toggleClass('Img_bulk Img_bulk2');
+                }
+
+                if (icon.hasClass('Img_container') || icon.hasClass('Img_container2')) {
+                    $("#ico" + yardItemId).toggleClass('Img_container Img_container2');
+                }
+            }
+            else {
+                $(control).find('i').toggleClass('fa-caret-down fa-caret-up');
+                $("#ph" + yardItemId).toggleClass('selectedPanel');
+                $("#ph" + yardItemId).find('.glyphicon.pad_ico2, .glyphicon.pad_ico').toggleClass('pad_ico pad_ico2');
+
+                var icon = $("#ico" + yardItemId);
+
+                if (icon.hasClass('Img_vehicle') || icon.hasClass('Img_vehicle2')) {
+                    $("#ico" + yardItemId).toggleClass('Img_vehicle Img_vehicle2');
+                }
+
+                if (icon.hasClass('Img_bulk') || icon.hasClass('Img_bulk2')) {
+                    $("#ico" + yardItemId).toggleClass('Img_bulk Img_bulk2');
+                }
+
+                if (icon.hasClass('Img_container') || icon.hasClass('Img_container2')) {
+                    $("#ico" + yardItemId).toggleClass('Img_container Img_container2');
+                }
+            }
+
+        }
+
+    });
+
+    function LoadTrackingTable(yardItemList, yardItemId, control) {
+
+        //build the header
+		var innerHtml = "<div id='dc" + yardItemId + "' class='collapse show' role='tabpanel' aria-labelledby='ph" + yardItemId + "'>";
+        innerHtml += "<div class='panel-body'>";
+        innerHtml += "<table width='100%' class='display table-striped tabla' id='TrackingTable" + yardItemId + "' cellspacing='0'>";
+        innerHtml += "<thead class='thead_BL'><tr role='row'>";
+        innerHtml += "<th class='no-sort'>Date/Heure</th><th>&#201;v&#233;nement</th>";
+
+        if (isYITrackingInfoCurrentPositionFieldVisible()) {
+            innerHtml += "<th>Position</th>";
+        }
+        else {
+            innerHtml += "<th style='background: unset'></th>";
+        }
+        innerHtml += "<th style='background: unset' class='no-sort'></th></tr>";
+        innerHtml += "</tr></thead>";
+        innerHtml += "<tbody>";
+
+        //build each item
+        for (var a = 0; a < yardItemList.length; a++) {
+            innerHtml += "<tr role='row'><td class='ancho_colt'>" + yardItemList[a].Date + "</td>";
+            innerHtml += "<td class='ancho_colt'>" + yardItemList[a].EventTypeName + "</td>";
+
+            if (isYITrackingInfoCurrentPositionFieldVisible()) {
+                innerHtml += "<td class='ancho_colt'>" + yardItemList[a].Position + "</td>";
+            }
+            else {
+                innerHtml += "<td class='ancho_colt'></td>";
+            }
+            if (yardItemList[a].CreatedByIES == 'True') {
+				innerHtml += "<td><button id='btnDeleteEvent' type='button' class='btn btn-danger btn_event d-none d-sm-block' data-yievent ='" + JSON.stringify(yardItemList[a]) + "' onClick='RemoveIpakiEvent(event)'>" + "Enlever" + "</button></td>";
+            } else {
+                innerHtml += "<td class='ancho_colt'></td>";
+            }
+
+            innerHtml += "</tr>";
+        }
+
+        //build the footer
+        innerHtml += "</tbody></table></div></div>";
+
+        $("#dc" + yardItemId).html(innerHtml);
+
+        //at last change set this flag as true
+        $("#dc" + yardItemId).attr("data-loaded", "true");
+
+        PaintTrackingTable(yardItemId);
+
+        //unblock the screen
+        $.unblockScreen();
+    }
+
+    function RemoveIpakiEvent(e) {
+
+        yardItemNumber = $(e.target).closest('#trackingInfo').data('yarditemnumber');
+        yardItemId = $(e.target).closest('#trackingInfo').data('filter-id');
+        var yardItemEventData = $(e.target).data('yievent');
+        var formateDate = new Date(yardItemEventData.Date).toISOString();
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '/ATLCIVP/TrackingInfo/DeleteYardItemEvent',
+            data: { __RequestVerificationToken: token, eventTypeCode: yardItemEventData.EventTypeCode, yardItemNumber: yardItemNumber, eventDateString: formateDate, billOfLadingNumber: "AEV0238293" },
+            type: 'POST',
+            async: false,
+            cache: false,
+            success: function (result) {
+                if (result.success) {
+                    var divError = $('#divError');
+                    divError.hide();
+                    LoadTrackingTable(result.yardItemList, yardItemId, e.target);
+                } else {
+                    var divError = $('#divError');
+                    var spanError = $('#spanError');
+                    spanError.html(result.message);
+                    divError.show();
+                }
+            },
+            error: function (message) {
+                var divError = $('#divError');
+                var spanError = $('#spanError');
+                spanError.html(message);
+                divError.show();
+            }
+        }).always(function () {
+            $('.popover').popover('hide');
+        });
+
+        return false;
+    };
+</script>
+    </div>
+    <footer class="container FondBlanc pt-3">
+        <hr>
+        <p class="logo">© 2025 AGL Group<img src="../assets/images/ipk_logo2.jpg" class="logoFooter"></p>
+    </footer>
+    
+
+    <script>
+        $(document).ready(function () {
+            bindCartCount();
+        });
+
+        function bindCartCount() {
+            $.ajax({
+                type: 'POST',
+                url: '/ATLCIVP/Cart/GetCurrentUserCartCount',
+                cache: false,
+                datatype: 'json',
+                contentType: 'application/json',
+                success: function (result) {
+                    $('#lblCartCount').text(result['ItemCount']);
+                },
+                error: function (message) {
+                    $('#lblCartCount').text('0');
+                }
+            });
+        }
+    </script>
+
+
+
+
+</body></html>

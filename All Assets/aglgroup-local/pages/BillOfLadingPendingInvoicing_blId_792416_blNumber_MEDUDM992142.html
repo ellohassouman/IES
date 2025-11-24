@@ -1,0 +1,688 @@
+<!DOCTYPE html><html class="js no-flexbox flexbox-legacy canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers no-applicationcache svg inlinesvg smil svgclippaths wf-nunitosans-n4-active wf-nunitosans-n7-active wf-active"><head>
+    <meta charset="utf-8">
+    <title>Ipaki Extranet</title>
+    <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon">
+
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0">
+
+    <link href="../assets/css/dataTables.css" rel="stylesheet">
+
+    <link href="../assets/css/bootstrap.css" rel="stylesheet">
+<link href="../assets/css/bootstrap_rtl.css" rel="stylesheet">
+
+    <link href="../assets/css/bootstrap-icons_min.css" rel="stylesheet">
+
+    
+    <link href="../assets/css/bootstrap-datetimepicker.css" rel="stylesheet">
+
+    <link href="../assets/css/captcha-stylesheet.css" rel="stylesheet">
+
+    <link href="../assets/css/fontawesome-all.css" rel="stylesheet">
+<link href="../assets/css/sassStyle.css" rel="stylesheet">
+<link href="../assets/css/perfect-scrollbar.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js" type="text/javascript" async=""></script><script src="../assets/js/modernizr-2_5_3.js"></script>
+
+    <script src="../assets/js/jquery-3_7_1.js"></script>
+
+    <script src="../assets/js/bootstrap_bundle_min.js"></script>
+<script src="../assets/js/bootstrap-datetimepicker.js"></script>
+<script src="../assets/js/bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/resources_en-US.js"></script>
+
+    <script src="../assets/js/respond.js"></script>
+
+    <script src="../assets/js/bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/spin.js"></script><style type="text/css"></style>
+<script src="../assets/js/jquery_spin.js"></script>
+
+    <script src="../assets/js/moment.js"></script>
+
+    <script src="../assets/js/generalFunctions.js"></script>
+<script src="../assets/js/Validations.js"></script>
+<script src="../assets/js/js-cookie.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,700&amp;subset=latin" media="all"><script src="../assets/js/perfect-scrollbar_jquery.js"></script>
+<script src="../assets/js/perfect-scrollbar.js"></script>
+
+    <script src="../assets/js/dataTables_min.js"></script>
+
+    <script src="../assets/js/bootstrap-datetimepicker_fr.js"></script>
+
+
+    <script>
+        if (window.top !== window.self) {
+			window.location.href = '/Error/FrameError';
+		}
+    </script>
+<script>NS_CSM_td=276211850;NS_CSM_pd=275116656;NS_CSM_u="/clm10";NS_CSM_col="AAAAAAUmu1N6q4hQfWAZhBfdSA6D3TwtLUWEK5APuMIrmybXAQEcDGgS2af3QG+MGPUWCw7v4QA6wIT7ZZE45Tmig3nM";</script><script type="text/javascript">function sendTimingInfoInit(){setTimeout(sendTimingInfo,0)}function sendTimingInfo(){var wp=window.performance;if(wp){var c1,c2,t;c1=wp.timing;if(c1){var cm={};cm.ns=c1.navigationStart;if((t=c1.unloadEventStart)>0)cm.us=t;if((t=c1.unloadEventEnd)>0)cm.ue=t;if((t=c1.redirectStart)>0)cm.rs=t;if((t=c1.redirectEnd)>0)cm.re=t;cm.fs=c1.fetchStart;cm.dls=c1.domainLookupStart;cm.dle=c1.domainLookupEnd;cm.cs=c1.connectStart;cm.ce=c1.connectEnd;if((t=c1.secureConnectionStart)>0)cm.scs=t;cm.rqs=c1.requestStart;cm.rss=c1.responseStart;cm.rse=c1.responseEnd;cm.dl=c1.domLoading;cm.di=c1.domInteractive;cm.dcls=c1.domContentLoadedEventStart;cm.dcle=c1.domContentLoadedEventEnd;cm.dc=c1.domComplete;if((t=c1.loadEventStart)>0)cm.ls=t;if((t=c1.loadEventEnd)>0)cm.le=t;cm.tid=NS_CSM_td;cm.pid=NS_CSM_pd;cm.ac=NS_CSM_col;var xhttp=new XMLHttpRequest();if(xhttp){var JSON=JSON||{};JSON.stringify=JSON.stringify||function(ob){var t=typeof(ob);if(t!="object"||ob===null){if(t=="string")ob='"'+ob+'"';return String(ob);}else{var n,v,json=[],arr=(ob&&ob.constructor==Array);for(n in ob){v=ob[n];t=typeof(v);if(t=="string")v='"'+v+'"';else if(t=="object"&&v!==null)v=JSON.stringify(v);json.push((arr?"":'"'+n+'":')+String(v));}return(arr?"[":"{")+String(json)+(arr?"]":"}");}};xhttp.open("POST",NS_CSM_u,true);xhttp.send(JSON.stringify(cm));}}}}if(window.addEventListener)window.addEventListener("load",sendTimingInfoInit,false);else if(window.attachEvent)window.attachEvent("onload",sendTimingInfoInit);else window.onload=sendTimingInfoInit;</script></head>
+
+<body>
+<script>
+ function string_to_array(str) {var len = str.length;var res = new Array(len);for(var i = 0; i < len; i++)res[i] = str.charCodeAt(i);return res;}function array_to_hex_string(ary) {var res = "";for(var i = 0; i < ary.length; i++)res += SHA256_hexchars[ary[i] >> 4] + SHA256_hexchars[ary[i] & 0x0f];return res;}function SHA256_init() {SHA256_H = new Array(0x6a09e667, 0xbb67ae85,0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19);SHA256_buf = new Array();SHA256_len = 0;}function SHA256_write(msg) {if (typeof(msg) == "string") SHA256_buf = SHA256_buf.concat(string_to_array(msg));else SHA256_buf = SHA256_buf.concat(msg); for(var i = 0; i + 64 <= SHA256_buf.length; i += 64) SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf.slice(i, i +64)); SHA256_buf = SHA256_buf.slice(i); SHA256_len += msg.length;}function SHA256_finalize() { SHA256_buf[SHA256_buf.length] = 0x80;  if (SHA256_buf.length > 64 - 8) {for(var i = SHA256_buf.length; i < 64; i++)SHA256_buf[i] = 0;SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf);SHA256_buf.length = 0;} for(var i = SHA256_buf.length; i < 64 - 5; i++)SHA256_buf[i] = 0;  SHA256_buf[59] =(SHA256_len >>> 29) & 0xff;  SHA256_buf[60] = (SHA256_len >>> 21) & 0xff;  SHA256_buf[61] = (SHA256_len >>> 13) & 0xff;  SHA256_buf[62] = (SHA256_len >>> 5) & 0xff;  SHA256_buf[63] = (SHA256_len << 3) & 0xff;  SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf);  var res = new Array(32);  for(var i = 0; i < 8; i++) {res[4 * i + 0] = SHA256_H[i] >>> 24; res[4 * i + 1] = (SHA256_H[i] >> 16) & 0xff; res[4 * i + 2] = (SHA256_H[i] >> 8) & 0xff; res[4 * i + 3] = SHA256_H[i] & 0xff; } delete SHA256_H; delete SHA256_buf; delete SHA256_len; return res;}function HMAC_SHA256_init(key) {  if (typeof(key) == "string") HMAC_SHA256_key = string_to_array(key);  else  HMAC_SHA256_key = new Array().concat(key);  if (HMAC_SHA256_key.length > 64) { SHA256_init(); SHA256_write(HMAC_SHA256_key); HMAC_SHA256_key = SHA256_finalize(); }  for(var i = HMAC_SHA256_key.length; i < 64; i++)  HMAC_SHA256_key[i] = 0; for(var i = 0; i < 64; i++) HMAC_SHA256_key[i] ^=  0x36;  SHA256_init(); SHA256_write(HMAC_SHA256_key);} function HMAC_SHA256_write(msg) {  SHA256_write(msg);} function HMAC_SHA256_finalize() {  var md = SHA256_finalize();  for(var i = 0; i < 64; i++) HMAC_SHA256_key[i] ^= 0x36 ^ 0x5c; SHA256_init(); SHA256_write(HMAC_SHA256_key); SHA256_write(md);  for(var i = 0; i < 64; i++)    HMAC_SHA256_key[i] = 0;  delete HMAC_SHA256_key;  return SHA256_finalize();}function HMAC_SHA256_MAC(key, msg) { var res;  HMAC_SHA256_init(key);  HMAC_SHA256_write(msg);  res = HMAC_SHA256_finalize();  return array_to_hex_string(res);} SHA256_hexchars = new Array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f');SHA256_K = new Array( 0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1,0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f,0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2); function SHA256_sigma0(x) { return ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);} function SHA256_sigma1(x) { return ((x >>> 17) | (x << 15)) ^ ((x >>> 19) | (x << 13)) ^ (x >>> 10);}function SHA256_Sigma0(x) { return ((x >>> 2) | (x << 30)) ^ ((x >>> 13) | (x << 19)) ^ ((x >>> 22) | (x << 10));}function SHA256_Sigma1(x) { return ((x >>> 6) | (x << 26)) ^ ((x >>> 11) | (x << 21)) ^ ((x >>> 25) | (x << 7));} function SHA256_Ch(x, y, z) { return z ^ (x & (y ^ z));} function SHA256_Maj(x, y, z) {return (x & y) ^ (z & (x ^ y));}function SHA256_Hash_Word_Block(H, W) { for(var i = 16; i < 64; i++)  W[i] = (SHA256_sigma1(W[i - 2]) +  W[i - 7] + SHA256_sigma0(W[i - 15]) + W[i - 16]) & 0xffffffff; var state = new Array().concat(H); for(var i = 0; i < 64; i++) {    var T1 = state[7] + SHA256_Sigma1(state[4]) + SHA256_Ch(state[4], state[5], state[6]) + SHA256_K[i] + W[i]; var T2 = SHA256_Sigma0(state[0]) + SHA256_Maj(state[0], state[1], state[2]); state.pop(); state.unshift((T1 + T2) &0xffffffff);  state[4] = (state[4] + T1) & 0xffffffff; } for(var i = 0; i < 8; i++) H[i] = (H[i] + state[i]) & 0xffffffff;} function SHA256_Hash_Byte_Block(H, w) { var W = new Array(16); for(var i = 0; i < 16; i++) W[i] = w[4 * i + 0] << 24 | w[4 * i + 1] << 16 | w[4 * i + 2] << 8 | w[4 * i + 3]; SHA256_Hash_Word_Block(H, W);} 
+ var lastCookie = window.name;
+ function getCookie(name) {
+       let cookie = {}; 
+            document.cookie.split(';').forEach(function(el) {
+                let cookiekv = el.split('=');
+           cookie[cookiekv[0].trim()] = cookiekv[1];
+            })
+           if (cookie.hasOwnProperty(name)) {
+               return cookie[name];
+                     }
+            return "";
+ };
+ var checkCookie = function() {
+       var token ="7067722647229789059";
+			    var seed = getCookie('citrix_ns_seed');
+      var currentCookie = document.cookie;
+         if (currentCookie != lastCookie || (lastCookie.length == 0)) {
+           console.log('cookie has changed');
+           var hash = HMAC_SHA256_MAC(seed, token);
+         document.cookie = 'MC=' + hash +'; Domain= .aglgroup.com';
+               lastCookie = currentCookie;
+          window.name = currentCookie;
+     }
+                    return true;
+ };
+ window.setInterval(checkCookie, 100);
+        </script>
+
+    <nav class="navbar navbar-expand-md navbar-inverse fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarFlagsMenu" aria-controls="navbarFlagsMenu" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <div class="logo-version">
+                    <a class="navbar-brand fontBalnc" href="/TICTC/Home"> </a>
+                </div>
+            </div>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarFlagsMenu">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+
+
+<form action="/TICTC/LogOff?LoginActionName=CustomerLogin" id="logoutForm" method="post">            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle fontBalnc menuUser" data-bs-toggle="dropdown"><span class="glyphicon glyphicon-user paddIcon"></span>Elloh ASSOUMAN<b class="caret"></b></a>
+                    <ul class="dropdown-menu menuUser">
+                            <li>
+                                <a id="linkMyProfile" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#ProfileModal" href="/TICTC/Customer/MyProfile">
+                                    <span class="bi bi-person-fill" aria-hidden="true"></span> Mon Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/TICTC/Payment/History">
+                                    <span class="bi bi-clock" aria-hidden="true"></span> Historique de paiement
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/TICTC/Account/ChangePassword">
+                                    <span class="bi bi-lock-fill" aria-hidden="true"></span> Changer le mot de passe
+                                </a>
+                            </li>
+                                <li>
+                                    <a class="dropdown-item" id="supportButton" data-bs-toggle="modal" data-bs-target="#supportDialog" href="/TICTC/Support/ShowSupportDialog">
+                                        <div><span class="bi bi-envelope-fill" aria-hidden="true"></span> Demander de l'assistance</div>
+                                    </a>
+                                </li>
+                        <li>
+                            <input name="__RequestVerificationToken" type="hidden" value="5ZmCfeRSZLXXAwcW44oQ-Nf54UIoVLx7i-kir8A-Gfsfj4givtMfaYD5sKF9MhQt-EvgjFHgNMB37KcI5nfOv3PqGoRlWgfWFmF1nvAU5ydXQgHXM_AYN21tvEcXfQ5JUbWI9MY9aCJ33Dq-t_uTAg2">
+                            <a href="javascript:document.getElementById('logoutForm').submit()" class="dropdown-item"><span class="bi bi-box-arrow-right" aria-hidden="true"></span> Déconnecter</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+<input type="hidden" name="as_sfid" value="AAAAAAXDUMzf3MvBwg77UwGNPtLbwb_MbMleOe4L88glIvBOxqe8rWo3masN6GfqyFoDdvaVDGGXIIYX8BEw5UetmFalu1ASk3Wro9LZWe7SzVWgGMW61A2E3vHdAIvLVoB-X2QtJiKl7W1UHWDQ2jjFUyngEVkdHIj1_HvXEpJsfFvJlw=="><input type="hidden" name="as_fid" value="531597b7ad1b475226845162616ffda75e41673a"></form><script>
+    $('#supportButton').click(function () {
+        $('#supportDialogContent').load(this.href, function () {
+            $('#supportDialog').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    $('#linkMyProfile').click(function () {
+        $('#ProfileModalContent').load(this.href, function () {
+            $('#ProfileModal').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    
+
+</script>
+
+
+                        <div class="d-none d-md-block float-start">
+<form action="/Default/SetCulture" id="SetCultureForm" method="post"><span class="posFlags">
+                                    <span class="btn-group btn-group-xs">
+                                        <button type="submit" name="culture" id="en-us" value="en-us" class="btn btn-primary btn-sm">Anglais</button>
+                                        <button type="submit" name="culture" id="fr" value="fr" class="btn btn-primary btn-sm">Français</button>
+                                    </span>
+                                </span>
+<input type="hidden" name="as_sfid" value="AAAAAAUsYVzQMpghXKMHS7x87SZ3nrxfFq6VxBf4j6-pbEhMU7Mfq8A66Lhr9MTITnfZkWJZxllac53YvhOr8QJGG8OEjAYbAMjPoGu67O1G9p6BsTEo3_3KylT6tBOStFpkrU_cup-N61bNVhpw4tx_3g9CjPXbfaDSxPRYnQp_9mdSWQ=="><input type="hidden" name="as_fid" value="29a1a36d911039719f0d776efdf8051fb994db9c"></form>                        </div>
+
+                    </li>
+                </ul>
+            </div>
+                <a href="/TICTC/Payment/PayInvoices">
+                    <div id="divShoppingCart" class="Shopping_cart">
+                        <span id="lblCartCount" class="txt_cart"></span>
+                    </div>
+                </a>
+            <div class="hidden-sm d-md-none d-lg-none">
+<form action="/Default/SetCulture" method="post"><span class="posFlags posFlagsCustomer">
+                        <span class="btn-group btn-group-xs">
+                                <button type="submit" name="culture" id="en-us" value="en-us" class="btn btn-primary btnLangMobile">EN</button>
+                        </span>
+                    </span>
+<input type="hidden" name="as_sfid" value="AAAAAAXOTrFhc7k4UKLbP4UeojM_BIiM_jZfYd1l4t6OdTDNrX5pUH8P7yeomZpzbOOH-AvWfFWxBpLmg0V5QjoJsxpBZLm5QMxAYLqEJZxfewv8iH4vrHpCeEkOPDmizi9ZtH3Cc8o1gPLdqT03VAFZGVSqM8Ryu--Ax6PLByKDn2uytw=="><input type="hidden" name="as_fid" value="d6f9709d67473651163196881b0d7d3b69c1f647"></form>            </div>
+        </div>
+    </nav>
+
+    <div id="supportDialog" class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="supportModal" aria-hidden="true">
+        <div id="supportDialogContent" class="modal-dialog"></div>
+    </div>
+
+    <div id="ProfileModal" class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="myProfileModal" aria-hidden="true">
+        <div id="ProfileModalContent" class="modal-dialog"></div>
+    </div>
+
+    <div class="jumbotronCustomer hidden-xs" style="background-image: url(/Images/img_puerto.jpg);">
+        <div class="container transpCustomer">
+                <h2>TICT Clearing (Training)</h2>
+                <h4>TICT Clearing (Training)</h4>
+        </div>
+        <div style="text-align:right;">
+        </div>
+    </div>
+
+    <div id="supportAlerts">
+        
+
+
+
+    </div>
+
+    <div class="container FondBlanc content">
+        
+
+<div id="wrapper" class="toggled">
+
+    <div id="page-content-wrapper">
+        
+
+
+
+<div id="divError" class="alert alert-danger alrt_pad" role="alert" style="display:none;">
+	<div class="d-flex justify-content-between">
+		<div>
+			<span class="fas fa-exclamation-circle" aria-hidden="true"></span>
+			<b>Attention!</b>
+			<span id="spanError"></span>
+		</div>
+		<div>
+			<button type="button" class="btn-close" aria-label="Close" onclick="$('#divError').hide();"></button>
+		</div>
+	</div>
+</div>
+
+        
+
+        <input name="__RequestVerificationToken" type="hidden" value="ITR4rc4hm3uf3fNKehWJftfHTP5p4zRnIQEyaSkJndux9iqT2ekn114DrLZAkQY-YOGgY6f4quDSo9i33smlehnyEns5E3Vn_OITf_WErjeUpnUBnj8KA4XpXVK_yHXZLT1P8VCv6xRCR2oAXeb1vQ2">
+        <div>
+            
+            <div class="header_bl4">
+                <div class="row">
+                    <div class="col-lg-8 col-md-8 col-sm-6 col-7 num_Bl">
+                        <h2 class="tit_bl left-padding titleBlSummaryMobile">BL MEDUDM992142</h2>
+                    </div>
+                    <div class="col-lg-4 col-md-4 col-sm-5 col-5 Bl_hist_btn side-padding" style=" cursor:pointer;">
+                        <a href="/TICTC/Home" title="Retour à la Recherche" class="text-decoration-none">
+                            <h4 class="col_link fs-5 ">
+                                <span class="fas fa-arrow-circle-left" aria-hidden="true"></span>
+                                <span class="d-none d-sm-inline-block">Retour à la Recherche</span>
+                            </h4>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <div id="blSummaryButtonsContent" class="row pb-4">
+<nav>
+    <a class="btn btn-default blnavbar_btn " href="/TICTC/Customer/BillOfLadingDetails?blNumber=MEDUDM992142" title="Détails du BL" onclick="$.blockScreen();">
+       Détails du BL
+    </a>
+    <a class="btn btn-default blnavbar_btn " href="/TICTC/Customer/BillOfLadingInvoices?blNumber=MEDUDM992142" title="Factures" onclick="$.blockScreen();">
+       Factures
+    </a>
+    <a class="btn btn-default blnavbar_btn active" href="/TICTC/Customer/BillOfLadingPendingInvoicing?blId=792416&amp;blNumber=MEDUDM992142" title="Eléments à Facturer " onclick="$.blockScreen();">
+       Eléments à Facturer 
+    </a>
+    <a class="btn btn-default blnavbar_btn " href="/TICTC/Customer/BillOfLadingYITrakingInfo?blId=792416&amp;blNumber=MEDUDM992142" title="Suivi" onclick="$.blockScreen();">
+       Suivi
+    </a>
+</nav>
+
+            </div>
+                <hr style="opacity:0.1">
+            <div>
+                        <button id="btnAddEvent" type="button" class="btn btn-primary float-start autoWidth pendingInvoicing_btn" disabled="disabled">
+                            <i class="fas fa-plus"></i> Service
+                        </button>
+                                    <button type="button" data-button="generateProformaBtn" class="btn btn-primary float-start autoWidth pendingInvoicing_btn" disabled="">
+                        <i class="fas fa-file-alt"></i> Générer proforma 
+                    </button>
+            </div>
+
+        </div>
+
+        
+
+        
+        <div id="pendingInvoicingDataTable_wrapper" class="dt-container"><div class="dt-layout-row"><div class="dt-layout-cell dt-layout-start"></div><div class="dt-layout-cell dt-layout-end"></div></div><div class="dt-layout-row dt-layout-table"><div class="dt-layout-cell  dt-layout-full"><div class="dt-scroll"><div class="dt-scroll-head" style="overflow: hidden; position: relative; border: 0px; width: 100%;"><div class="dt-scroll-headInner" style="box-sizing: content-box; width: 1296px; padding-right: 0px;"><table width="100%" class="display table-striped tabla dataTable" cellspacing="0" style="width: 1296px; margin-left: 0px;"><thead>
+                <tr class="header_tabla"><th class="sel_Col_width sorting_disabled checkbox-alignment dt-orderable-none" data-dt-column="0" rowspan="1" colspan="1" aria-label=""><span class="dt-column-title"><input name="sel" id="selectAll" type="checkbox" value=""></span><span class="dt-column-order"></span></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="1" rowspan="1" colspan="1" aria-label="Numéro de Yard Item: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Numéro de Yard Item</span><span class="dt-column-order"></span></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="2" rowspan="1" colspan="1" aria-label="Type: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Type</span><span class="dt-column-order"></span></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="3" rowspan="1" colspan="1" aria-label="Détail: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Détail</span><span class="dt-column-order"></span></th><th class="invoice-header no-sort dt-orderable-none" data-dt-column="4" rowspan="1" colspan="1" aria-label="
+                            Événements
+                        "><span class="dt-column-title">
+                            <span class="eventTitle">Événements</span>
+                        </span><span class="dt-column-order"></span></th></tr>
+            </thead><colgroup><col data-dt-column="0" style="width: 64.775px;"><col data-dt-column="1" style="width: 323.9px;"><col data-dt-column="2" style="width: 323.9px;"><col data-dt-column="3" style="width: 323.9px;"><col data-dt-column="4" style="width: 259.125px;"></colgroup></table></div></div><div class="dt-scroll-body" style="position: relative; overflow: auto; width: 100%;"><table width="100%" class="display table-striped tabla dataTable" id="pendingInvoicingDataTable" cellspacing="0" style="width: 100%;"><colgroup><col data-dt-column="0" style="width: 64.775px;"><col data-dt-column="1" style="width: 323.9px;"><col data-dt-column="2" style="width: 323.9px;"><col data-dt-column="3" style="width: 323.9px;"><col data-dt-column="4" style="width: 259.125px;"></colgroup><tfoot class="tfoot_BL footer_tabla">
+                <tr><th class="fontWeigthNormal" data-dt-column="0" rowspan="1" colspan="1"><div class="dt-scroll-sizing"><span class="dt-column-title"></span></div></th><th class="fontWeigthNormal" data-dt-column="1" rowspan="1" colspan="1"><div class="dt-scroll-sizing"><span class="dt-column-title">Numéro de Yard Item</span></div></th><th class="fontWeigthNormal" data-dt-column="2" rowspan="1" colspan="1"><div class="dt-scroll-sizing"><span class="dt-column-title">Type</span></div></th><th class="fontWeigthNormal" data-dt-column="3" rowspan="1" colspan="1"><div class="dt-scroll-sizing"><span class="dt-column-title">Détail</span></div></th><th class="fontWeigthNormal" data-dt-column="4" rowspan="1" colspan="1"><div class="dt-scroll-sizing"><span class="dt-column-title">Événements</span></div></th></tr>
+            </tfoot><thead>
+                <tr class="header_tabla"><th class="sel_Col_width sorting_disabled checkbox-alignment dt-orderable-none" data-dt-column="0" rowspan="1" colspan="1" aria-label=""><div class="dt-scroll-sizing"><span class="dt-column-title"><input name="sel" type="checkbox" value=""></span><span class="dt-column-order"></span></div></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="1" rowspan="1" colspan="1" aria-label="Numéro de Yard Item: Activate to sort"><div class="dt-scroll-sizing"><span class="dt-column-title" role="button">Numéro de Yard Item</span><span class="dt-column-order"></span></div></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="2" rowspan="1" colspan="1" aria-label="Type: Activate to sort"><div class="dt-scroll-sizing"><span class="dt-column-title" role="button">Type</span><span class="dt-column-order"></span></div></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="3" rowspan="1" colspan="1" aria-label="Détail: Activate to sort"><div class="dt-scroll-sizing"><span class="dt-column-title" role="button">Détail</span><span class="dt-column-order"></span></div></th><th class="invoice-header no-sort dt-orderable-none" data-dt-column="4" rowspan="1" colspan="1" aria-label="
+                            Événements
+                        "><div class="dt-scroll-sizing"><span class="dt-column-title">
+                            <span class="eventTitle">Événements</span>
+                        </span><span class="dt-column-order"></span></div></th></tr>
+            </thead>
+            
+
+            <tbody role="alert" aria-live="polite" aria-relevant="all"><tr>
+                        <td class="sel_Col_width"><input class="selectableRow" name="sel" type="checkbox" value="1488473" data-yarditemnumber="MSDU8245231" data-isdraft="False"></td>
+                        <td class="ancho_colt">MSDU8245231</td>
+                        <td class="ancho_colt">[Container]</td>
+                        <td class="ancho_colt">40' HIGH CUBE HEAVY DUTY</td>
+                            <td class="ancho_colt">
+                            </td>
+                    </tr><tr>
+                        <td class="sel_Col_width"><input class="selectableRow" name="sel" type="checkbox" value="1488884" data-yarditemnumber="MSDU8908078" data-isdraft="False"></td>
+                        <td class="ancho_colt">MSDU8908078</td>
+                        <td class="ancho_colt">[Container]</td>
+                        <td class="ancho_colt">40' HIGH CUBE HEAVY DUTY</td>
+                            <td class="ancho_colt">
+                            </td>
+                    </tr><tr>
+                        <td class="sel_Col_width"><input class="selectableRow" name="sel" type="checkbox" value="1488439" data-yarditemnumber="MSMU6927080" data-isdraft="False"></td>
+                        <td class="ancho_colt">MSMU6927080</td>
+                        <td class="ancho_colt">[Container]</td>
+                        <td class="ancho_colt">40' HIGH CUBE HEAVY DUTY</td>
+                            <td class="ancho_colt">
+                            </td>
+                    </tr></tbody>
+            
+        </table></div><div class="dt-scroll-foot" style="overflow: hidden; border: 0px; width: 100%;"><div class="dt-scroll-footInner" style="width: 1296px; padding-right: 0px;"><table width="100%" class="display table-striped tabla dataTable" cellspacing="0" style="width: 1296px; margin-left: 0px;"><tfoot class="tfoot_BL footer_tabla">
+                <tr><th class="fontWeigthNormal" data-dt-column="0" rowspan="1" colspan="1"><span class="dt-column-title"></span></th><th class="fontWeigthNormal" data-dt-column="1" rowspan="1" colspan="1"><span class="dt-column-title">Numéro de Yard Item</span></th><th class="fontWeigthNormal" data-dt-column="2" rowspan="1" colspan="1"><span class="dt-column-title">Type</span></th><th class="fontWeigthNormal" data-dt-column="3" rowspan="1" colspan="1"><span class="dt-column-title">Détail</span></th><th class="fontWeigthNormal" data-dt-column="4" rowspan="1" colspan="1"><span class="dt-column-title">Événements</span></th></tr>
+            </tfoot><colgroup><col data-dt-column="0" style="width: 64.775px;"><col data-dt-column="1" style="width: 323.9px;"><col data-dt-column="2" style="width: 323.9px;"><col data-dt-column="3" style="width: 323.9px;"><col data-dt-column="4" style="width: 259.125px;"></colgroup></table></div></div></div></div></div><div class="dt-layout-row"><div class="dt-layout-cell dt-layout-start"></div><div class="dt-layout-cell dt-layout-end"></div></div></div>
+        
+    </div>
+
+</div>
+
+<div class="modal fade" id="EventsModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div id="EventModalContent" class="modal-dialog"></div>
+</div>
+
+<div id="dialogDiv" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div id="dialogContent" class="modal-dialog"></div>
+</div>
+
+
+<script type="text/javascript">
+
+    var invoiceToAddEvents = "";
+    var BindForm; //this var it's use as a communicator between proformageneration and this page to access your controls
+
+    $(document).ready(function () {
+
+        $('#pendingInvoicingDataTable').dataTable({
+            bFilter: false,
+            bInfo: false,
+            "aaSorting": [],
+            "aoColumnDefs": [
+                { "bSortable": false, "aTargets": [0, 4] },
+            ],
+            "bPaginate": false,
+            "oLanguage": {
+                "sEmptyTable": "Il n&#39;y a pas d&#39;&#233;l&#233;ments &#224; facturer"
+            },
+            scrollX: true,
+            responsive: true
+        });
+    });
+
+    $('#selectAll').click(function (e) {
+        var checkboxes = $('td input:checkbox', $('#pendingInvoicingDataTable'));
+        checkboxes.prop('checked', this.checked);
+        enableGenerateProforma();
+    });
+
+    $('.selectableRow').change(function () {
+        enableGenerateProforma();
+    });
+
+    $('#EventsModal').on('show.bs.modal', function (event) {
+        var tableId = "#pendingInvoicingDataTable";
+        var rowClass = ".selectableRow";
+        if (invoiceToAddEvents != "") {
+            tableId = "#invoiceTable_" + invoiceToAddEvents;
+            rowClass = ".selectableRowInvoice";
+        }
+
+        copyDataFromInvoicingTable(tableId, rowClass);
+        $.unblockScreen();
+    });
+
+    $('#btnAddEvent, #btnAddEventResponsive').click(function () {
+        $.blockScreen();
+        invoiceToAddEvents = "";
+        var selectedIDs = getSelectedYardItems();
+        OpenAddEventsModal(selectedIDs);
+    });
+
+    $('[data-button="generateProformaBtn"]').click(function () {
+            $('#dialogContent').load(("/TICTC/Invoice/GenerateProforma?billOfLadingId=792416"), function () {
+                //workaround to fix the modal error in the view when the session is lost
+                try {
+                    var dialogDivModal = new bootstrap.Modal(document.getElementById('dialogDiv'));
+                    var options = {
+                        backdrop: 'static',
+                        keyboard: false
+                    };
+                    dialogDivModal.show(options);
+
+					bindForm(this);
+					bindClientDataToModel_YardItemsJSON(getYardItemsToInvoice()); //this function is implemented in the proformageneration
+				} catch (e) {
+					location.reload();
+				}
+            });
+    });
+
+    BindForm = bindForm; //assign the bind
+
+    function enableGenerateProforma() {
+        var $generateProformaBtn = $('[data-button="generateProformaBtn"]');
+        var $btnAddEvent = $('#btnAddEvent');
+
+
+        var checkedCount = $('.selectableRow:checked').length;
+
+        var draftSelected = $('.selectableRow:checked').filter(function () { return $(this).data('isdraft') == 'True' })
+
+        if (checkedCount > 0) {
+
+            $generateProformaBtn.removeAttr("disabled");
+
+            if (draftSelected.length == 0) {
+                $btnAddEvent.removeAttr("disabled");
+            }
+        }
+        else {
+            if ('False' == 'False') {
+                $generateProformaBtn.attr("disabled", "disabled");
+            }
+            $btnAddEvent.attr("disabled", "disabled");
+        }
+    }
+
+    function OpenAddEventsModal(selectedIDs) {
+        var url = "/TICTC/Event/_Add?yardItemIds=ids&blNumber=MEDUDM992142";
+        url = url.replace("ids", selectedIDs);
+        $.get(url, function (data) {
+            if (data['Message'] === undefined) {
+                $('#EventModalContent').html(data);
+                var EventsModal = new bootstrap.Modal(document.getElementById('EventsModal'));
+                var options = {
+                    backdrop: 'static',
+                    keyboard: false
+                };
+                EventsModal.show(options);
+            } else {
+                var divError = $('#divError');
+
+                var spanError = $('#spanError');
+
+                spanError.html(data['Message']);
+                divError.show();
+                $.unblockScreen();
+            }
+
+        });
+    }
+
+    function enableAddEventsExtend(invoiceId) {
+        var $btnAddEvent = $('#btnAddEvent_' + invoiceId);
+        var checkedCount = $('.selectableRowInvoice:checked').length;
+
+        var $container = $btnAddEvent.closest('[data-sliding-menu="container"]');
+
+        if (checkedCount > 0) {
+
+            var draftSelected = $('.selectableRowInvoice:checked').filter(function () { return $(this).data('isdraft') == 'True' })
+
+            if (draftSelected.length == 0) {
+
+                $btnAddEvent.removeAttr("disabled");
+            }
+
+            openMenu($container);
+        }
+        else {
+            $btnAddEvent.attr("disabled", "disabled");
+            closeMenu($container);
+        }
+    }
+
+    function removeEvent(eventId, classname) {
+        var token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/TICTC/Event/Remove',
+            data: { __RequestVerificationToken: token, eventId: eventId },
+            type: 'POST',
+            async: false,
+            cache: false,
+            success: function (result) {
+                if (result.success) {
+                    var popoverId = $("#ContentPopover-" + eventId).parent().parent().prop("id");
+                    $('#' + popoverId).remove();
+                    $("#divEvent" + eventId).remove();
+                }
+            },
+            error: function (message) {
+                var divError = $('#divError');
+                var spanError = $('#spanError');
+                spanError.html(message);
+                divError.show();
+            }
+        }).always(function () {
+            $('.popover').popover('hide');
+        });
+
+        return false;
+    }
+
+    function getSelectedYardItems() {
+        var selectedIDs = [];
+        $(".selectableRow").each(function () {
+            if ($(this).prop('checked') == true) {
+                selectedIDs.push($(this).val());
+            }
+        });
+
+        return selectedIDs;
+    }
+
+    function getBlItemsToInvoice() {
+        var selectedIDs;
+        if ('False' == 'True') {
+            selectedIDs = $.map($(".selectableRow"), function (blitem, i) { return $(blitem).val(); });
+        }
+        else {
+            selectedIDs = getSelectedYardItems();
+        }
+
+        return selectedIDs;
+    }
+
+    function getYardItemsToInvoice() {
+        var selectedYIs;
+        if ('False' == 'True') {
+            selectedYIs = $.map($(".selectableRow"), function (item, i) {
+                return { yardItemNumber: $(item).data('yarditemnumber'), yardItemId: $(item).val()};
+            });
+        }
+        else {
+            selectedYIs = [];
+            $(".selectableRow").each(function () {
+                if ($(this).prop('checked') == true) {
+                    selectedYIs.push({ yardItemNumber: $(this).data('yarditemnumber').toString(), yardItemId: $(this).val()});
+                }
+            });
+        }
+
+        return selectedYIs;
+    }
+
+    function copyDataFromInvoicingTable(tableId, rowClass) {
+        var tableList = [];
+        $(tableId + " > tbody tr").each(function (index, item) {
+            var rowList = [];
+            if ($(item).find(rowClass).prop("checked")) {
+                rowList.push($($(item).find("td")[1]).text());
+                rowList.push($($(item).find("td")[2]).text());
+                rowList.push($($(item).find("td")[3]).text());
+            }
+
+            if (rowList.length > 0) {
+                tableList.push(rowList);
+            }
+        });
+
+        if (tableList.length > 0) {
+            populateInvoicingTable(tableList);
+        }
+    }
+
+    function populateInvoicingTable(yardItems) {
+        var yardItemsTable = $('#yardItemsEventsTable').dataTable({
+            bFilter: false,
+            bInfo: false,
+            "bPaginate": false,          
+            "aoColumnDefs": [
+                { "sClass": "hidden-xs", "aTargets": [2] }
+            ],
+        });
+
+        var table = $('#yardItemsEventsTable').DataTable();
+        table.clear();
+        table.rows.add(yardItems);
+        table.draw();       
+    }
+
+    function bindForm(dialog) {
+        $('form', dialog).submit(function () {
+            $.blockScreen();
+
+            $('#btnGenerateProformaClose,#btnGenerateProformaSubmit').attr('disabled', 'disabled');
+            $.ajax({
+                url: this.action,
+                type: this.method,
+                data: $(this).serialize(),
+				success: function (result, textStatus, jqXHR) {
+                    if (result.success) {
+                        $('#dialogDiv').modal('hide');
+                        window.location.href = result.redirectTo;
+                    } else {
+                        //workaround to fix the workflow when the session is  lost
+                        var contentType = jqXHR.getResponseHeader('Content-Type');
+                        if (contentType && contentType.includes('text/html') && result.indexOf("<!DOCTYPE html>") !== -1) {
+							document.open();
+							document.write(result);
+							document.close();
+                        } else {
+							$('#dialogContent').html(result);
+							bindForm($('#dialogContent'));
+                        }
+						$.unblockScreen();
+                    }
+                },
+				error: function (xhr, ajaxOptions, thrownError) {
+					if (xhr.status === 403) {
+						var response = JSON.parse(xhr.responseText);
+						if (response.isRedirect) {
+							window.location.href = response.redirectUrl;
+						}
+					}
+				}
+            });
+            return false;
+        });
+    }
+
+    document.addEventListener('click', function (e) {
+        var popoverElements = document.querySelectorAll('[data-bs-toggle="popover"]');
+        popoverElements.forEach(function (popoverElement) {
+            if (popoverElement !== e.target && !popoverElement.contains(e.target)) {
+                var popover = bootstrap.Popover.getInstance(popoverElement);
+                if (popover) {
+                    popover.hide();
+                }
+            }
+        });
+    });
+</script>
+
+    </div>
+    <footer class="container FondBlanc pt-3">
+        <hr>
+        <p class="logo">© 2025 AGL Group<img src="../assets/images/ipk_logo2.jpg" class="logoFooter"></p>
+    </footer>
+    
+
+    <script>
+        $(document).ready(function () {
+            bindCartCount();
+        });
+
+        function bindCartCount() {
+            $.ajax({
+                type: 'POST',
+                url: '/TICTC/Cart/GetCurrentUserCartCount',
+                cache: false,
+                datatype: 'json',
+                contentType: 'application/json',
+                success: function (result) {
+                    $('#lblCartCount').text(result['ItemCount']);
+                },
+                error: function (message) {
+                    $('#lblCartCount').text('0');
+                }
+            });
+        }
+    </script>
+
+
+
+
+</body></html>

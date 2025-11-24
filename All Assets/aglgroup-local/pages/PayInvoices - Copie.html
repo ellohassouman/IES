@@ -1,0 +1,467 @@
+<!DOCTYPE html><html class="js no-flexbox flexbox-legacy canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers no-applicationcache svg inlinesvg smil svgclippaths wf-nunitosans-n4-active wf-nunitosans-n7-active wf-active"><head>
+    <meta charset="utf-8">
+    <title>Ipaki Extranet</title>
+    <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon">
+
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0">
+
+    <link href="../assets/css/dataTables.css" rel="stylesheet">
+
+    <link href="../assets/css/bootstrap.css" rel="stylesheet">
+<link href="../assets/css/bootstrap_rtl.css" rel="stylesheet">
+
+    <link href="../assets/css/bootstrap-icons_min.css" rel="stylesheet">
+
+    
+    <link href="../assets/css/bootstrap-datetimepicker.css" rel="stylesheet">
+
+    <link href="../assets/css/captcha-stylesheet.css" rel="stylesheet">
+
+    <link href="../assets/css/fontawesome-all.css" rel="stylesheet">
+<link href="../assets/css/sassStyle.css" rel="stylesheet">
+<link href="../assets/css/perfect-scrollbar.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js" type="text/javascript" async=""></script><script src="../assets/js/modernizr-2_5_3.js"></script>
+
+    <script src="../assets/js/jquery-3_7_1.js"></script>
+
+    <script src="../assets/js/bootstrap_bundle_min.js"></script>
+<script src="../assets/js/bootstrap-datetimepicker.js"></script>
+<script src="../assets/js/bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/resources_en-US.js"></script>
+
+    <script src="../assets/js/respond.js"></script>
+
+    <script src="../assets/js/bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/spin.js"></script><style type="text/css"></style>
+<script src="../assets/js/jquery_spin.js"></script>
+
+    <script src="../assets/js/moment.js"></script>
+
+    <script src="../assets/js/generalFunctions.js"></script>
+<script src="../assets/js/Validations.js"></script>
+<script src="../assets/js/js-cookie.js"></script>
+<script src="../assets/js/perfect-scrollbar_jquery.js"></script>
+<script src="../assets/js/perfect-scrollbar.js"></script>
+
+    <script src="../assets/js/dataTables_min.js"></script>
+
+    <script src="../assets/js/bootstrap-datetimepicker_fr.js"></script>
+
+
+    <script>
+        if (window.top !== window.self) {
+			window.location.href = '/Error/FrameError';
+		}
+    </script>
+<script>NS_CSM_td=276211774;NS_CSM_pd=275116656;NS_CSM_u="/clm10";NS_CSM_col="AAAAAAVPP8HwzM4Tl1QP09h3WFNxWQtgnIhxA3av9OJlqupqC0uK+rcQcS7g+qU0m1bZtu6KiTIdogbG/Bfh1lmAYUVB";</script><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,700&amp;subset=latin" media="all"><script type="text/javascript">function sendTimingInfoInit(){setTimeout(sendTimingInfo,0)}function sendTimingInfo(){var wp=window.performance;if(wp){var c1,c2,t;c1=wp.timing;if(c1){var cm={};cm.ns=c1.navigationStart;if((t=c1.unloadEventStart)>0)cm.us=t;if((t=c1.unloadEventEnd)>0)cm.ue=t;if((t=c1.redirectStart)>0)cm.rs=t;if((t=c1.redirectEnd)>0)cm.re=t;cm.fs=c1.fetchStart;cm.dls=c1.domainLookupStart;cm.dle=c1.domainLookupEnd;cm.cs=c1.connectStart;cm.ce=c1.connectEnd;if((t=c1.secureConnectionStart)>0)cm.scs=t;cm.rqs=c1.requestStart;cm.rss=c1.responseStart;cm.rse=c1.responseEnd;cm.dl=c1.domLoading;cm.di=c1.domInteractive;cm.dcls=c1.domContentLoadedEventStart;cm.dcle=c1.domContentLoadedEventEnd;cm.dc=c1.domComplete;if((t=c1.loadEventStart)>0)cm.ls=t;if((t=c1.loadEventEnd)>0)cm.le=t;cm.tid=NS_CSM_td;cm.pid=NS_CSM_pd;cm.ac=NS_CSM_col;var xhttp=new XMLHttpRequest();if(xhttp){var JSON=JSON||{};JSON.stringify=JSON.stringify||function(ob){var t=typeof(ob);if(t!="object"||ob===null){if(t=="string")ob='"'+ob+'"';return String(ob);}else{var n,v,json=[],arr=(ob&&ob.constructor==Array);for(n in ob){v=ob[n];t=typeof(v);if(t=="string")v='"'+v+'"';else if(t=="object"&&v!==null)v=JSON.stringify(v);json.push((arr?"":'"'+n+'":')+String(v));}return(arr?"[":"{")+String(json)+(arr?"]":"}");}};xhttp.open("POST",NS_CSM_u,true);xhttp.send(JSON.stringify(cm));}}}}if(window.addEventListener)window.addEventListener("load",sendTimingInfoInit,false);else if(window.attachEvent)window.attachEvent("onload",sendTimingInfoInit);else window.onload=sendTimingInfoInit;</script></head>
+
+<body>
+<script>
+ function string_to_array(str) {var len = str.length;var res = new Array(len);for(var i = 0; i < len; i++)res[i] = str.charCodeAt(i);return res;}function array_to_hex_string(ary) {var res = "";for(var i = 0; i < ary.length; i++)res += SHA256_hexchars[ary[i] >> 4] + SHA256_hexchars[ary[i] & 0x0f];return res;}function SHA256_init() {SHA256_H = new Array(0x6a09e667, 0xbb67ae85,0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19);SHA256_buf = new Array();SHA256_len = 0;}function SHA256_write(msg) {if (typeof(msg) == "string") SHA256_buf = SHA256_buf.concat(string_to_array(msg));else SHA256_buf = SHA256_buf.concat(msg); for(var i = 0; i + 64 <= SHA256_buf.length; i += 64) SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf.slice(i, i +64)); SHA256_buf = SHA256_buf.slice(i); SHA256_len += msg.length;}function SHA256_finalize() { SHA256_buf[SHA256_buf.length] = 0x80;  if (SHA256_buf.length > 64 - 8) {for(var i = SHA256_buf.length; i < 64; i++)SHA256_buf[i] = 0;SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf);SHA256_buf.length = 0;} for(var i = SHA256_buf.length; i < 64 - 5; i++)SHA256_buf[i] = 0;  SHA256_buf[59] =(SHA256_len >>> 29) & 0xff;  SHA256_buf[60] = (SHA256_len >>> 21) & 0xff;  SHA256_buf[61] = (SHA256_len >>> 13) & 0xff;  SHA256_buf[62] = (SHA256_len >>> 5) & 0xff;  SHA256_buf[63] = (SHA256_len << 3) & 0xff;  SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf);  var res = new Array(32);  for(var i = 0; i < 8; i++) {res[4 * i + 0] = SHA256_H[i] >>> 24; res[4 * i + 1] = (SHA256_H[i] >> 16) & 0xff; res[4 * i + 2] = (SHA256_H[i] >> 8) & 0xff; res[4 * i + 3] = SHA256_H[i] & 0xff; } delete SHA256_H; delete SHA256_buf; delete SHA256_len; return res;}function HMAC_SHA256_init(key) {  if (typeof(key) == "string") HMAC_SHA256_key = string_to_array(key);  else  HMAC_SHA256_key = new Array().concat(key);  if (HMAC_SHA256_key.length > 64) { SHA256_init(); SHA256_write(HMAC_SHA256_key); HMAC_SHA256_key = SHA256_finalize(); }  for(var i = HMAC_SHA256_key.length; i < 64; i++)  HMAC_SHA256_key[i] = 0; for(var i = 0; i < 64; i++) HMAC_SHA256_key[i] ^=  0x36;  SHA256_init(); SHA256_write(HMAC_SHA256_key);} function HMAC_SHA256_write(msg) {  SHA256_write(msg);} function HMAC_SHA256_finalize() {  var md = SHA256_finalize();  for(var i = 0; i < 64; i++) HMAC_SHA256_key[i] ^= 0x36 ^ 0x5c; SHA256_init(); SHA256_write(HMAC_SHA256_key); SHA256_write(md);  for(var i = 0; i < 64; i++)    HMAC_SHA256_key[i] = 0;  delete HMAC_SHA256_key;  return SHA256_finalize();}function HMAC_SHA256_MAC(key, msg) { var res;  HMAC_SHA256_init(key);  HMAC_SHA256_write(msg);  res = HMAC_SHA256_finalize();  return array_to_hex_string(res);} SHA256_hexchars = new Array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f');SHA256_K = new Array( 0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1,0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f,0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2); function SHA256_sigma0(x) { return ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);} function SHA256_sigma1(x) { return ((x >>> 17) | (x << 15)) ^ ((x >>> 19) | (x << 13)) ^ (x >>> 10);}function SHA256_Sigma0(x) { return ((x >>> 2) | (x << 30)) ^ ((x >>> 13) | (x << 19)) ^ ((x >>> 22) | (x << 10));}function SHA256_Sigma1(x) { return ((x >>> 6) | (x << 26)) ^ ((x >>> 11) | (x << 21)) ^ ((x >>> 25) | (x << 7));} function SHA256_Ch(x, y, z) { return z ^ (x & (y ^ z));} function SHA256_Maj(x, y, z) {return (x & y) ^ (z & (x ^ y));}function SHA256_Hash_Word_Block(H, W) { for(var i = 16; i < 64; i++)  W[i] = (SHA256_sigma1(W[i - 2]) +  W[i - 7] + SHA256_sigma0(W[i - 15]) + W[i - 16]) & 0xffffffff; var state = new Array().concat(H); for(var i = 0; i < 64; i++) {    var T1 = state[7] + SHA256_Sigma1(state[4]) + SHA256_Ch(state[4], state[5], state[6]) + SHA256_K[i] + W[i]; var T2 = SHA256_Sigma0(state[0]) + SHA256_Maj(state[0], state[1], state[2]); state.pop(); state.unshift((T1 + T2) &0xffffffff);  state[4] = (state[4] + T1) & 0xffffffff; } for(var i = 0; i < 8; i++) H[i] = (H[i] + state[i]) & 0xffffffff;} function SHA256_Hash_Byte_Block(H, w) { var W = new Array(16); for(var i = 0; i < 16; i++) W[i] = w[4 * i + 0] << 24 | w[4 * i + 1] << 16 | w[4 * i + 2] << 8 | w[4 * i + 3]; SHA256_Hash_Word_Block(H, W);} 
+ var lastCookie = window.name;
+ function getCookie(name) {
+       let cookie = {}; 
+            document.cookie.split(';').forEach(function(el) {
+                let cookiekv = el.split('=');
+           cookie[cookiekv[0].trim()] = cookiekv[1];
+            })
+           if (cookie.hasOwnProperty(name)) {
+               return cookie[name];
+                     }
+            return "";
+ };
+ var checkCookie = function() {
+       var token ="10121903894997676979";
+			    var seed = getCookie('citrix_ns_seed');
+      var currentCookie = document.cookie;
+         if (currentCookie != lastCookie || (lastCookie.length == 0)) {
+           console.log('cookie has changed');
+           var hash = HMAC_SHA256_MAC(seed, token);
+         document.cookie = 'MC=' + hash +'; Domain= .aglgroup.com';
+               lastCookie = currentCookie;
+          window.name = currentCookie;
+     }
+                    return true;
+ };
+ window.setInterval(checkCookie, 100);
+        </script>
+
+    <nav class="navbar navbar-expand-md navbar-inverse fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarFlagsMenu" aria-controls="navbarFlagsMenu" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <div class="logo-version">
+                    <a class="navbar-brand fontBalnc" href="/TICTC/Home"> </a>
+                </div>
+            </div>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarFlagsMenu">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+
+
+<form action="/TICTC/LogOff?LoginActionName=CustomerLogin" id="logoutForm" method="post">            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle fontBalnc menuUser" data-bs-toggle="dropdown"><span class="glyphicon glyphicon-user paddIcon"></span>Elloh ASSOUMAN<b class="caret"></b></a>
+                    <ul class="dropdown-menu menuUser">
+                            <li>
+                                <a id="linkMyProfile" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#ProfileModal" href="/TICTC/Customer/MyProfile">
+                                    <span class="bi bi-person-fill" aria-hidden="true"></span> Mon Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/TICTC/Payment/History">
+                                    <span class="bi bi-clock" aria-hidden="true"></span> Historique de paiement
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/TICTC/Account/ChangePassword">
+                                    <span class="bi bi-lock-fill" aria-hidden="true"></span> Changer le mot de passe
+                                </a>
+                            </li>
+                                <li>
+                                    <a class="dropdown-item" id="supportButton" data-bs-toggle="modal" data-bs-target="#supportDialog" href="/TICTC/Support/ShowSupportDialog">
+                                        <div><span class="bi bi-envelope-fill" aria-hidden="true"></span> Demander de l'assistance</div>
+                                    </a>
+                                </li>
+                        <li>
+                            <input name="__RequestVerificationToken" type="hidden" value="IbsUyvG2j9_ZmGoHMtyUAf_C6NFof6t7GeQsUpwXPMTbOPe7K5hjNIIsPbcGeRM5Is_xRnaYCOTLHmx2pNLJSJE2QgizPF0eyt3Iv6z-t3tYYPiw6V6_E3qC1OwZZtRxzQn8lE9V05poiRcQWn_4xg2">
+                            <a href="javascript:document.getElementById('logoutForm').submit()" class="dropdown-item"><span class="bi bi-box-arrow-right" aria-hidden="true"></span> Déconnecter</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+<input type="hidden" name="as_sfid" value="AAAAAAXR9ph1AxN8YTk-kxWbhr7m9xsKAxsH7pgn6DfmOLPbhOhRhDu4zzEebW_FSpFrJmW5PYd9g4V7wTK0dT1gs8EFO7XMb_DnEYfDkEovyaOFXEfge6on6_hMXIes_-3tkJzrAaYi4sKXVJaFsWdtaCA7xE0I2H2FfBPoFQ5PZZ_erg=="><input type="hidden" name="as_fid" value="c93046098d02421af144022a1e379e28363936b4"></form><script>
+    $('#supportButton').click(function () {
+        $('#supportDialogContent').load(this.href, function () {
+            $('#supportDialog').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    $('#linkMyProfile').click(function () {
+        $('#ProfileModalContent').load(this.href, function () {
+            $('#ProfileModal').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    
+
+</script>
+
+
+                        <div class="d-none d-md-block float-start">
+<form action="/Default/SetCulture" id="SetCultureForm" method="post"><span class="posFlags">
+                                    <span class="btn-group btn-group-xs">
+                                        <button type="submit" name="culture" id="en-us" value="en-us" class="btn btn-primary btn-sm">Anglais</button>
+                                        <button type="submit" name="culture" id="fr" value="fr" class="btn btn-primary btn-sm">Français</button>
+                                    </span>
+                                </span>
+<input type="hidden" name="as_sfid" value="AAAAAAUArZFDIt7cUuxKNlkm15I5Fqn-tfXVKFCXCgIQ5bbtZ10LvI5Ghj3nVtUogjv8OsasSz4lHkgp0YVwjB0L2bRl9Cr_wIKgepaNqIYKlb2vJYXt4wKN-Z6evkeXIqO9Xk6k1kgedGA8vUN1GrMJWnamR74x50pMCrJ1HKUb2zcmYQ=="><input type="hidden" name="as_fid" value="ef19abec64118f37f95bb86c78bda44fff3efba5"></form>                        </div>
+
+                    </li>
+                </ul>
+            </div>
+                <a href="/TICTC/Payment/PayInvoices">
+                    <div id="divShoppingCart" class="Shopping_cart">
+                        <span id="lblCartCount" class="txt_cart"></span>
+                    </div>
+                </a>
+            <div class="hidden-sm d-md-none d-lg-none">
+<form action="/Default/SetCulture" method="post"><span class="posFlags posFlagsCustomer">
+                        <span class="btn-group btn-group-xs">
+                                <button type="submit" name="culture" id="en-us" value="en-us" class="btn btn-primary btnLangMobile">EN</button>
+                        </span>
+                    </span>
+<input type="hidden" name="as_sfid" value="AAAAAAUmqPp-V1xwJq8iuUdAJxQig7ZhPke39Qsw0WE8DzBz_Y6-Sj_EU83dReUUCv7uaKLrxm2i1_Qf_U8aBFVTpenBr3L8TLZwxGdVtEfoP3x7FFKpfe9cwwzN2dVz1R86DR8MgS1XlnrkOOhXrTq045YTsTRiLQH34o35qNqkJ0ybDw=="><input type="hidden" name="as_fid" value="ba49adcc60ca9ce958d9f078149d378bebf7e9e5"></form>            </div>
+        </div>
+    </nav>
+
+    <div id="supportDialog" class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="supportModal" aria-hidden="true">
+        <div id="supportDialogContent" class="modal-dialog"></div>
+    </div>
+
+    <div id="ProfileModal" class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="myProfileModal" aria-hidden="true">
+        <div id="ProfileModalContent" class="modal-dialog"></div>
+    </div>
+
+    <div class="jumbotronCustomer hidden-xs" style="background-image: url(/Images/img_puerto.jpg);">
+        <div class="container transpCustomer">
+                <h2>TICT Clearing (Training)</h2>
+                <h4>TICT Clearing (Training)</h4>
+        </div>
+        <div style="text-align:right;">
+        </div>
+    </div>
+
+    <div id="supportAlerts">
+        
+
+
+
+    </div>
+
+    <div class="container FondBlanc content">
+        
+
+
+
+<input name="__RequestVerificationToken" type="hidden" value="JPjXtjdePRznSK9oJvHeyotm5whjn_pdmZUyIqCOMYxSImucBK652YQ74jHKmseSazvpSNebjWXEmcTgbgTLpYCEXVCxaXwjTQCdtgPEB5N_ONngD8Ohgmq9KLteHp6D9MIciG2eKXrjNHj_qMYtLg2">
+<div>
+    <h4 class="header_bl col-lg-12 pad_amount mt-1 mb-1">Panier de commande <span><img src="../assets/images/ico_cart2.jpg"></span></h4>
+</div>
+
+<div class="modal fade" id="modalCinetPay" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header d-flex justify-content-between">
+                <h4 class="modal-title">CinetPay Payment</h4>
+                <button id="modalCinetPayDismiss" type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <object id="cinetPayUrl" data=""></object>
+            </div>
+            <div class="modal-footer">
+                <button id="modalCinetPayClose" type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="col-lg-12">
+        <div class="alert alert-warning alert_separador" role="alert">
+            <h4 class="cart-subtitle" id="messageHeading">
+                <span class="bi bi-exclamation-triangle"></span> <b>Attention</b>
+                    <a class="anchorjs-link" href="#messageHeading">
+                        <span class="anchorjs-icon"></span>
+                    </a>
+                </h4>
+                <ul>
+                    <li>Le panier est vide</li>
+                </ul>
+                <br>
+                <p class="mb-0">
+                    <a href="/TICTC/Home" class="btn btn-default" type="button">Page d'accueil</a>
+                </p>
+            </div>
+        </div>
+
+<script>
+
+    $(document).ready(function () {
+        var rowsCount = $('#invoiceTable tr').length;
+
+        var paymentMethodsWithExtraCharge = []
+
+        $('.checkValidations').change(function () {
+            var conditionsAccepted = $('#check_conditions').is(":checked");
+            var continueButton = $('#btn_continue');
+            var anyMethodSelected = $('input[name=payment_method_group]:checked').length != 0;
+
+            if (anyMethodSelected && this.name == "payment_method_group") {
+                var paymentMethodId = parseInt($('input[name=payment_method_group]:checked').attr('id'));
+                var paymentHasExtraCharges = paymentMethodsWithExtraCharge.includes(paymentMethodId);
+                var invoiceId = $("#invoiceIdValue").first().val();
+                var count = $("[id='invoiceIdValue']").length;
+
+
+                if (paymentHasExtraCharges) {
+                    var token = $('input[name="__RequestVerificationToken"]').val();
+                    // call method to get extra charges value
+                    $.ajax({
+                        type: 'POST',
+                        url: '/TICTC/Payment/GetExtraChargeAmount',
+                        cache: false,
+                        data: {
+                            __RequestVerificationToken: token,
+                            invoiceId: invoiceId,
+                            paymentMethodId: paymentMethodId,
+                            itemsCount: count,
+                            totalInvoiceAmount: '0'
+                        },
+                        success: function (result) {
+                            if (result['extraChargeAmount'] == '0.00') {
+                                $('#extraChargesTable').hide();
+                                $('#totalAmount').text($("#totalInvoiceAmount").val());
+                            } else {
+                                var currencyCode = $('#currencyCode').val();
+                                $('#serviceChargeValue').text(result['extraChargeAmount'] + ' (' + currencyCode + ')');
+                                $('#amountValue').text(result['totalExtraChargeAmount'] + ' (' + currencyCode + ')');
+                                $('#totalAmount').text(result['totalAmount']);
+                                $('#extraChargesTable').show();
+                            }
+                        },
+                        error: function (message) {
+                            $('#extraChargesTable').hide();
+                            $('#totalAmount').text($("#totalInvoiceAmount").val());
+                        }
+                    });
+                }
+                else {
+                    $('#extraChargesTable').hide();
+                    $('#totalAmount').text($("#totalInvoiceAmount").val());
+                }
+            }
+            if (conditionsAccepted && anyMethodSelected && rowsCount > 1) {
+                continueButton.removeAttr('disabled');
+            } else {
+                continueButton.attr('disabled', 'disabled');
+            }
+        });
+
+        $('#invoiceTable').on("click", ".deleteInvoiceButton", function (event) {
+            $("#modalInvoiceDelete #confirmation").text($(this).data("confirmation"));
+            $("#modalInvoiceDelete #invoiceId").val($(this).data("invoiceid"));
+            $("#modalInvoiceDelete #invoiceNumber").val($(this).data("invoicenumber"));
+            $('#modalInvoiceDelete').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+
+        $("#invoiceTable tr:even").addClass("even");
+        $("#invoiceTable tr:odd").addClass("odd");
+
+        $('#modalCinetPay').on('shown.bs.modal', function (e) {
+            if (window.history && window.history.pushState) {
+                var url = window.location;
+                window.history.pushState('forward', null, url + '/#');
+                $(window).on('popstate', function () {
+                    window.history.replaceState(null, null, url);
+                    modalCinetPayDismiss();
+                });
+            }
+        });
+    });
+
+    $('#btn_continue').click(function () {
+        var anyMethodSelected = $('input[name=payment_method_group]:checked').length != 0;
+        if (anyMethodSelected) {
+            var paymentMethodSelectedId = $('input[name=payment_method_group]:checked').attr('id');
+            $("#paymentMethodIdSelected").val(paymentMethodSelectedId);
+            var paymentMethodSelected = $('input[name=payment_method_group]:checked').val();
+
+            if (paymentMethodSelected == 'CinetPay' || paymentMethodSelected == 'InTouch') {
+                var url = "/TICTC/Controller/GeneratePayment";
+                url = url.replace("Controller", paymentMethodSelected);
+
+				$.ajax({
+					url: url,
+					type: "get",
+					data: { paymentMethodId: paymentMethodSelectedId },
+					async: false,
+                    success: function (result) {
+                        console.log(result);
+                        console.log(paymentMethodSelected);
+                        if (result.containsErrors) {
+                            window.location.href = result.redirectTo;
+                        }
+                        else {
+                            if (paymentMethodSelected == 'CinetPay') {
+								modalCinetPayRaise(result.urlPayment);
+                            }
+                            //intouch
+                            else {
+                                modalInTouchRaise(result);
+                            }
+                        }
+					},
+					error: function (error) {
+						console.log(error);
+					}
+				});
+            }
+            else {
+                var url = "/TICTC/Controller/PayInvoices";
+                url = url.replace("Controller", paymentMethodSelected);
+
+                $('#payInvoiceForm').attr('action', url);
+                $('#payInvoiceForm').submit();
+            }
+        }
+    });
+
+    function modalInTouchRaise(result) {
+        var urlAction = "/TICTC/Payment/PaymentExit";
+        $('#payInvoiceForm').attr('action', urlAction + "?cartId=" + result.cartId);
+        $('#payInvoiceForm').submit();
+
+        sendPaymentInfos(
+            result.cartId,
+            result.agenceCode,
+            result.secureCode,
+            result.domainName,
+            result.successNotificationUrl,
+            result.failNotificationUrl,
+            result.amount);
+    }
+
+    function modalCinetPayRaise(urlPayment) {
+		$(".modal-body #cinetPayUrl").attr('data', urlPayment);
+		$('#modalCinetPay').modal({
+			keyboard: false,
+			backdrop: 'static'
+		});
+    }
+
+    function modalCinetPayDismiss() {
+        var url = "/TICTC/Payment/PaymentExit";
+        $('#payInvoiceForm').attr('action', url + "?cartId=" + $("#cartId").val());
+        $('#payInvoiceForm').submit();
+    }
+
+
+    $('#modalCinetPayDismiss, #modalCinetPayClose').click(function () {
+		modalCinetPayDismiss();
+    });
+
+    $('#btn_collapse').click(function () {
+        $('#span_collapse_sign').toggleClass("bi bi-plus-circle-fill bi bi-dash-circle-fill");
+    });
+</script>
+    </div>
+    <footer class="container FondBlanc pt-3">
+        <hr>
+        <p class="logo">© 2025 AGL Group<img src="../assets/images/ipk_logo2.jpg" class="logoFooter"></p>
+    </footer>
+    
+
+    <script>
+        $(document).ready(function () {
+            bindCartCount();
+        });
+
+        function bindCartCount() {
+            $.ajax({
+                type: 'POST',
+                url: '/TICTC/Cart/GetCurrentUserCartCount',
+                cache: false,
+                datatype: 'json',
+                contentType: 'application/json',
+                success: function (result) {
+                    $('#lblCartCount').text(result['ItemCount']);
+                },
+                error: function (message) {
+                    $('#lblCartCount').text('0');
+                }
+            });
+        }
+    </script>
+
+
+
+
+</body></html>

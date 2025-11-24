@@ -1,0 +1,1377 @@
+<!DOCTYPE html><html class="js no-flexbox flexbox-legacy canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers no-applicationcache svg inlinesvg smil svgclippaths wf-nunitosans-n4-active wf-nunitosans-n7-active wf-active"><head>
+    <meta charset="utf-8">
+    <title>Ipaki Extranet</title>
+    <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon">
+
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0">
+
+    <link href="../assets/css/dataTables.css" rel="stylesheet">
+
+    <link href="../assets/css/bootstrap.css" rel="stylesheet">
+<link href="../assets/css/bootstrap_rtl.css" rel="stylesheet">
+
+    <link href="../assets/css/bootstrap-icons_min.css" rel="stylesheet">
+
+    
+    <link href="../assets/css/bootstrap-datetimepicker.css" rel="stylesheet">
+
+    <link href="../assets/css/captcha-stylesheet.css" rel="stylesheet">
+
+    <link href="../assets/css/fontawesome-all.css" rel="stylesheet">
+<link href="../assets/css/sassStyle.css" rel="stylesheet">
+<link href="../assets/css/perfect-scrollbar.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js" type="text/javascript" async=""></script><script src="../assets/js/modernizr-2_5_3.js"></script>
+
+    <script src="../assets/js/jquery-3_7_1.js"></script>
+
+    <script src="../assets/js/bootstrap_bundle_min.js"></script>
+<script src="../assets/js/bootstrap-datetimepicker.js"></script>
+<script src="../assets/js/bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/resources_en-US.js"></script>
+
+    <script src="../assets/js/respond.js"></script>
+
+    <script src="../assets/js/bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/spin.js"></script><style type="text/css"></style>
+<script src="../assets/js/jquery_spin.js"></script>
+
+    <script src="../assets/js/moment.js"></script>
+
+    <script src="../assets/js/generalFunctions.js"></script>
+<script src="../assets/js/Validations.js"></script>
+<script src="../assets/js/js-cookie.js"></script>
+<script src="../assets/js/perfect-scrollbar_jquery.js"></script>
+<script src="../assets/js/perfect-scrollbar.js"></script>
+
+    <script src="../assets/js/dataTables_min.js"></script>
+
+    <script src="../assets/js/bootstrap-datetimepicker_fr.js"></script>
+
+
+    <script>
+        if (window.top !== window.self) {
+			window.location.href = '/Error/FrameError';
+		}
+    </script>
+<script>NS_CSM_td=275811944;NS_CSM_pd=275116665;NS_CSM_u="/clm10";NS_CSM_col="AAAAAAVJLNmcAkss2PCwRCgdFbdKEnhyAWCByhPQ8yBxZmQnlqDOl3zOdEoAt9Tv/M8qHCTjUX4r5kYoSQcR9iuAC5SN";</script><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,700&amp;subset=latin" media="all"><script type="text/javascript">function sendTimingInfoInit(){setTimeout(sendTimingInfo,0)}function sendTimingInfo(){var wp=window.performance;if(wp){var c1,c2,t;c1=wp.timing;if(c1){var cm={};cm.ns=c1.navigationStart;if((t=c1.unloadEventStart)>0)cm.us=t;if((t=c1.unloadEventEnd)>0)cm.ue=t;if((t=c1.redirectStart)>0)cm.rs=t;if((t=c1.redirectEnd)>0)cm.re=t;cm.fs=c1.fetchStart;cm.dls=c1.domainLookupStart;cm.dle=c1.domainLookupEnd;cm.cs=c1.connectStart;cm.ce=c1.connectEnd;if((t=c1.secureConnectionStart)>0)cm.scs=t;cm.rqs=c1.requestStart;cm.rss=c1.responseStart;cm.rse=c1.responseEnd;cm.dl=c1.domLoading;cm.di=c1.domInteractive;cm.dcls=c1.domContentLoadedEventStart;cm.dcle=c1.domContentLoadedEventEnd;cm.dc=c1.domComplete;if((t=c1.loadEventStart)>0)cm.ls=t;if((t=c1.loadEventEnd)>0)cm.le=t;cm.tid=NS_CSM_td;cm.pid=NS_CSM_pd;cm.ac=NS_CSM_col;var xhttp=new XMLHttpRequest();if(xhttp){var JSON=JSON||{};JSON.stringify=JSON.stringify||function(ob){var t=typeof(ob);if(t!="object"||ob===null){if(t=="string")ob='"'+ob+'"';return String(ob);}else{var n,v,json=[],arr=(ob&&ob.constructor==Array);for(n in ob){v=ob[n];t=typeof(v);if(t=="string")v='"'+v+'"';else if(t=="object"&&v!==null)v=JSON.stringify(v);json.push((arr?"":'"'+n+'":')+String(v));}return(arr?"[":"{")+String(json)+(arr?"]":"}");}};xhttp.open("POST",NS_CSM_u,true);xhttp.send(JSON.stringify(cm));}}}}if(window.addEventListener)window.addEventListener("load",sendTimingInfoInit,false);else if(window.attachEvent)window.attachEvent("onload",sendTimingInfoInit);else window.onload=sendTimingInfoInit;</script></head>
+
+<body>
+<script>
+ function string_to_array(str) {var len = str.length;var res = new Array(len);for(var i = 0; i < len; i++)res[i] = str.charCodeAt(i);return res;}function array_to_hex_string(ary) {var res = "";for(var i = 0; i < ary.length; i++)res += SHA256_hexchars[ary[i] >> 4] + SHA256_hexchars[ary[i] & 0x0f];return res;}function SHA256_init() {SHA256_H = new Array(0x6a09e667, 0xbb67ae85,0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19);SHA256_buf = new Array();SHA256_len = 0;}function SHA256_write(msg) {if (typeof(msg) == "string") SHA256_buf = SHA256_buf.concat(string_to_array(msg));else SHA256_buf = SHA256_buf.concat(msg); for(var i = 0; i + 64 <= SHA256_buf.length; i += 64) SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf.slice(i, i +64)); SHA256_buf = SHA256_buf.slice(i); SHA256_len += msg.length;}function SHA256_finalize() { SHA256_buf[SHA256_buf.length] = 0x80;  if (SHA256_buf.length > 64 - 8) {for(var i = SHA256_buf.length; i < 64; i++)SHA256_buf[i] = 0;SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf);SHA256_buf.length = 0;} for(var i = SHA256_buf.length; i < 64 - 5; i++)SHA256_buf[i] = 0;  SHA256_buf[59] =(SHA256_len >>> 29) & 0xff;  SHA256_buf[60] = (SHA256_len >>> 21) & 0xff;  SHA256_buf[61] = (SHA256_len >>> 13) & 0xff;  SHA256_buf[62] = (SHA256_len >>> 5) & 0xff;  SHA256_buf[63] = (SHA256_len << 3) & 0xff;  SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf);  var res = new Array(32);  for(var i = 0; i < 8; i++) {res[4 * i + 0] = SHA256_H[i] >>> 24; res[4 * i + 1] = (SHA256_H[i] >> 16) & 0xff; res[4 * i + 2] = (SHA256_H[i] >> 8) & 0xff; res[4 * i + 3] = SHA256_H[i] & 0xff; } delete SHA256_H; delete SHA256_buf; delete SHA256_len; return res;}function HMAC_SHA256_init(key) {  if (typeof(key) == "string") HMAC_SHA256_key = string_to_array(key);  else  HMAC_SHA256_key = new Array().concat(key);  if (HMAC_SHA256_key.length > 64) { SHA256_init(); SHA256_write(HMAC_SHA256_key); HMAC_SHA256_key = SHA256_finalize(); }  for(var i = HMAC_SHA256_key.length; i < 64; i++)  HMAC_SHA256_key[i] = 0; for(var i = 0; i < 64; i++) HMAC_SHA256_key[i] ^=  0x36;  SHA256_init(); SHA256_write(HMAC_SHA256_key);} function HMAC_SHA256_write(msg) {  SHA256_write(msg);} function HMAC_SHA256_finalize() {  var md = SHA256_finalize();  for(var i = 0; i < 64; i++) HMAC_SHA256_key[i] ^= 0x36 ^ 0x5c; SHA256_init(); SHA256_write(HMAC_SHA256_key); SHA256_write(md);  for(var i = 0; i < 64; i++)    HMAC_SHA256_key[i] = 0;  delete HMAC_SHA256_key;  return SHA256_finalize();}function HMAC_SHA256_MAC(key, msg) { var res;  HMAC_SHA256_init(key);  HMAC_SHA256_write(msg);  res = HMAC_SHA256_finalize();  return array_to_hex_string(res);} SHA256_hexchars = new Array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f');SHA256_K = new Array( 0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1,0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f,0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2); function SHA256_sigma0(x) { return ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);} function SHA256_sigma1(x) { return ((x >>> 17) | (x << 15)) ^ ((x >>> 19) | (x << 13)) ^ (x >>> 10);}function SHA256_Sigma0(x) { return ((x >>> 2) | (x << 30)) ^ ((x >>> 13) | (x << 19)) ^ ((x >>> 22) | (x << 10));}function SHA256_Sigma1(x) { return ((x >>> 6) | (x << 26)) ^ ((x >>> 11) | (x << 21)) ^ ((x >>> 25) | (x << 7));} function SHA256_Ch(x, y, z) { return z ^ (x & (y ^ z));} function SHA256_Maj(x, y, z) {return (x & y) ^ (z & (x ^ y));}function SHA256_Hash_Word_Block(H, W) { for(var i = 16; i < 64; i++)  W[i] = (SHA256_sigma1(W[i - 2]) +  W[i - 7] + SHA256_sigma0(W[i - 15]) + W[i - 16]) & 0xffffffff; var state = new Array().concat(H); for(var i = 0; i < 64; i++) {    var T1 = state[7] + SHA256_Sigma1(state[4]) + SHA256_Ch(state[4], state[5], state[6]) + SHA256_K[i] + W[i]; var T2 = SHA256_Sigma0(state[0]) + SHA256_Maj(state[0], state[1], state[2]); state.pop(); state.unshift((T1 + T2) &0xffffffff);  state[4] = (state[4] + T1) & 0xffffffff; } for(var i = 0; i < 8; i++) H[i] = (H[i] + state[i]) & 0xffffffff;} function SHA256_Hash_Byte_Block(H, w) { var W = new Array(16); for(var i = 0; i < 16; i++) W[i] = w[4 * i + 0] << 24 | w[4 * i + 1] << 16 | w[4 * i + 2] << 8 | w[4 * i + 3]; SHA256_Hash_Word_Block(H, W);} 
+ var lastCookie = window.name;
+ function getCookie(name) {
+       let cookie = {}; 
+            document.cookie.split(';').forEach(function(el) {
+                let cookiekv = el.split('=');
+           cookie[cookiekv[0].trim()] = cookiekv[1];
+            })
+           if (cookie.hasOwnProperty(name)) {
+               return cookie[name];
+                     }
+            return "";
+ };
+ var checkCookie = function() {
+       var token ="7067722647229789059";
+			    var seed = getCookie('citrix_ns_seed');
+      var currentCookie = document.cookie;
+         if (currentCookie != lastCookie || (lastCookie.length == 0)) {
+           console.log('cookie has changed');
+           var hash = HMAC_SHA256_MAC(seed, token);
+         document.cookie = 'MC=' + hash +'; Domain= .aglgroup.com';
+               lastCookie = currentCookie;
+          window.name = currentCookie;
+     }
+                    return true;
+ };
+ window.setInterval(checkCookie, 100);
+        </script>
+
+    <nav class="navbar navbar-expand-md navbar-inverse fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarFlagsMenu" aria-controls="navbarFlagsMenu" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <div class="logo-version">
+                    <a class="navbar-brand fontBalnc" href="/TICTC/Home"> </a>
+                </div>
+            </div>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarFlagsMenu">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+
+
+<form action="/TICTC/LogOff?LoginActionName=CustomerLogin" id="logoutForm" method="post">            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle fontBalnc menuUser" data-bs-toggle="dropdown"><span class="glyphicon glyphicon-user paddIcon"></span>Elloh ASSOUMAN<b class="caret"></b></a>
+                    <ul class="dropdown-menu menuUser">
+                            <li>
+                                <a id="linkMyProfile" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#ProfileModal" href="/TICTC/Customer/MyProfile">
+                                    <span class="bi bi-person-fill" aria-hidden="true"></span> Mon Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/TICTC/Payment/History">
+                                    <span class="bi bi-clock" aria-hidden="true"></span> Historique de paiement
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/TICTC/Account/ChangePassword">
+                                    <span class="bi bi-lock-fill" aria-hidden="true"></span> Changer le mot de passe
+                                </a>
+                            </li>
+                                <li>
+                                    <a class="dropdown-item" id="supportButton" data-bs-toggle="modal" data-bs-target="#supportDialog" href="/TICTC/Support/ShowSupportDialog">
+                                        <div><span class="bi bi-envelope-fill" aria-hidden="true"></span> Demander de l'assistance</div>
+                                    </a>
+                                </li>
+                        <li>
+                            <input name="__RequestVerificationToken" type="hidden" value="9ZTtG-AR07qzZzdMNc5cUKDalk6yYfQUGbaRoLq7wBUp3NqIBNd7qjy7_roIbL16QCawFcG8FvpXwAkYTjyfkxGU8C4hDR34sCY9d9w5_DTews9T1uPFGhhkoXn5ZSebp8Ek3vQlmiWmnQVs0tPdug2">
+                            <a href="javascript:document.getElementById('logoutForm').submit()" class="dropdown-item"><span class="bi bi-box-arrow-right" aria-hidden="true"></span> Déconnecter</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+<input type="hidden" name="as_sfid" value="AAAAAAWKZTJZY2nQeM34DIvHEldFlRSoRsQsKYT6tj517KuymwaboSuEPa2XPjQjRR0tZK9WRwei5n1raDQRzFhxH5msGBijdEDNR_4VzZbzjRstrfnS3m0PiwB2FcxcVtasA1XBI9ZEg61wSFcXOXKdNu9wgG2mtVZkFWd9wKntZU5uHg=="><input type="hidden" name="as_fid" value="3ac2b3940365af90337b5440bb7454bbc02816aa"></form><script>
+    $('#supportButton').click(function () {
+        $('#supportDialogContent').load(this.href, function () {
+            $('#supportDialog').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    $('#linkMyProfile').click(function () {
+        $('#ProfileModalContent').load(this.href, function () {
+            $('#ProfileModal').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    
+
+</script>
+
+
+                        <div class="d-none d-md-block float-start">
+<form action="/Default/SetCulture" id="SetCultureForm" method="post"><span class="posFlags">
+                                    <span class="btn-group btn-group-xs">
+                                        <button type="submit" name="culture" id="en-us" value="en-us" class="btn btn-primary btn-sm">Anglais</button>
+                                        <button type="submit" name="culture" id="fr" value="fr" class="btn btn-primary btn-sm">Français</button>
+                                    </span>
+                                </span>
+<input type="hidden" name="as_sfid" value="AAAAAAXrGC9ZoKydwg4ByhZO6UwNngVVCdNCq5GXuTN-938b_V6PPbDfIOm0Udsn7AxGxvu1hMrFPDlH6AcVhnghig2E87DicS3f6EH7SCjGLxlyKrqRE9jVGHruCHI8xEdAF0mxLVQd7SrVyx7EY4ij2ghRqfRdD5oFOyTGChDUbETSWg=="><input type="hidden" name="as_fid" value="401b06c483d4961caaedb1e373789e01ac00b8ee"></form>                        </div>
+
+                    </li>
+                </ul>
+            </div>
+                <a href="/TICTC/Payment/PayInvoices">
+                    <div id="divShoppingCart" class="Shopping_cart">
+                        <span id="lblCartCount" class="txt_cart"></span>
+                    </div>
+                </a>
+            <div class="hidden-sm d-md-none d-lg-none">
+<form action="/Default/SetCulture" method="post"><span class="posFlags posFlagsCustomer">
+                        <span class="btn-group btn-group-xs">
+                                <button type="submit" name="culture" id="en-us" value="en-us" class="btn btn-primary btnLangMobile">EN</button>
+                        </span>
+                    </span>
+<input type="hidden" name="as_sfid" value="AAAAAAWDfBqLnLsQexUHBQrtSaXGu2A-XMuKnGxXuBtVsbhB0q3D1v52eB4PQBxUFLvJXCBd5pXN6Bia9IaPRXxjgt8axEzCLht29mOgyxAAlzaFKUrGKBM2VjekL6m24bDmK8bS0-3C0kN--KNXTjRGoGWTdnPiqUZbze6VT-QnKQXvMQ=="><input type="hidden" name="as_fid" value="e0cf2daed5b0b5bd40c799f93a561e6f3c14a6e2"></form>            </div>
+        </div>
+    </nav>
+
+    <div id="supportDialog" class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="supportModal" aria-hidden="true">
+        <div id="supportDialogContent" class="modal-dialog"></div>
+    </div>
+
+    <div id="ProfileModal" class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="myProfileModal" aria-hidden="true">
+        <div id="ProfileModalContent" class="modal-dialog"></div>
+    </div>
+
+    <div class="jumbotronCustomer hidden-xs" style="background-image: url(/Images/img_puerto.jpg);">
+        <div class="container transpCustomer">
+                <h2>TICT Clearing (Training)</h2>
+                <h4>TICT Clearing (Training)</h4>
+        </div>
+        <div style="text-align:right;">
+        </div>
+    </div>
+
+    <div id="supportAlerts">
+        
+
+
+
+    </div>
+
+    <div class="container FondBlanc content">
+        
+
+<div id="wrapper" class="toggled">
+    <div id="page-content-wrapper">
+
+
+	<div class="alert alert-danger alrt_pad d-flex justify-content-between" role="alert">
+		<div>
+			<span class="bi bi-exclamation-circle-fill" aria-hidden="true"></span>
+			<b>Attention!</b>
+			<p style="white-space: pre-line; overflow:hidden">L'utilisateur ne peut accéder à la facture car le client facturé ne figure pas dans la liste des clients assignés à cet utilisateur</p>
+		</div>
+		<div>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"><span class="sr-only">Close</span></button>
+		</div>
+	</div>
+
+<div id="divError" class="alert alert-danger alrt_pad" role="alert" style="display:none;">
+	<div class="d-flex justify-content-between">
+		<div>
+			<span class="fas fa-exclamation-circle" aria-hidden="true"></span>
+			<b>Attention!</b>
+			<span id="spanError"></span>
+		</div>
+		<div>
+			<button type="button" class="btn-close" aria-label="Close" onclick="$('#divError').hide();"></button>
+		</div>
+	</div>
+</div>
+
+
+        <input name="__RequestVerificationToken" type="hidden" value="Lx_q-LtHDdkuV5RitAd67IydRKkkPKwEKmBt6GlDGfPL0fcaktUbygfuQBck9z3iL7W2XDffAPsx1PUpsTQKZxCoCy6FWRhQDLOCI442F77lZdVvwL-xoZOvee3vzHvA_X8YSBc7hya7WqR6mqUXhg2">
+        <div class="header_bl4">
+            <div class="row">
+                <div class="col-10 num_Bl">
+                    <h2 class="tit_bl left-padding titleBlSummaryMobile">BL MEDUDM992142</h2>
+                </div>
+                <div class="col-2 Bl_hist_btn side-padding" style=" cursor:pointer;">
+                    <a href="/TICTC/Home" title="Retour à la Recherche">
+                        <h4 class="col_link">
+                            <span class="fas fa-arrow-circle-left" aria-hidden="true"></span>
+                            <span class="d-none d-lg-inline">Retour à la Recherche</span>
+                        </h4>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modalConfirmValidate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<form action="/TICTC/Invoice/ValidateProforma" id="formValidateProforma" method="post" role="form"><input id="invoiceId" name="invoiceId" type="hidden" value=""><input id="currencyCode" name="currencyCode" type="hidden" value="">                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header d-flex justify-content-between">
+                            <h4 class="modal-title" id="myModalLabel">Validation de Proforma </h4>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body txt_comment">
+                            <span class="txt_comment">Etes-vous sûr de vouloir valider cette proforma?</span>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-bs-dismiss="modal" id="btnValidateProformaClose">Fermer</button>
+                            <button type="button" class="btn btn-primary btn_verde" id="btnValidateProformaConfirm">Valider</button>
+                        </div>
+                    </div>
+                </div>
+<input type="hidden" name="as_sfid" value="AAAAAAW26anbe63ZOK_uNWQAJrZC_5NVwEIzyTWEz7xTkrgar8zSoRvVAlPd8cUuhCTf8oy5DqmieQbOFAq6T9wxQdXL0Z4Nm0W_lw0wF67cCpGVFb2AOfJKwhULiHvKaC5yFGQ40aLbQ4ce5oJ-VbZRf2944X4AdrSlz5s8j6lt4ppUYA=="><input type="hidden" name="as_fid" value="4f6d8a12e0019a05eb0526a4acafbba6102c0e84"></form>        </div>
+
+        <div class="modal fade" id="modalConfirmDelete" tabindex="-1" role="dialog" aria-labelledby="modalConfirmDeleteLabel" aria-hidden="true">
+<form action="/TICTC/Invoice/DeleteProforma" id="formDeleteProforma" method="post" role="form"><input name="__RequestVerificationToken" type="hidden" value="q-BPT_Riy6Mgi4sxb-c6Qqd0W9uxRlAMZueaRq-uRWxS4VF8zTFNQ05r_pygHye_qlPhS5KmQNeIKbql4EVkH3YoOsaw0L_eouTkpUAlebdpRprXIJkLbABSrtOjLLlnfS8DrU_U1rqwb8kij5tk9g2"><input id="invoiceId" name="invoiceId" type="hidden" value="">                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header d-flex justify-content-between">
+                            <h4 class="modal-title" id="modalConfirmDeleteLabel">Supprimer proforma</h4>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body txt_comment">
+                            <span class="txt_comment">Etes-vous sûr de vouloir supprimer cette proforma?</span>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-bs-dismiss="modal" id="btnDeleteProformaClose">Fermer</button>
+                            <button type="button" class="btn btn-primary btn_verde" id="btnDeleteProformaConfirm">Valider</button>
+                        </div>
+                    </div>
+                </div>
+<input type="hidden" name="as_sfid" value="AAAAAAXXnOsa6EaW87_1xy0Ts-Y6aiaogmiFGhRVpccY1GcFK-L6IPXflzClGgOnAkL_OwPckSE2I_8Pj9Oayuj6YGnApM0E7OekxbuPEP59fHCGfRY2VeFw3xj2xVVsPALz8-qgJxJvftZ5vwWxb1oZr5zGoq-b7g1ZnrQN-6bu_qEm3g=="><input type="hidden" name="as_fid" value="bb2e57532f26a144005638d404c48b349f0fe21f"></form>        </div>
+
+        <div class="modal fade" id="EventsModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div id="EventModalContent" class="modal-dialog">
+
+            </div>
+        </div>
+
+        <div class="modal fade" id="modalExtendedStorage" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+
+
+<form action="/TICTC/Invoice/ExtendStorage" id="formExtendStorage" method="post" role="form"><input name="__RequestVerificationToken" type="hidden" value="qF8o6rVgcYVvVRrtCD8W3gdXY-DDxxq2vbdC50C7kR1UqoDLBsNF8Kcstyrc4UZseOD3yvIa4bqfWsSQEoR8FKYe1bKLwmkPLD5MxhbQ8k4dx9b913JokZ0KIxCxBFF5g1FQnb2-YJnogyEgEqjOuQ2"><input id="invoiceId" name="invoiceId" type="hidden" value=""><input id="blNumber" name="blNumber" type="hidden" value=""><input id="yardItemIds" name="yardItemIds" type="hidden" value=""><input id="yardItemNumbers" name="yardItemNumbers" type="hidden" value=""><input id="journalType" name="journalType" type="hidden" value=""><input id="blId" name="blId" type="hidden" value="792416">    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert-dismissible-right">
+                <h4 class="modal-title" id="myModalLabel">Prolonger le stationnement </h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="divError" class="alert alert-danger alrt_pad alert-dismissible-right" role="alert" style="display: none;">
+                    <span class="bi bi-exclamation-circle-fill" aria-hidden="true"></span> <strong> Rappeler.</strong> Merci d'entrer une date valide 
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="$('#formExtendStorage #divError').hide();">
+                    </button>
+                </div>
+
+                <div id="divRemember" class="alert alert-warning alert-dismissible-right" role="alert">
+                    <div class="w-75 alert-row-col">
+                        <span class="bi bi-info-circle-fill" aria-hidden="true"></span>
+                        <strong> Rappeler .</strong> En prolongeant le stationnement, une facture additionnelle sera créée
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div class="row pad_label">
+                    <div class="col-lg-3 txt_modal">
+                        Nouvelle date d'enlèvement:
+                    </div>
+                    <div class="col-lg-8">
+                        <div id="datetimepickerStorage" class="input-group date" data-link-field="dtp_input1">
+                            <input class="form-control" id="BillingDate" name="BillingDate" size="16" type="text" value="" placeholder="dd/MM/yyyy">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                        </div>
+                    </div>
+                    <span class="glyphicon glyphicon-question-sign question hidden-xs hidden-sm hidden-md" aria-hidden="true" data-toggle="tooltip" data-placement="left" title="La date doit être supérieure à la date d'enlèvement initiale"></span>
+                </div>
+
+
+                <div class="row pad_BLGroup">
+                    <h4 class="col-lg-12 bottomLine2 YI_list_marg">Liste de Yard Items</h4>
+                </div>
+                <table class="display table-striped dataTable tabla" id="yardItemsExtendedTable" style="width: 100%;">
+                    <thead class="thead_BL">
+                        <tr role="row">
+                            <th role="columnheader" tabindex="0" aria-controls="proformaTable_85887" rowspan="1" colspan="1" aria-sort="ascending" aria-label="Numéro de Yard Item: Activer pour trier dans un ordre descendant" style="width: 60px;">Numéro de Yard Item</th>
+                            <th role="columnheader" tabindex="0" aria-controls="proformaTable_85887" rowspan="1" colspan="1" aria-label="Description: Activer pour trier dans un ordre ascendant " style="width: 60px;">Type</th>
+                            <th class="hidden-xs" role="columnheader" tabindex="0" aria-controls="proformaTable_85887" rowspan="1" colspan="1" aria-label="Description: Activer pour trier dans un ordre ascendant " style="width: 60px;">Détail</th>
+                        </tr>
+                    </thead>
+                    <tbody role="alert" aria-live="polite" aria-relevant="all"></tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button id="btnExtendStorageClose" type="button" class="btn btn-default actionButton" data-bs-dismiss="modal">Fermer</button>
+                <button id="btnExtendStorageExtend" type="button" class="btn btn-primary actionButton">Prolonger </button>
+            </div>
+        </div>
+    </div>
+<input type="hidden" name="as_sfid" value="AAAAAAUNMPCQTsvJ-AtP8PKyjrOG6whk3MwVlFUvq0B5hI_N7oOIYToSMPA7VPm31JOK9tejO1us0BqBYmqPeTr_UZSGDXLMkDTtDzX672PTUQEy3HRAtgnvjd3--Ky8DRHF6QdHMgYMnNl3U2w-Swm08BcoLl6pH5DMih3gvuxX4nUKRw=="><input type="hidden" name="as_fid" value="3a77ec7283f553651f622f1a1d7e55a5d382715d"></form>
+<script type="text/javascript">
+    var billingDate;
+    $(document).ready(function () {
+
+        $("#datetimepickerStorage").datetimepicker({
+            weekStart: 1,
+            todayBtn: 1,
+            autoclose: 1,
+            todayHighlight: 1,
+            minuteStep: 30,
+            forceParse: 0,
+            minView: 2,
+            format: 'dd/mm/yyyy',
+            language: 'fr',
+            pickerPosition: 'bottom-left',
+        });
+
+        $("#datetimepickerStorage input").attr("placeholder", 'dd/MM/yyyy');
+
+        $(".datetimepicker-days").click(function () {
+            $(".datetimepicker-hours .table-condensed tfoot").remove();
+            $(".datetimepicker-minutes .table-condensed tfoot").remove();
+        });
+
+        $("#datetimepickerStorage").datetimepicker().on('show.bs.modal', function (event) {
+            event.stopPropagation();
+        });
+
+        $('#modalExtendedStorage').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var invoiceId = button.data('invoiceid');
+            var blNumber = button.data('blnumber');
+            billingDate = button.data('billingdate');
+            var journalType = button.data('journaltype');
+            $("#blNumber").val(blNumber);
+            $("#modalExtendedStorage #invoiceId").val(invoiceId);
+            $("#modalExtendedStorage #BillingDate").val(billingDate);
+            $("#modalExtendedStorage #journalType").val(journalType);
+            $('#yardItemsExtendedTable > tbody > tr:first').remove();
+
+            GetYardItemsByInvoiceId(invoiceId);
+        });
+
+        $('#modalExtendedStorage').on('hidden.bs.modal', function () {
+            $(this).removeData('bs.modal');
+            $("#yardItemsExtendedTable > tbody").html("");
+            $("#formExtendStorage #divError").hide();
+            $("#formExtendStorage #divRemember").show();
+        });
+
+        function Required(value) {
+            return value != null && value != "";
+        }
+
+        function ParseDateTime(value) {
+            var parsedDateTime = moment(value, "DD-MM-YYYY");
+            return parsedDateTime;
+        }
+
+        function isValidDate(date) {
+            var oldBillingDate = ParseDateTime(billingDate);
+            var newBillingDate = ParseDateTime(date);
+            return newBillingDate > oldBillingDate;
+        }
+
+        function IsValidBillingDate() {
+            var isValid = true;
+            isValid = Required($("#modalExtendedStorage #BillingDate").val());
+
+            //isValid = isValid && isValidDate($("#modalExtendedStorage #BillingDate").val());
+            return isValid;
+        }
+
+        $('#btnExtendStorageExtend').click(function () {
+            if (IsValidBillingDate()) {
+                $.blockScreen();
+
+                $('.actionButton').attr('disabled', 'disabled');
+                $('#formExtendStorage').submit();
+            } else {
+                $("#formExtendStorage #divError").show();
+                $("#formExtendStorage #divRemember").hide();
+                return false;
+            }
+            return true;
+        });
+    });
+
+    function GetYardItemsByInvoiceId(invoiceId) {
+        $.blockScreen();
+        var token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/TICTC/Invoice/GetYardItemsByInvoiceId',
+            data: { __RequestVerificationToken: token, invoiceId: invoiceId },
+            type: 'POST',
+            async: true,
+            cache: false,
+            success: function (result) {
+                PopulateTable(result.yardItems);
+                var ids = GetYardItemIds(result.yardItems);
+                $("#yardItemIds").val(ids);
+                var numbers = GetYardItemsNumbers(result.yardItems);
+                $("#yardItemNumbers").val(numbers);
+            },
+            error: function (message) {
+                alert(message);
+            },
+            complete: function () {
+                $.unblockScreen();
+            }
+        });
+    }
+
+    function PopulateTable(yardItems) {
+        var newData = { aaData: [] };
+        for (var i = 0; i < yardItems.length; i++) {
+            newData.aaData.push([yardItems[i].Number, yardItems[i].ItemType, yardItems[i].Description]);
+        }
+        var yardItemsTable;
+
+
+        var table = $('#yardItemsExtendedTable').DataTable();
+        var table_length = table.data().count();
+
+        if (table_length == 0) {
+
+            yardItemsTable = $('#yardItemsExtendedTable').dataTable({
+                bFilter: false,
+                bInfo: false,
+                "bPaginate": false,
+                destroy: true,
+                "aoColumnDefs": [
+                    { "sClass": "hidden-xs", "aTargets": [2] }
+                ]
+            });
+        } else {
+
+            yardItemsTable = $('#yardItemsExtendedTable').dataTable();
+        }
+
+        table.clear();
+        table.rows.add(newData.aaData);
+        table.draw();
+    }
+
+    function GetYardItemIds(yardItems) {
+        var ids = [];
+        for (var i = 0; i < yardItems.length; i++) {
+            ids.push(yardItems[i].Id);
+        }
+
+        return ids.join(', ');
+    }
+
+    function GetYardItemsNumbers(yardItems) {
+        var numbers = [];
+
+        for (var i = 0; i < yardItems.length; i++) {
+            numbers.push(yardItems[i].Number);
+        }
+
+        return numbers.join(', ');
+    }
+
+</script>
+        </div>
+
+
+        <div class="row pb-4" style="flex:auto; display:flex">
+            <div class="col" style="float: left">
+<nav>
+    <a class="btn btn-default blnavbar_btn " href="/TICTC/Customer/BillOfLadingDetails?blNumber=MEDUDM992142" title="Détails du BL" onclick="$.blockScreen();">
+       Détails du BL
+    </a>
+    <a class="btn btn-default blnavbar_btn active" href="/TICTC/Customer/BillOfLadingInvoices?blNumber=MEDUDM992142" title="Factures" onclick="$.blockScreen();">
+       Factures
+    </a>
+    <a class="btn btn-default blnavbar_btn " href="/TICTC/Customer/BillOfLadingPendingInvoicing?blId=792416&amp;blNumber=MEDUDM992142" title="Eléments à Facturer " onclick="$.blockScreen();">
+       Eléments à Facturer 
+    </a>
+    <a class="btn btn-default blnavbar_btn " href="/TICTC/Customer/BillOfLadingYITrakingInfo?blId=792416&amp;blNumber=MEDUDM992142" title="Suivi" onclick="$.blockScreen();">
+       Suivi
+    </a>
+</nav>
+
+            </div>
+
+            <div class="col-12 col-lg-2 download-dns-invoices" style="float:right">
+                <button class="btn btn-primary d-none blnavbar_btn" dn-button="true" aria-hidden="true" type="button" disabled="disabled" style="float:right; margin-right:15px">
+                    <span class="fas fa-download"></span> DNs
+                </button>
+            </div>
+        </div>
+        <div class="panel-group" id="accordionInvoices" role="tablist" aria-multiselectable="true">
+
+
+
+<div class="panel panel-default" data-filter="Invoice" data-filter-id="3308200" data-sliding-menu="container">
+    <div class="panel-heading" role="tab" id="headingInvoice_3308200">
+		<div class="row">
+			<div class="col-lg-3 col-md-6 col-sm-6 col-6">
+				<h5 id="invoiceHeader_3308200" class="panel-title">
+					<a class="collapsed whiteOnHover" data-bs-toggle="collapse" href="#collapseInvoice_3308200" aria-expanded="false" aria-controls="collapseInvoice_3308200" data-collapse-icon="">
+							<i class="fas fa-caret-down"></i> <span data-sliding-menu="title" title="Facture #251018767">Facture #251018767</span>
+					</a>
+				</h5>
+			</div>
+
+
+			<div class="col-3 col-xs-offset-1 d-md-none">
+			</div>
+			
+
+			<div class="col d-block d-md-none">
+                <div class="btn-group dropstart float-start content-responsive-menu" style="float:right;">
+                    <button type="button" class="btn btn-primary dropdown-toggle custom-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                                <li><a class="dropdown-item d-none add-event-menu" data-button="event" data-invoice-id="3308200" title="Service"><i class="fas fa-plus p-2"></i><span>Service</span></a></li>
+                            <li><a class="dropdown-item extend-menu" data-bs-toggle="modal" data-bs-target="#modalExtendedStorage" data-blnumber="MEDUDM992142" data-invoiceid="3308200" data-billingdate="20/10/2025" data-journaltype="STI" title="Prolonger "><i class="fas fa-calendar-plus p-2"></i><span>Prolonger </span></a></li>
+                                                        <li><a class="dropdown-item disabled added-menu"><i class="bi bi-cart-check-fill p-2"></i><span>Ajouté</span></a></li>
+                                                                            <li><a class="dropdown-item download-menu" href="/TICTC/Invoice/GenerateInvoiceReport?InvoiceId=3308200&amp;InvoiceNumber=251018767" title="Télécharger la facture"><i class="fas fa-file-download p-2"></i><span>Télécharger</span></a></li>
+                    </ul>
+                </div>
+			</div>
+			
+
+			<div class="clearfix d-none d-md-block d-lg-none"></div>
+			<div class="col-8 col-sm-6 col-md-6 col-lg-5" data-sliding-menu="title">
+				<div class="row">
+					<div class="col-lg-4 col-md-4 col-sm-12 d-none d-md-block limitCharacters">
+						<span class="data_pad whiteOnHover" title="Cash Client"><span class="fas fa-user pad_ico" aria-hidden="true" title="Client"></span> Cash Client</span>
+					</div>
+					<div class="col-lg-4 col-md-4 col-sm-12 limitCharacters">
+						<span class="data_pad whiteOnHover limitCharacters2" title="20/10/2025 "><span class="fas fa-calendar-alt pad_ico" aria-hidden="true" title="Date d'enlèvement"></span> 20/10/2025 </span>
+					</div>
+					<div class="col-lg-4 col-md-4 col-sm-12 limitCharacters">
+						<span class="data_pad whiteOnHover limitCharacters3" title="311 645,51 NGN">
+							<span class="fas fa-coins pad_ico" aria-hidden="true" title="Total"></span>
+							311 645,51 NGN
+						</span>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-4 col-md-6 col-sm-6 d-none d-md-block">
+				<div class="row">
+					<div class="col-lg-2 col-sm-2 d-none d-md-block">
+					</div>
+					<div class="col-lg-2 col-sm-2 d-none d-md-block">
+							<a href="/TICTC/Invoice/GenerateInvoiceReport?InvoiceId=3308200&amp;InvoiceNumber=251018767" class="btn_print"><span class="fas fa-file-download pad_ico2" aria-hidden="true" title="Download Invoice"></span></a>
+					</div>
+					<div class="col-lg-4 col-sm-4">
+								<span class="btn btn_inCart">
+									<span class="ico_inCart"></span> Ajouté
+								</span>
+					</div>
+					<div class="col-lg-4 col-sm-4 d-none d-sm-inline">
+							<button type="button" class="btn btn_extend" data-bs-toggle="modal" data-bs-target="#modalExtendedStorage" data-blnumber="MEDUDM992142" data-invoiceid="3308200" data-billingdate="20/10/2025" data-journaltype="STI">
+								<i class="far fa-calendar-plus"></i> <span class="col-sm-4 d-none d-sm-inline">  Prolonger </span>
+							</button>
+					</div>
+				</div>
+			</div>
+		</div>
+    </div>
+    <div id="collapseInvoice_3308200" class="panel-collapse collapse invoicesPanel" role="tabpanel" aria-labelledby="headingInvoice_3308200">
+        <div class="panel-body">
+            <div id="invoiceTable_3308200_wrapper" class="dt-container dt-empty-footer"><div class="dt-layout-row"><div class="dt-layout-cell dt-layout-start"></div><div class="dt-layout-cell dt-layout-end"></div></div><div class="dt-layout-row dt-layout-table"><div class="dt-layout-cell  dt-layout-full"><table width="100%" class="display table-striped tabla invoiceTable dataTable" id="invoiceTable_3308200" cellspacing="0" style="width: 100%;"><colgroup><col data-dt-column="0" style="width: 0px;"><col data-dt-column="1" style="width: 0px;"><col data-dt-column="2" style="width: 0px;"><col data-dt-column="3" style="width: 0px;"><col data-dt-column="4" style="width: 0px;"><col data-dt-column="5" style="width: 0px;"></colgroup>
+                <thead class="thead_BL">
+                    <tr><th style="width:70px !important" class="sel_Col_width checkbox-alignment dt-orderable-none" data-dt-column="0" rowspan="1" colspan="1" aria-label=""><span class="dt-column-title"><input name="sel" id="checkAll_3308200" class="checkAll" type="checkbox" value=""></span><span class="dt-column-order"></span></th><th class="ancho_colt invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="1" rowspan="1" colspan="1" aria-label="Numéro de Yard Item: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Numéro de Yard Item</span><span class="dt-column-order"></span></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="2" rowspan="1" colspan="1" aria-label="Type: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Type</span><span class="dt-column-order"></span></th><th class="invoice-header left-alignment d-none d-md-table-cell dt-orderable-asc dt-orderable-desc" data-dt-column="3" rowspan="1" colspan="1" aria-label="Détail: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Détail</span><span class="dt-column-order"></span></th><th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Événements  Service"><span class="dt-column-title"><span class="eventTitle">Événements</span> <button id="btnAddEvent_3308200" type="button" class="btn btn-primary btn_event addEventInvoice float-start d-none d-md-block" disabled="disabled"><span class="fas fa-plus" aria-hidden="true"></span> Service</button></span><span class="dt-column-order"></span></th><th class="fontDN invoice-header dt-orderable-none" data-dt-column="5" rowspan="1" colspan="1" aria-label="Bon à Délivrer"><span class="dt-column-title">Bon à Délivrer</span><span class="dt-column-order"></span></th></tr>
+                </thead>
+
+                <tbody><tr data-yi-number="MEDU7569141" data-dnprintable="False">
+                                <td class="sel_Col_width"><input class="selectableRowInvoice" name="check_3308200" type="checkbox" value="1488613" data-isdraft="False"></td>
+                            <td class="ancho_colt">MEDU7569141</td>
+                            <td class="ancho_colt">[Container]</td>
+                            <td class="ancho_colt left-alignment d-none d-md-table-cell">45G1</td>
+                                <td class="ancho_colt">
+                                </td>
+
+                                <td>
+
+                                </td>
+                        </tr></tbody>
+            <tfoot></tfoot></table></div></div><div class="dt-layout-row"><div class="dt-layout-cell dt-layout-start"></div><div class="dt-layout-cell dt-layout-end"></div></div></div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        var columns = [];
+        if ('True' === 'True' && 'True' === 'True' && 'True' === 'True') {
+            columns.push(0);
+            columns.push(4);
+            if ('True' === 'True') {
+                columns.push(5);
+            }
+        } else {
+            if ('True' === 'True') {
+                columns.push(3);
+            }
+        }
+
+        $('#invoiceTable_' + '3308200').dataTable({
+            bFilter: false,
+            bInfo: false,
+            "bPaginate": false,
+            "aaSorting": [],
+            "aoColumnDefs": [{ "bSortable": false, "aTargets": columns }]
+        });
+    });
+
+    $("a[data-dnbutton='true']").each(function (index) {
+        $(this).click(function () {
+            $.blockScreen();
+            $.ajax({
+                url: this.href,
+                type: 'POST',
+                contentType: "application/json",
+                success: function (result) {
+                    $('#printDeliveryNoteDialogContent').html(result);
+                    $('#printDeliveryNoteDialog').modal({
+                        backdrop: 'static',
+                        keyboard: true
+                    }, 'show');
+                },
+                complete: function () {
+                    $.unblockScreen();
+                }
+            });
+            return false;
+        })
+    });
+</script>
+<div class="panel panel-default" data-filter="Invoice" data-filter-id="3308235" data-sliding-menu="container">
+    <div class="panel-heading" role="tab" id="headingInvoice_3308235">
+		<div class="row">
+			<div class="col-lg-3 col-md-6 col-sm-6 col-6">
+				<h5 id="invoiceHeader_3308235" class="panel-title">
+					<a class="collapsed whiteOnHover" data-bs-toggle="collapse" href="#collapseInvoice_3308235" aria-expanded="false" aria-controls="collapseInvoice_3308235" data-collapse-icon="">
+							<i class="fas fa-caret-down"></i> <span data-sliding-menu="title" title="Facture #251018791">Facture #251018791</span>
+					</a>
+				</h5>
+			</div>
+
+
+			<div class="col-3 col-xs-offset-1 d-md-none">
+			</div>
+			
+
+			<div class="col d-block d-md-none">
+                <div class="btn-group dropstart float-start content-responsive-menu" style="float:right;">
+                    <button type="button" class="btn btn-primary dropdown-toggle custom-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                                <li><a class="dropdown-item d-none add-event-menu" data-button="event" data-invoice-id="3308235" title="Service"><i class="fas fa-plus p-2"></i><span>Service</span></a></li>
+                            <li><a class="dropdown-item extend-menu" data-bs-toggle="modal" data-bs-target="#modalExtendedStorage" data-blnumber="MEDUDM992142" data-invoiceid="3308235" data-billingdate="14/11/2025" data-journaltype="STI" title="Prolonger "><i class="fas fa-calendar-plus p-2"></i><span>Prolonger </span></a></li>
+                                                        <li><a class="dropdown-item add-menu" data-invoiceid="3308235" data-currencycode="NGN" data-btn-cart="add" title="Ajouter"><i class="bi bi-cart-fill p-2"></i><span>Ajouter</span></a></li>
+                                <li><a class="dropdown-item d-none disabled added-menu"><i class="bi bi-cart-check-fill p-2"></i><span>Ajouté</span></a></li>
+                                                                            <li><a class="dropdown-item download-menu" href="/TICTC/Invoice/GenerateInvoiceReport?InvoiceId=3308235&amp;InvoiceNumber=251018791" title="Télécharger la facture"><i class="fas fa-file-download p-2"></i><span>Télécharger</span></a></li>
+                    </ul>
+                </div>
+			</div>
+			
+
+			<div class="clearfix d-none d-md-block d-lg-none"></div>
+			<div class="col-8 col-sm-6 col-md-6 col-lg-5" data-sliding-menu="title">
+				<div class="row">
+					<div class="col-lg-4 col-md-4 col-sm-12 d-none d-md-block limitCharacters">
+						<span class="data_pad whiteOnHover" title="SHIVLILA POLYMERS LIMITED"><span class="fas fa-user pad_ico" aria-hidden="true" title="Client"></span> SHIVLILA POLYMERS LIMITED</span>
+					</div>
+					<div class="col-lg-4 col-md-4 col-sm-12 limitCharacters">
+						<span class="data_pad whiteOnHover limitCharacters2" title="14/11/2025 "><span class="fas fa-calendar-alt pad_ico" aria-hidden="true" title="Date d'enlèvement"></span> 14/11/2025 </span>
+					</div>
+					<div class="col-lg-4 col-md-4 col-sm-12 limitCharacters">
+						<span class="data_pad whiteOnHover limitCharacters3" title="15 626 551,31 NGN">
+							<span class="fas fa-coins pad_ico" aria-hidden="true" title="Total"></span>
+							15 626 551,31 NGN
+						</span>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-4 col-md-6 col-sm-6 d-none d-md-block">
+				<div class="row">
+					<div class="col-lg-2 col-sm-2 d-none d-md-block">
+					</div>
+					<div class="col-lg-2 col-sm-2 d-none d-md-block">
+							<a href="/TICTC/Invoice/GenerateInvoiceReport?InvoiceId=3308235&amp;InvoiceNumber=251018791" class="btn_print"><span class="fas fa-file-download pad_ico2" aria-hidden="true" title="Download Invoice"></span></a>
+					</div>
+					<div class="col-lg-4 col-sm-4">
+								<a data-invoiceid="3308235" data-currencycode="NGN" class="btn btn_addToCart btnAddToCart" data-btn-cart="add">
+									<span class="bi bi-cart-fill pad_ico4"></span> Ajouter
+								</a>
+								<span class="btn btn_inCart d-none" data-btn-cart="added">
+									<span class="ico_inCart"></span> Ajouté
+								</span>
+					</div>
+					<div class="col-lg-4 col-sm-4 d-none d-sm-inline">
+							<button type="button" class="btn btn_extend" data-bs-toggle="modal" data-bs-target="#modalExtendedStorage" data-blnumber="MEDUDM992142" data-invoiceid="3308235" data-billingdate="14/11/2025" data-journaltype="STI">
+								<i class="far fa-calendar-plus"></i> <span class="col-sm-4 d-none d-sm-inline">  Prolonger </span>
+							</button>
+					</div>
+				</div>
+			</div>
+		</div>
+    </div>
+    <div id="collapseInvoice_3308235" class="panel-collapse collapse invoicesPanel" role="tabpanel" aria-labelledby="headingInvoice_3308235">
+        <div class="panel-body">
+            <div id="invoiceTable_3308235_wrapper" class="dt-container dt-empty-footer"><div class="dt-layout-row"><div class="dt-layout-cell dt-layout-start"></div><div class="dt-layout-cell dt-layout-end"></div></div><div class="dt-layout-row dt-layout-table"><div class="dt-layout-cell  dt-layout-full"><table width="100%" class="display table-striped tabla invoiceTable dataTable" id="invoiceTable_3308235" cellspacing="0" style="width: 100%;"><colgroup><col data-dt-column="0" style="width: 0px;"><col data-dt-column="1" style="width: 0px;"><col data-dt-column="2" style="width: 0px;"><col data-dt-column="3" style="width: 0px;"><col data-dt-column="4" style="width: 0px;"><col data-dt-column="5" style="width: 0px;"></colgroup>
+                <thead class="thead_BL">
+                    <tr><th style="width:70px !important" class="sel_Col_width checkbox-alignment dt-orderable-none" data-dt-column="0" rowspan="1" colspan="1" aria-label=""><span class="dt-column-title"><input name="sel" id="checkAll_3308235" class="checkAll" type="checkbox" value=""></span><span class="dt-column-order"></span></th><th class="ancho_colt invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="1" rowspan="1" colspan="1" aria-label="Numéro de Yard Item: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Numéro de Yard Item</span><span class="dt-column-order"></span></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="2" rowspan="1" colspan="1" aria-label="Type: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Type</span><span class="dt-column-order"></span></th><th class="invoice-header left-alignment d-none d-md-table-cell dt-orderable-asc dt-orderable-desc" data-dt-column="3" rowspan="1" colspan="1" aria-label="Détail: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Détail</span><span class="dt-column-order"></span></th><th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-none" aria-label="Événements  Service"><span class="dt-column-title"><span class="eventTitle">Événements</span> <button id="btnAddEvent_3308235" type="button" class="btn btn-primary btn_event addEventInvoice float-start d-none d-md-block" disabled="disabled"><span class="fas fa-plus" aria-hidden="true"></span> Service</button></span><span class="dt-column-order"></span></th><th class="fontDN invoice-header dt-orderable-none" data-dt-column="5" rowspan="1" colspan="1" aria-label="Bon à Délivrer"><span class="dt-column-title">Bon à Délivrer</span><span class="dt-column-order"></span></th></tr>
+                </thead>
+
+                <tbody><tr data-yi-number="MEDU7637020" data-dnprintable="False">
+                                <td class="sel_Col_width"><input class="selectableRowInvoice" name="check_3308235" type="checkbox" value="1488614" data-isdraft="False"></td>
+                            <td class="ancho_colt">MEDU7637020</td>
+                            <td class="ancho_colt">[Container]</td>
+                            <td class="ancho_colt left-alignment d-none d-md-table-cell">45G1</td>
+                                <td class="ancho_colt">
+                                </td>
+
+                                <td>
+
+                                </td>
+                        </tr></tbody>
+            <tfoot></tfoot></table></div></div><div class="dt-layout-row"><div class="dt-layout-cell dt-layout-start"></div><div class="dt-layout-cell dt-layout-end"></div></div></div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        var columns = [];
+        if ('True' === 'True' && 'True' === 'True' && 'True' === 'True') {
+            columns.push(0);
+            columns.push(4);
+            if ('True' === 'True') {
+                columns.push(5);
+            }
+        } else {
+            if ('True' === 'True') {
+                columns.push(3);
+            }
+        }
+
+        $('#invoiceTable_' + '3308235').dataTable({
+            bFilter: false,
+            bInfo: false,
+            "bPaginate": false,
+            "aaSorting": [],
+            "aoColumnDefs": [{ "bSortable": false, "aTargets": columns }]
+        });
+    });
+
+    $("a[data-dnbutton='true']").each(function (index) {
+        $(this).click(function () {
+            $.blockScreen();
+            $.ajax({
+                url: this.href,
+                type: 'POST',
+                contentType: "application/json",
+                success: function (result) {
+                    $('#printDeliveryNoteDialogContent').html(result);
+                    $('#printDeliveryNoteDialog').modal({
+                        backdrop: 'static',
+                        keyboard: true
+                    }, 'show');
+                },
+                complete: function () {
+                    $.unblockScreen();
+                }
+            });
+            return false;
+        })
+    });
+</script>        </div>
+    </div>
+</div>
+
+<div id="printDeliveryNoteDialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deliveryNoteModal" aria-hidden="true">
+    <div id="printDeliveryNoteDialogContent" class="modal-dialog"></div>
+</div>
+
+<div id="deliveryNoteWrongPinDialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deliveryNoteWrongPinModal" aria-hidden="true">
+    <div id="deliveryNoteWrongPinDialogContent" class="modal-dialog"></div>
+</div>
+
+<script src="../assets/js/ellipsis.js"></script>
+<script src="../assets/js/jszip.js"></script>
+<script src="../assets/js/FileSaver.js"></script>
+<script src="../assets/js/delivery-note-downloader.js"></script>
+
+<script type="text/javascript">
+    var invoiceToAddEvents = "";
+    var BindForm;
+
+
+    $(document).ready(function () {
+        var canAddEvents = 'True' === 'True';
+        var canPrintDNs = 'True' === 'True';
+        var lista = [0];
+
+        if (canAddEvents) {
+            lista.push(4);
+        }
+
+        checkConditionsToViewMultipleDNPrintButton(canPrintDNs);
+
+        function bindForm(dialog) {
+            $('form', dialog).submit(function () {
+                $.blockScreen();
+                return false;
+            });
+        }
+
+        $('.tabla').not('#pendingInvoicingTable, #TrackingTable, .invoiceTable, #yardItemsExtendedTable').dataTable({ bFilter: false, bInfo: false, "bPaginate": false });
+
+        function toggleIcon(e) {
+            $(e.target)
+                .prev('.panel-heading')
+                .find('[data-collapse-icon] i')
+                .toggleClass('fa-caret-down fa-caret-up');
+
+            $($(e.target).parent())
+                .children('.panel-heading')
+                .toggleClass('selectedPanel')
+
+            $($(e.target).parent()
+                .find('.glyphicon'))
+                .toggleClass('pad_ico pad_ico252');
+        }
+
+        $('.panel-collapse.collapse').on('show.bs.collapse', toggleIcon);
+
+        $('.panel-collapse.collapse').on('hide.bs.collapse', toggleIcon);
+
+        $('#btnAddEvent, #btnAddEventResponsive').click(function () {
+            $.blockScreen();
+            invoiceToAddEvents = "";
+            var selectedIDs = getSelectedYardItems();
+            OpenAddEventsModal(selectedIDs);
+        });
+
+        $('#EventsModal').on('show.bs.modal', function (event) {
+            var tableId = "#pendingInvoicingTable";
+            var rowClass = ".selectableRow";
+            if (invoiceToAddEvents != "") {
+                tableId = "#invoiceTable_" + invoiceToAddEvents;
+                rowClass = ".selectableRowInvoice";
+            }
+
+            copyDataFromInvoicingTable(tableId, rowClass);
+            $.unblockScreen();
+        });
+
+        $(document).on("click", "a.btn_print", function (event) {
+            $.blockScreenWhileDownloading();
+        });
+
+        BindForm = bindForm;
+    });
+
+    $("button[dn-button='true']").click(function () {
+            $.blockScreen();
+            var zip = new JSZip();
+            var selectedYINumbers = getSelectedYardItemNumbers();
+
+            if (selectedYINumbers.length != 0) {
+
+                   getZippedDeliveryNotes(
+                        selectedYINumbers,
+                        "/TICTC/Customer/PrintDeliveryNoteWithtout2Fa?YardItemNumber=number&BillOfLadingNumber=MEDUDM992142",
+                        "number",
+                        (results) => {
+                            if (results.length != 0) {
+                                results.forEach((result) => { zip.file(result.fileName, result.arrayBuffer, { binary: true }) });
+                                zip.generateAsync({ type: "blob" }).then(function (blob) {
+                                    saveAs(blob, "MEDUDM992142" + "_DNs.zip");
+                                });
+                            }
+                            $.unblockScreen();
+                       },
+                       () => {
+                            var divError = $('#divError');
+                            var spanError = $('#spanError');
+                            spanError.html("Au moins un des bon de livraison n'a pas pu être imprimé. Veuillez contacter le service client.");
+                            divError.show();
+                            $.unblockScreen();
+                       }
+                   );
+            }
+    });
+
+    function getSelectedYardItemNumbers() {
+        var selectedYINumbers = [];
+        $(".selectableRowInvoice").each(function () {
+            if ($(this).prop('checked') == true) {
+                selectedYINumbers.push($(this).closest('tr').attr("data-YI-Number"));
+            }
+        });
+        return selectedYINumbers;
+    }
+
+    function getSelectedYardItemIds() {
+        var selectedIDs = [];
+        $(".selectableRowInvoice").each(function () {
+            if ($(this).prop('checked') == true) {
+                selectedIDs.push($(this).val());
+            }
+        });
+        return selectedIDs;
+    }
+
+    function checkConditionsToViewMultipleDNPrintButton(canPrintDNs) {
+        var printableYardItems = $('.print_dn_button').length;
+        if (printableYardItems >= 2 && canPrintDNs) {
+            $("button[dn-button='true']").removeClass('d-none');
+        }
+    }
+
+    function checkConditionsToEnableMultipleDNPrintButton() {
+        var selectedYIIds = getSelectedYardItemIds();
+
+        if (selectedYIIds.length >= 2) {
+            if (selectedYIIds.every((x) => {
+                return $("input[value=" + x + "]").closest('tr').attr("data-DNPrintable").toLowerCase() === 'true';
+            })) {
+                $("button[dn-button='true']").removeAttr('disabled');
+            } else {
+                $("button[dn-button='true']").attr("disabled", "disabled");
+            }
+        } else {
+            $("button[dn-button='true']").attr("disabled", "disabled");
+        }
+    }
+
+    function OpenAddEventsModal(selectedIDs) {
+        var url = "/TICTC/Event/_Add?yardItemIds=ids&blNumber=MEDUDM992142";
+        url = url.replace("ids", selectedIDs);
+        $.get(url, function (data) {
+            if (data['Message'] === undefined) {
+                $('#EventModalContent').html(data);
+                $('#EventsModal').modal('show');
+            } else {
+                var divError = $('#divError');
+                var spanError = $('#spanError');
+                spanError.html(data['Message']);
+                divError.show();
+                $.unblockScreen();
+            }
+        });
+    }
+
+    function copyDataFromInvoicingTable(tableId, rowClass) {
+        var tableList = [];
+        $(tableId + " > tbody tr").each(function (index, item) {
+            var rowList = [];
+            if ($(item).find(rowClass).prop("checked")) {
+                rowList.push($($(item).find("td")[1]).text());
+                rowList.push($($(item).find("td")[2]).text());
+                rowList.push($($(item).find("td")[3]).text());
+            }
+
+            if (rowList.length > 0) {
+                tableList.push(rowList);
+            }
+        });
+
+        if (tableList.length > 0) {
+            populateTable(tableList);
+        }
+    }
+
+    function populateTable(yardItems) {
+        var yardItemsTable = $('#yardItemsEventsTable').dataTable({
+            bFilter: false,
+            bInfo: false,
+            "bPaginate": false,
+            "aaSorting": [],
+            "aoColumnDefs": [
+                { "sClass": "hidden-xs", "aTargets": [2] }
+            ],
+        });
+        var table = $('#yardItemsEventsTable').DataTable();
+        table.clear();
+        table.rows.add(yardItems);
+        table.draw();
+    }
+
+    function getSelectedYardItems() {
+        var selectedIDs = [];
+        $(".selectableRow").each(function () {
+            if ($(this).prop('checked') == true) {
+                selectedIDs.push($(this).val());
+            }
+        });
+
+        return selectedIDs;
+    }
+
+    $('#modalConfirmValidate').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var invoiceId = button.data('invoiceid');
+        var currencyCode = button.data('currencycode');
+        $("#modalConfirmValidate #invoiceId").val(invoiceId);
+        $("#modalConfirmValidate #currencyCode").val(currencyCode);
+        $('#btnValidateProformaClose,#btnValidateProformaConfirm').removeAttr('disabled');
+    });
+
+    $('#modalConfirmDelete').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var invoiceId = button.data('invoiceid');
+        $("#modalConfirmDelete #invoiceId").val(invoiceId);
+    });
+
+    function addInvoiceToCart(invoiceId, currencyCode, button) {
+        var token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            type: 'POST',
+            url: '/TICTC/Cart/AddItemToCart',
+            data: {
+                __RequestVerificationToken: token,
+                invoiceId: invoiceId,
+                currencyCode: currencyCode
+            },
+            async: true,
+            cache: false,
+            success: function (result) {
+                if (result["Success"].toLowerCase() === "true") {
+
+                    var $container = button.closest('[data-filter]');
+
+                    $container.find('[data-btn-cart="add"]').addClass('d-none');
+
+                    $container.find('[data-btn-cart="added"]').removeClass('d-none');
+
+                    bindCartCount();
+                } else {
+                    var message = result["Message"];
+                    var divError = $('#divError');
+
+                    var spanError = $('#spanError');
+
+                    spanError.html(message);
+                    divError.show();
+
+                    var paymentStatus = result["PaymentStatus"];
+                    if(paymentStatus!= null){
+
+                        var acceptedStatus = 2;
+                        var rejectedStatus = 3;
+
+                        if (paymentStatus == acceptedStatus) {
+                            $.blockScreen();
+                            location.reload();
+                        }else if(paymentStatus != rejectedStatus){
+                            var invoiceIdsToHideAddButton = result["RelatedInvoices"];
+
+                            if (invoiceIdsToHideAddButton != null) {
+                                var addButtons = $('.btn.btn_addToCart.btnAddToCart');
+                                for (i = 0; i < addButtons.length; i++) {
+                                    if (invoiceIdsToHideAddButton.includes(parseInt(addButtons[i].dataset.invoiceid))) {
+                                        $(addButtons[i]).hide();
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    button.removeAttr('disabled');
+                }
+            }
+        });
+    }
+
+    $('#btnDeleteProformaConfirm').click(function () {
+        $.blockScreen();
+        $('#btnDeleteProformaClose,#btnDeleteProformaConfirm').attr('disabled', 'disabled');
+        $("#formDeleteProforma").submit();
+    });
+
+    $('#btnValidateProformaConfirm').click(function () {
+        $.blockScreen();
+        $('#btnValidateProformaClose,#btnValidateProformaConfirm').attr('disabled', 'disabled');
+
+        var invoiceId = $('#invoiceId').val();
+        var currencyCode = $('#currencyCode').val();
+        var button = $('.btn_confProf*[data-invoiceId="' + invoiceId + '"]');
+        validateProforma(invoiceId, currencyCode, button);
+    });
+
+    bindAddToCarButtons();
+
+    function bindAddToCarButtons() {
+        var $buttons = $('[data-btn-cart="add"]');
+        $buttons.unbind();
+        $buttons.click(function () {
+            var button = $(this);
+            var invoiceId = button.data('invoiceid');
+            var currencyCode = button.data('currencycode');
+
+            button.attr('disabled', 'disabled');
+
+            addInvoiceToCart(invoiceId, currencyCode, button);
+        });
+    }
+
+    function validateProforma(invoiceId, currencyCode, button) {
+        var token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            type: 'POST',
+            url: '/TICTC/Invoice/ValidateProforma',
+            data: {
+                __RequestVerificationToken: token,
+                invoiceId: invoiceId,
+                currencyCode: currencyCode,
+                billOfLadingNumber: 'MEDUDM992142',
+                billOfLadingId: '792416'
+            },
+            async: true,
+            cache: false,
+            success: function (result) {
+                if (result["Success"].toLowerCase() === "true") {
+                    window.location.replace('/TICTC/Customer/BillOfLadingInvoices?blNumber=MEDUDM992142');
+                } else {
+                    if (result["HasToPay"]) {
+                        var $container = button.closest('[data-filter]');
+
+                        $container.find('[data-btn="validate"]').addClass('d-none');
+
+						$container.find('[data-btn-cart="add"]').removeClass('d-none');
+                    }
+
+                    var message = result["Message"];
+                    var divError = $('#divError');
+
+                    var spanError = $('#spanError');
+
+                    spanError.html(message);
+                    divError.show();
+
+                    $('html, body').animate({
+                        scrollTop: $('body').offset().top
+                    }, 1000);
+
+                    button.removeAttr('disabled');
+
+                    $('#modalConfirmValidate').modal('hide');
+                    $.unblockScreen();
+                }
+            }
+        });
+    }
+
+    function removeEvent(eventId, classname) {
+        var token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/TICTC/Event/Remove',
+            data: { __RequestVerificationToken: token, eventId: eventId },
+            type: 'POST',
+            async: false,
+            cache: false,
+            success: function (result) {
+                if (result.success) {
+                    var popoverId = $("#ContentPopover-" + eventId).parent().parent().prop("id");
+                    $('#' + popoverId).remove();
+                    $("#divEvent" + eventId).remove();
+                }
+            },
+            error: function (message) {
+                var divError = $('#divError');
+                var spanError = $('#spanError');
+                spanError.html(message);
+                divError.show();
+            }
+        }).always(function () {
+            $('.popover').popover('hide');
+        });
+
+        return false;
+    }
+
+    $('.checkAll').click(function (e) {
+        var table = $(e.target).closest('table');
+        $('td input:checkbox', table).prop('checked', this.checked);
+        var invoiceId = table[0].id.split('_')[1];
+        enableAddEventsExtend(invoiceId);
+        checkConditionsToEnableMultipleDNPrintButton();
+    });
+
+    $('.selectableRowInvoice').change(function () {
+        var invoiceId = $(this).attr("name").split('_')[1];
+        enableAddEventsExtend(invoiceId);
+        checkConditionsToEnableMultipleDNPrintButton();
+    });
+
+    $('.addEventInvoice').click(function () {
+        $.blockScreen();
+        var invoiceId = $(this).attr("id").split('_')[1];
+        var selectedIDs = getSelectedYardItemsFromInvoiceBlock(invoiceId);
+        invoiceToAddEvents = invoiceId;
+        OpenAddEventsModal(selectedIDs);
+    });
+
+    $('[data-button="event"]').click(function () {
+        $.blockScreen();
+        var invoiceId = $(this).data('invoice-id');
+        var selectedIDs = getSelectedYardItemsFromInvoiceBlock(invoiceId);
+        invoiceToAddEvents = invoiceId;
+        OpenAddEventsModal(selectedIDs);
+    });
+
+    function getSelectedYardItemsFromInvoiceBlock(invoiceId) {
+        var selectedIDs = [];
+        $("#invoiceTable_" + invoiceId + " .selectableRowInvoice").each(function () {
+            if ($(this).prop('checked') == true) {
+                selectedIDs.push($(this).val());
+            }
+        });
+
+        return selectedIDs;
+    }
+
+    function enableAddEventsExtend(invoiceId) {
+        var $btnAddEvent = $('#btnAddEvent_' + invoiceId);
+        var checkedCount = $('.selectableRowInvoice:checked').length;
+
+        var $container = $btnAddEvent.closest('[data-sliding-menu="container"]');
+        var $btnAddEventResponsive = $container.find('[data-button="event"]');
+
+        if (checkedCount > 0) {
+
+            var draftSelected = $('.selectableRowInvoice:checked').filter(function () { return $(this).data('isdraft') == 'True' })
+
+            if (draftSelected.length == 0) {
+
+                $btnAddEvent.removeAttr("disabled");
+
+				$btnAddEventResponsive.removeClass('d-none');
+            }
+        }
+        else {
+            $btnAddEvent.attr("disabled", "disabled");
+
+			$btnAddEventResponsive.addClass('d-none');
+        }
+    }
+
+
+    function closeMenu($container) {
+        $container.find('[data-sliding-menu="open"]').removeClass('hidden-xs');
+        $container.find('[data-sliding-menu="close"]').addClass('hidden-xs');
+        $container.find('[data-sliding-menu="actions"]').removeClass('tableActionsDisplay');
+    }
+
+    function openMenu($container) {
+        $container.find('[data-sliding-menu="open"]').addClass('hidden-xs');
+        $container.find('[data-sliding-menu="close"]').removeClass('hidden-xs');
+        $container.find('[data-sliding-menu="actions"]').removeClass('hidden-xs').addClass('tableActionsDisplay');
+    }
+
+    $('#btnRefoundResponsive').click(function () {
+        $.blockScreen();
+        $(this).closest('form').submit();
+    });
+
+    document.addEventListener('click', function (e) {
+        var popoverElements = document.querySelectorAll('[data-bs-toggle="popover"]');
+        popoverElements.forEach(function (popoverElement) {
+            if (popoverElement !== e.target && !popoverElement.contains(e.target)) {
+                var popover = bootstrap.Popover.getInstance(popoverElement);
+                if (popover) {
+                    popover.hide();
+                }
+            }
+        });
+    });
+</script>
+    </div>
+    <footer class="container FondBlanc pt-3">
+        <hr>
+        <p class="logo">© 2025 AGL Group<img src="../assets/images/ipk_logo2.jpg" class="logoFooter"></p>
+    </footer>
+    
+
+    <script>
+        $(document).ready(function () {
+            bindCartCount();
+        });
+
+        function bindCartCount() {
+            $.ajax({
+                type: 'POST',
+                url: '/TICTC/Cart/GetCurrentUserCartCount',
+                cache: false,
+                datatype: 'json',
+                contentType: 'application/json',
+                success: function (result) {
+                    $('#lblCartCount').text(result['ItemCount']);
+                },
+                error: function (message) {
+                    $('#lblCartCount').text('0');
+                }
+            });
+        }
+    </script>
+
+
+
+
+<div class="datetimepicker datetimepicker-dropdown-bottom-left dropdown-menu" style="left: -160px; z-index: 1095;"><div class="datetimepicker-minutes" style="display: none;"><table class=" table-condensed"><thead><tr><th class="prev" style="visibility: visible;"><i class="glyphicon glyphicon-arrow-left"></i> </th><th colspan="5" class="switch">23 Novembre 2025</th><th class="next" style="visibility: visible;"><i class="glyphicon glyphicon-arrow-right"></i> </th></tr></thead><tbody><tr><td colspan="7"><span class="minute">19:00</span><span class="minute active">19:30</span></td></tr></tbody><tfoot><tr><th colspan="7" class="today">Aujourd'hui</th></tr></tfoot></table></div><div class="datetimepicker-hours" style="display: none;"><table class=" table-condensed"><thead><tr><th class="prev" style="visibility: visible;"><i class="glyphicon glyphicon-arrow-left"></i> </th><th colspan="5" class="switch">23 Novembre 2025</th><th class="next" style="visibility: visible;"><i class="glyphicon glyphicon-arrow-right"></i> </th></tr></thead><tbody><tr><td colspan="7"><span class="hour">0:00</span><span class="hour">1:00</span><span class="hour">2:00</span><span class="hour">3:00</span><span class="hour">4:00</span><span class="hour">5:00</span><span class="hour">6:00</span><span class="hour">7:00</span><span class="hour">8:00</span><span class="hour">9:00</span><span class="hour">10:00</span><span class="hour">11:00</span><span class="hour">12:00</span><span class="hour">13:00</span><span class="hour">14:00</span><span class="hour">15:00</span><span class="hour">16:00</span><span class="hour">17:00</span><span class="hour">18:00</span><span class="hour active">19:00</span><span class="hour">20:00</span><span class="hour">21:00</span><span class="hour">22:00</span><span class="hour">23:00</span></td></tr></tbody><tfoot><tr><th colspan="7" class="today">Aujourd'hui</th></tr></tfoot></table></div><div class="datetimepicker-days" style="display: block;"><table class=" table-condensed"><thead><tr><th class="prev" style="visibility: visible;"><i class="glyphicon glyphicon-arrow-left"></i> </th><th colspan="5" class="switch">Novembre 2025</th><th class="next" style="visibility: visible;"><i class="glyphicon glyphicon-arrow-right"></i> </th></tr><tr><th class="dow">L</th><th class="dow">Ma</th><th class="dow">Me</th><th class="dow">J</th><th class="dow">V</th><th class="dow">S</th><th class="dow">D</th></tr></thead><tbody><tr><td class="day old">27</td><td class="day old">28</td><td class="day old">29</td><td class="day old">30</td><td class="day old">31</td><td class="day">1</td><td class="day">2</td></tr><tr><td class="day">3</td><td class="day">4</td><td class="day">5</td><td class="day">6</td><td class="day">7</td><td class="day">8</td><td class="day">9</td></tr><tr><td class="day">10</td><td class="day">11</td><td class="day">12</td><td class="day">13</td><td class="day">14</td><td class="day">15</td><td class="day">16</td></tr><tr><td class="day">17</td><td class="day">18</td><td class="day">19</td><td class="day">20</td><td class="day">21</td><td class="day">22</td><td class="day today active">23</td></tr><tr><td class="day">24</td><td class="day">25</td><td class="day">26</td><td class="day">27</td><td class="day">28</td><td class="day">29</td><td class="day">30</td></tr><tr><td class="day new">1</td><td class="day new">2</td><td class="day new">3</td><td class="day new">4</td><td class="day new">5</td><td class="day new">6</td><td class="day new">7</td></tr></tbody><tfoot><tr><th colspan="7" class="today">Aujourd'hui</th></tr></tfoot></table></div><div class="datetimepicker-months" style="display: none;"><table class="table-condensed"><thead><tr><th class="prev" style="visibility: visible;"><i class="glyphicon glyphicon-arrow-left"></i> </th><th colspan="5" class="switch">2025</th><th class="next" style="visibility: visible;"><i class="glyphicon glyphicon-arrow-right"></i> </th></tr></thead><tbody><tr><td colspan="7"><span class="month">Jan</span><span class="month">Fev</span><span class="month">Mar</span><span class="month">Avr</span><span class="month">Mai</span><span class="month">Jui</span><span class="month">Jul</span><span class="month">Aou</span><span class="month">Sep</span><span class="month">Oct</span><span class="month active">Nov</span><span class="month">Dec</span></td></tr></tbody><tfoot><tr><th colspan="7" class="today">Aujourd'hui</th></tr></tfoot></table></div><div class="datetimepicker-years" style="display: none;"><table class="table-condensed"><thead><tr><th class="prev" style="visibility: visible;"><i class="glyphicon glyphicon-arrow-left"></i> </th><th colspan="5" class="switch">2020-2029</th><th class="next" style="visibility: visible;"><i class="glyphicon glyphicon-arrow-right"></i> </th></tr></thead><tbody><tr><td colspan="7"><span class="year old">2019</span><span class="year">2020</span><span class="year">2021</span><span class="year">2022</span><span class="year">2023</span><span class="year">2024</span><span class="year active">2025</span><span class="year">2026</span><span class="year">2027</span><span class="year">2028</span><span class="year">2029</span><span class="year old">2030</span></td></tr></tbody><tfoot><tr><th colspan="7" class="today">Aujourd'hui</th></tr></tfoot></table></div></div></body></html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html><html class="js no-flexbox flexbox-legacy canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers no-applicationcache svg inlinesvg smil svgclippaths wf-nunitosans-n4-active wf-nunitosans-n7-active wf-active"><head>
+    <meta charset="utf-8">
+    <title>Ipaki Extranet</title>
+    <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon">
+
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+
+    <link href="../assets/css/bootstrap.css" rel="stylesheet">
+<link href="../assets/css/bootstrap_rtl.css" rel="stylesheet">
+
+    <link href="../assets/css/fontawesome-all.css" rel="stylesheet">
+<link href="../assets/css/sassStyle.css" rel="stylesheet">
+<link href="../assets/css/perfect-scrollbar.css" rel="stylesheet">
+
+    <link href="../assets/css/bootstrap-icons_min.css" rel="stylesheet">
+
+    <script type="text/javascript" async="" src="https://remote.captcha.com/include.js?i=ATABMAEwATMBMAIxNBTC9uKk7vQnU_F4Bj5rYXy9eNQ5XA"></script><script src="https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js" type="text/javascript" async=""></script><script src="../assets/js/jquery-1_11_0.js"></script>
+<script src="../assets/js/jquery-3_7_1.js"></script>
+
+    
+    <script src="../assets/js/jquery_unobtrusive-ajax_min.js"></script>
+
+    <script src="../assets/js/modernizr-2_5_3.js"></script>
+
+    <script src="../assets/js/bootstrap_bundle_min.js"></script>
+<script src="../assets/js/bootstrap-datetimepicker.js"></script>
+<script src="../assets/js/bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/resources_en-US.js"></script>
+
+    <script src="../assets/js/respond.js"></script>
+
+    <script src="../assets/js/generalFunctions.js"></script>
+<script src="../assets/js/Validations.js"></script>
+<script src="../assets/js/js-cookie.js"></script>
+<script src="../assets/js/perfect-scrollbar_jquery.js"></script>
+<script src="../assets/js/perfect-scrollbar.js"></script>
+
+
+    <script>
+        if (window.top !== window.self) {
+			window.location.href = '/Error/FrameError';
+		}
+    </script><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,700&amp;subset=latin" media="all">
+
+</head>
+<body class="bgPpal1">
+    <div>
+            
+
+
+<form action="/ATLCIVP/Register" class="form-horizontal" enctype="multipart/form-data" id="registerForm" method="post" role="form"><input name="__RequestVerificationToken" type="hidden" value="NJIk5PA-QP8D4dEgTrr4USQ6B308we8BjEl4FNagiIpgoKw7mwK4bE9Vpd7pyce5BUASE2Sa7bAIp3p4gUdf_Vk37XkPGGOZf6CkTje10lP21c-MgIyAwGcBqg1WACOyGd6uqJcZ6TYzJipKansq9A2">	
+		<div class="log_in2">
+			<div class="log_top"></div>
+			<div class="wrapLogin">
+				<div class="log_cont">
+					<img src="../assets/images/ipk_logo2.jpg" class="logo_ppal">
+				</div>
+				<div id="divError" class="alert alert-danger alrt_pad alert-dismissible-right alert-log" role="alert" style="display: none;">
+					<span class="bi bi-exclamation-circle-fill" aria-hidden="true"></span>
+					<b> Attention!</b>
+					<div>
+						<span data-error="" id="fileSizeExceededError">Au moins un document dépasse la taille maximum</span>
+					</div>
+					<button type="button" class="btn-close" onclick="$('#divError').hide();">
+					</button>
+
+				</div>
+				<div class="log_body">
+					<div class="cont_right">
+						<h4 class="bottomLine tit_log">Créer un compte</h4>
+					</div>
+					<div class="log_cont2">
+
+						<input id="HiddenJustificationDocuments" name="HiddenJustificationDocuments" type="hidden" value="">
+
+							<div>
+								<select class="form-control form-select input_login2" data-val="true" data-val-number="The field SelectedRoleId must be a number." data-val-required="'Selected Role Id' ne doit pas avoir la valeur null." id="ddlRoles" name="SelectedRoleId"><option value="113">Client</option>
+<option value="114">Client TMS</option>
+</select>
+							</div>
+						<div>
+							<input class="form-control input_login" data-val="true" data-val-email="Veuillez saisir une adresse e-mail valide" data-val-required="Veuillez saisir une adresse e-mail" id="email-input" name="Email" placeholder="E-Mail" type="text" value="">
+						</div>
+						<div>
+							<input class="form-control input_login" data-val="true" data-val-required="Veuillez saisir un Prénom" id="FirstName" name="FirstName" placeholder="Prénom" type="text" value="">
+						</div>
+						<div>
+							<input class="form-control input_login" data-val="true" data-val-required="Le “Nom” est obligatoire" id="LastName" name="LastName" placeholder="Nom" type="text" value="">
+						</div>
+						<div>
+							<input class="form-control input_login" data-phone-number="" data-val="true" data-val-regex="Phone number format is wrong." data-val-regex-pattern="[0-9-()]+" id="PhoneNumber" name="PhoneNumber" placeholder="Numéro de téléphone" type="text" value="">
+<script type="text/javascript">$("*[data-phone-number]").bind('keypress', function (e) {
+                    if (e.keyCode == '9' || e.keyCode == '16') {
+                        return;
+                    }
+                    var code;
+                    if (e.keyCode) code = e.keyCode;
+                    else if (e.which) code = e.which;
+                    if (e.which == 46)
+                        return false;
+                    if (code == 8 || (code >= 35 && code <= 41) || code == 45 || code == 46) // '(', ')' or '-', backspace, del, etc.
+                        return true;
+                    if (code < 48 || code > 57)
+                        return false;
+                });
+
+                //Disable paste
+                $("*[data-phone-number]").bind("paste", function (e) {
+                    e.preventDefault();
+                });
+
+                //Disable text drag & drop
+                $("*[data-phone-number]").bind('mouseenter', function (e) {
+                    var val = $(this).val();
+                    if (val != '0') {
+                        val = val.replace(/[^0-9()-]+/g, "")
+                        $(this).val(val);
+                    }
+                });</script>
+
+						</div>
+						<div>
+							<input class="form-control input_login" data-client-name="" data-val="true" data-val-regex="Le nom d'un client doit être composé de lettres, de chiffres, et d'espaces uniquement." data-val-regex-pattern="^[a-zA-ZÀ-ÿ0-9 ]+$" data-val-required="Veuillez saisir le nom de la société" id="CompanyName" name="CompanyName" placeholder="Nom de la société" type="text" value="">
+<script type="text/javascript">$("*[data-client-name]").keypress(function (e) {
+            var regex = new RegExp('^[a-zA-ZÀ-ÿ0-9 ]+$');
+            var str = String.fromCharCode(!e.charCode ? e.which : e.charCode);
+            if (regex.test(str)) {
+                return true;
+            }
+            e.preventDefault();
+            return false;
+            });
+
+            $("*[data-client-name]").bind("paste", function (e) {
+                e.preventDefault();
+            });
+            </script>
+
+						</div>
+						<div>
+							<input class="form-control input_login" data-val="true" data-val-required="Veuillez saisir l'adresse de la société" id="CompanyAddress" name="CompanyAddress" placeholder="Adresse de la société" type="text" value="">
+						</div>
+
+
+						<div>
+							<input autocomplete="off" class="form-control input_login" data-val="true" data-val-length="Merci de vérifier que le mot de passe réponde aux règles de complexité" data-val-length-max="100" data-val-length-min="12" data-val-required="Veuillez saisir un mot de passe" id="Password" name="Password" placeholder="Mot de passe" type="password">
+						</div>
+						<div class="passwordMessages">
+							<label>Le mot de passe doit:</label>
+							<ul>
+								<li>
+									Doit contenir au moins 12 caractères.
+								</li>
+								<li>
+									Contenir au moins 3 types de caractères (minuscule, majuscule, caractère spécial, chiffres).
+								</li>
+								<li>
+									Etre differents des 10 derniers mots de passe.
+								</li>
+								<li>
+									Ne pas contenir des caractères similaires à l'identifiant.
+								</li>
+								<li>
+									Expire après 120 jours.
+								</li>
+							</ul>
+						</div>
+						<div>
+							<input autocomplete="off" class="form-control input_login" data-val="true" data-val-equalto="Les mots de passe ne correspondent pas" data-val-equalto-other="*.Password" id="ConfirmPassword" name="ConfirmPassword" placeholder="Confirmer Mot de passe" type="password">
+						</div>
+						<div class="captcha_size">
+							<div class="Ver">
+								<input autocomplete="off" class="form-control input_login" id="CaptchaCode" name="CaptchaCode" placeholder="Ressaisir les caractères" type="text" value="">
+								
+
+
+  <div class="LBD_CaptchaDiv" id="Captcha_CaptchaDiv" style="width: 198px !important; height: 40px !important;"><!--
+ --><div class="LBD_CaptchaImageDiv" id="Captcha_CaptchaImageDiv" style="width: 120px !important; height: 40px !important;"><!--
+   --><div class="LBD_CaptchaImageDiv" style="width:120px; height:30px;"><img class="LBD_CaptchaImage" id="Captcha_CaptchaImage" src="/BotDetectCaptcha.ashx?get=image&amp;c=Captcha&amp;t=e3b0a88e6faa40ca89468828e8e83209" alt="CAPTCHA"></div><!--   --><!-- --></div><!--
+ --><div class="LBD_CaptchaIconsDiv" id="Captcha_CaptchaIconsDiv" style="width: 72px !important;"><!--
+   --><a class="LBD_ReloadLink" id="Captcha_ReloadLink" href="#" onclick="Captcha.ReloadImage(); this.blur(); return false;" title="Modifiez le code CAPTCHA" style="display: inline-block !important;"><img class="LBD_ReloadIcon" id="Captcha_ReloadIcon" src="../assets/images/ico_refresh.jpg" alt="Modifiez le code CAPTCHA"></a><!--
+   --><a class="LBD_SoundLink" id="Captcha_SoundLink" href="/BotDetectCaptcha.ashx?get=sound&amp;c=Captcha&amp;t=e3b0a88e6faa40ca89468828e8e83209" onclick="Captcha.PlaySound(); this.blur(); return false;" title="Écouter le code CAPTCHA"><img class="LBD_SoundIcon" id="Captcha_SoundIcon" src="../assets/images/ico_parlante.jpg" alt="Écouter le code CAPTCHA"></a><!--
+   --><div class="LBD_Placeholder" id="Captcha_AudioPlaceholder">&nbsp;</div><!--
+ --></div>
+    <script src="/BotDetectCaptcha.ashx?get=clientScriptInclude" type="text/javascript"></script>
+    <script type="text/javascript">
+    //<![CDATA[
+      BotDetect.Init('Captcha', 'e3b0a88e6faa40ca89468828e8e83209', 'Captcha', true, true, true, true, 1200, 7200, 0);
+    //]]>
+    </script>
+    <script type="text/javascript">
+    //<![CDATA[
+      try{(function(){var bdrsn = document.createElement('script'); bdrsn.type = 'text/javascript'; bdrsn.async = true; bdrsn.src = document.location.protocol + '//remote.captcha.com/include.js?i=ATABMAEwATMBMAIxNBTC9uKk7vQnU_F4Bj5rYXy9eNQ5XA'; var fsn = document.getElementsByTagName('script')[0]; fsn.parentNode.insertBefore(bdrsn, fsn);})();} catch(err){}
+    //]]>
+    </script>
+    <input type="hidden" name="LBD_VCID_Captcha" id="LBD_VCID_Captcha" value="e3b0a88e6faa40ca89468828e8e83209">
+    <input type="hidden" name="LBD_ChromeBackWorkaround_Captcha" id="LBD_ChromeBackWorkaround_Captcha" value="0">
+  </div>
+
+
+							</div>
+							<script type="text/javascript">$("a[title='CAPTCHA Control']").remove();</script>
+						</div>
+					</div>
+					<div class="cont_right cta_padd">
+						<div class="flexContent">
+							<input type="submit" class="btn btn-primary btn_log flexLoginBtn" value="Envoyer">
+							<a class="btn btn-secundary btn_log btn_log_sec flexLoginBtn" href="/ATLCIVP/Login?Length=7">Annuler</a>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="log_foot">
+				<img src="../assets/images/logo_agl.jpg" width="199" height="75" class="bollore_padd">
+			</div>
+		</div>
+		<script>
+			const MAX_SIZE = 105 * 1024 * 1024 //maximum size per file (105 MB, defined in the web config: {maxRequestLength="105000"})
+
+			$(function () {
+				$('#ddlRoles').change(showPartialForm);
+				showPartialForm();
+
+				$('#ddlJustificationDocumentOptions').change(showJustificationDocumentSection);
+				showJustificationDocumentSection();
+
+				$('#resendConfirmationLink').click(function () {
+					$('#registerForm')
+						.attr('action', '/ATLCIVP/Account/ResendConfirmationEmail')
+						.submit();
+				});
+
+				$('#email-input').keydown(function () {
+					$(this).attr('email-copy', $(this).val());
+				});
+				$('#email-input').keyup(function () {
+					var notification = $('#resend_confirmation_notification');
+
+					// If the resend link notification popup is currently shown
+					if (notification) {
+						// If the email input value was changed
+						if ($(this).val() != $(this).attr('email-copy')) {
+							notification.hide();
+						}
+					}
+				});
+
+				//It was added so that the application does not break when trying to upload a very large file.
+				$('#registerForm').on('submit', function (event) {
+					$("#divError").hide();
+					$("#fileSizeExceededError").hide();
+
+					var sumFileSize = 0;
+					var docUploadElements = $("[id*='docUpload_']");
+					docUploadElements.each(function () {
+						const file = $('#' + this.id)[0].files[0];
+						if (file) {
+							sumFileSize += file.size;
+							if (file.size > MAX_SIZE) {
+								event.preventDefault();
+								$("#divError").show();
+								$("#fileSizeExceededError").show();
+							}
+						}
+					});
+					if (sumFileSize > MAX_SIZE) {
+						event.preventDefault();
+						$("#divError").show();
+						$("#fileSizeExceededError").show();
+					}
+				});
+				
+            });
+
+            function showPartialForm () {
+                var rolesDictionary = {"113":"3","114":"4"} ;
+                var idSelected = rolesDictionary[$('#ddlRoles').val()];
+
+                var $elementsToHide = $('*[data-roletype]');
+                var $elementsToShow = $('*[data-roletype=' + idSelected + ']');
+
+                $elementsToHide.hide();
+                $elementsToShow.show();
+            }
+
+			function showJustificationDocumentSection() {
+				var selectedJustificationDocOption = $('#ddlJustificationDocumentOptions').val();
+				if (selectedJustificationDocOption == 2) {
+					var docUploadElements = $("[id*='docUpload_']");
+					docUploadElements.each(function () {
+						$('#' + this.id).val('');
+						$('#' + this.id).filestyle('clear');
+
+					});
+					$('#divJustificationDocumentUploadSection').hide();
+				} else {
+					$('#divJustificationDocumentUploadSection').show();
+				}
+			}
+
+		</script>
+	
+</form>
+    </div>
+
+
+
+</body></html>

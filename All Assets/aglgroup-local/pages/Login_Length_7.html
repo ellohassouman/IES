@@ -1,0 +1,131 @@
+<!DOCTYPE html><html class="js no-flexbox flexbox-legacy canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers no-applicationcache svg inlinesvg smil svgclippaths wf-nunitosans-n4-active wf-nunitosans-n7-active wf-active"><head>
+    <meta charset="utf-8">
+    <title>Ipaki Extranet</title>
+    <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon">
+
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+
+    <link href="../assets/css/bootstrap.css" rel="stylesheet">
+<link href="../assets/css/bootstrap_rtl.css" rel="stylesheet">
+
+    <link href="../assets/css/fontawesome-all.css" rel="stylesheet">
+<link href="../assets/css/sassStyle.css" rel="stylesheet">
+<link href="../assets/css/perfect-scrollbar.css" rel="stylesheet">
+
+    <link href="../assets/css/bootstrap-icons_min.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js" type="text/javascript" async=""></script><script src="../assets/js/jquery-1_11_0.js"></script>
+<script src="../assets/js/jquery-3_7_1.js"></script>
+
+    
+    <script src="../assets/js/jquery_unobtrusive-ajax_min.js"></script>
+
+    <script src="../assets/js/modernizr-2_5_3.js"></script>
+
+    <script src="../assets/js/bootstrap_bundle_min.js"></script>
+<script src="../assets/js/bootstrap-datetimepicker.js"></script>
+<script src="../assets/js/bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/resources_en-US.js"></script>
+
+    <script src="../assets/js/respond.js"></script>
+
+    <script src="../assets/js/generalFunctions.js"></script>
+<script src="../assets/js/Validations.js"></script>
+<script src="../assets/js/js-cookie.js"></script>
+<script src="../assets/js/perfect-scrollbar_jquery.js"></script>
+<script src="../assets/js/perfect-scrollbar.js"></script>
+
+
+    <script>
+        if (window.top !== window.self) {
+			window.location.href = '/Error/FrameError';
+		}
+    </script><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,700&amp;subset=latin" media="all">
+
+</head>
+<body class="bgPpal">
+    <div>
+            
+
+<form action="/ATLCIVP/Login" class="form-horizontal" id="loginForm" method="post" role="form"><input name="__RequestVerificationToken" type="hidden" value="CgqXRxV-wbIakTL66_jrYkKgKVoPO0S3lHuWe0FBnTdYOIFo0LeO4Bh-NcYK28Q9mYgHYKvf9x_NNECsFEWDlWqXIO5qYNJ_fWXGyADjonfsOtWQhXllgPpwZHecmLlZY27WVYzAZhwuXK42DhgDdA2">    
+        <div class="log_in2">
+            <div class="log_top create_u_canvas"><h3 class="tit_terminal"></h3></div>
+            <div class="wrapLogin">
+                <div class="row">
+                    <div class="log_cont">
+                        <img src="../assets/images/ipk_logo2.jpg" class="logo_ppal">
+                    </div>
+                </div>
+                
+
+                <div class="log_cont1">
+                    <div class="cont_right">
+                        <h4 class="bottomLine tit_log">Se connecter</h4>
+                    </div>
+                </div>
+
+                <div class="log_cont2">
+
+                    <div>
+                        <input class="form-control input_login2" data-val="true" data-val-email="Veuillez saisir une adresse e-mail valide" data-val-required="Veuillez saisir une adresse e-mail" id="email-input" name="Email" placeholder="e-mail " type="text" value="">
+                    </div>
+                    <div>
+                        <input autocomplete="off" class="form-control input_login" data-val="true" data-val-required="Veuillez entrer un mot de passe" id="Password" name="Password" placeholder="Mot de passe " type="password">
+                    </div>
+                    <div class="txt_rem">
+                        <input data-val="true" data-val-required="'Remember Me' ne doit pas avoir la valeur null." id="RememberMe" name="RememberMe" type="checkbox" value="true"><input name="RememberMe" type="hidden" value="false">
+                        <label for="RememberMe">Se souvenir de moi </label>
+                    </div>
+                </div>
+                <div class="cont_right">
+                    <div class="flexContent">
+                        <input type="submit" class="btn btn-primary btn_log flexLoginBtn" value="Envoyer">
+                        <a class="btn btn-default flexLoginBtn" href="/ATLCIVP/Register?Length=7">Nouveau compte</a>
+                    </div>
+                    <div class="check_rem2">
+                        <a href="/ATLCIVP/ForgotPassword?SubmitAction=ForgotPasswordCustomer&amp;CancelAction=CustomerLogin">Mot de passe oublié?</a>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="log_foot"><img src="../assets/images/logo_agl.jpg" width="199" height="75" class="bollore_padd"></div>
+        </div>
+    
+</form>
+<script>
+    $(document).ready(function () {
+        if ('' != null && '') {
+            $("input").prop("disabled", "disabled");
+            $("a").hide();
+        }
+
+        $('#resendConfirmationLink').click(function () {
+            $('#loginForm')
+                .attr('action', '/ATLCIVP/Account/ResendConfirmationEmail')
+                .submit();
+        });
+
+        $('#email-input').keydown(function () {
+            $(this).attr('email-copy', $(this).val());
+        });
+        $('#email-input').keyup(function () {
+            var notification = $('#resend_confirmation_notification');
+
+            // If the resend link notification popup is currently shown
+            if (notification) {
+                // If the email input value was changed
+                if ($(this).val() != $(this).attr('email-copy')) {
+                    notification.hide();
+                }
+            }
+        });
+    });
+</script>
+
+    </div>
+
+
+
+</body></html>

@@ -1,0 +1,645 @@
+<!DOCTYPE html><html class="js no-flexbox flexbox-legacy canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers no-applicationcache svg inlinesvg smil svgclippaths wf-nunitosans-n4-active wf-nunitosans-n7-active wf-active"><head>
+    <meta charset="utf-8">
+    <title>Ipaki Extranet</title>
+    <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon">
+
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0">
+
+    <link href="../assets/css/dataTables.css" rel="stylesheet">
+
+    <link href="../assets/css/bootstrap.css" rel="stylesheet">
+<link href="../assets/css/bootstrap_rtl.css" rel="stylesheet">
+
+    <link href="../assets/css/bootstrap-icons_min.css" rel="stylesheet">
+
+    
+    <link href="../assets/css/bootstrap-datetimepicker.css" rel="stylesheet">
+
+    <link href="../assets/css/captcha-stylesheet.css" rel="stylesheet">
+
+    <link href="../assets/css/fontawesome-all.css" rel="stylesheet">
+<link href="../assets/css/sassStyle.css" rel="stylesheet">
+<link href="../assets/css/perfect-scrollbar.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js" type="text/javascript" async=""></script><script src="../assets/js/modernizr-2_5_3.js"></script>
+
+    <script src="../assets/js/jquery-3_7_1.js"></script>
+
+    <script src="../assets/js/bootstrap_bundle_min.js"></script>
+<script src="../assets/js/bootstrap-datetimepicker.js"></script>
+<script src="../assets/js/bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/resources_en-US.js"></script>
+
+    <script src="../assets/js/respond.js"></script>
+
+    <script src="../assets/js/bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/spin.js"></script><style type="text/css"></style>
+<script src="../assets/js/jquery_spin.js"></script>
+
+    <script src="../assets/js/moment.js"></script>
+
+    <script src="../assets/js/generalFunctions.js"></script>
+<script src="../assets/js/Validations.js"></script>
+<script src="../assets/js/js-cookie.js"></script>
+<script src="../assets/js/perfect-scrollbar_jquery.js"></script>
+<script src="../assets/js/perfect-scrollbar.js"></script>
+
+    <script src="../assets/js/dataTables_min.js"></script>
+
+    <script src="../assets/js/bootstrap-datetimepicker_fr.js"></script>
+
+
+    <script>
+        if (window.top !== window.self) {
+			window.location.href = '/Error/FrameError';
+		}
+    </script>
+<script>NS_CSM_td=275810707;NS_CSM_pd=275116665;NS_CSM_u="/clm10";NS_CSM_col="AAAAAAWx9KR8I4NDMeDymlXaX5amS1poyBdFUNrzeLEprcXB0BAq+0yfX2g9mdeI9DcCRBwWMDpt1JK18/Ag673a3a8T";</script><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,700&amp;subset=latin" media="all"><script type="text/javascript">function sendTimingInfoInit(){setTimeout(sendTimingInfo,0)}function sendTimingInfo(){var wp=window.performance;if(wp){var c1,c2,t;c1=wp.timing;if(c1){var cm={};cm.ns=c1.navigationStart;if((t=c1.unloadEventStart)>0)cm.us=t;if((t=c1.unloadEventEnd)>0)cm.ue=t;if((t=c1.redirectStart)>0)cm.rs=t;if((t=c1.redirectEnd)>0)cm.re=t;cm.fs=c1.fetchStart;cm.dls=c1.domainLookupStart;cm.dle=c1.domainLookupEnd;cm.cs=c1.connectStart;cm.ce=c1.connectEnd;if((t=c1.secureConnectionStart)>0)cm.scs=t;cm.rqs=c1.requestStart;cm.rss=c1.responseStart;cm.rse=c1.responseEnd;cm.dl=c1.domLoading;cm.di=c1.domInteractive;cm.dcls=c1.domContentLoadedEventStart;cm.dcle=c1.domContentLoadedEventEnd;cm.dc=c1.domComplete;if((t=c1.loadEventStart)>0)cm.ls=t;if((t=c1.loadEventEnd)>0)cm.le=t;cm.tid=NS_CSM_td;cm.pid=NS_CSM_pd;cm.ac=NS_CSM_col;var xhttp=new XMLHttpRequest();if(xhttp){var JSON=JSON||{};JSON.stringify=JSON.stringify||function(ob){var t=typeof(ob);if(t!="object"||ob===null){if(t=="string")ob='"'+ob+'"';return String(ob);}else{var n,v,json=[],arr=(ob&&ob.constructor==Array);for(n in ob){v=ob[n];t=typeof(v);if(t=="string")v='"'+v+'"';else if(t=="object"&&v!==null)v=JSON.stringify(v);json.push((arr?"":'"'+n+'":')+String(v));}return(arr?"[":"{")+String(json)+(arr?"]":"}");}};xhttp.open("POST",NS_CSM_u,true);xhttp.send(JSON.stringify(cm));}}}}if(window.addEventListener)window.addEventListener("load",sendTimingInfoInit,false);else if(window.attachEvent)window.attachEvent("onload",sendTimingInfoInit);else window.onload=sendTimingInfoInit;</script></head>
+
+<body>
+<script>
+ function string_to_array(str) {var len = str.length;var res = new Array(len);for(var i = 0; i < len; i++)res[i] = str.charCodeAt(i);return res;}function array_to_hex_string(ary) {var res = "";for(var i = 0; i < ary.length; i++)res += SHA256_hexchars[ary[i] >> 4] + SHA256_hexchars[ary[i] & 0x0f];return res;}function SHA256_init() {SHA256_H = new Array(0x6a09e667, 0xbb67ae85,0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19);SHA256_buf = new Array();SHA256_len = 0;}function SHA256_write(msg) {if (typeof(msg) == "string") SHA256_buf = SHA256_buf.concat(string_to_array(msg));else SHA256_buf = SHA256_buf.concat(msg); for(var i = 0; i + 64 <= SHA256_buf.length; i += 64) SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf.slice(i, i +64)); SHA256_buf = SHA256_buf.slice(i); SHA256_len += msg.length;}function SHA256_finalize() { SHA256_buf[SHA256_buf.length] = 0x80;  if (SHA256_buf.length > 64 - 8) {for(var i = SHA256_buf.length; i < 64; i++)SHA256_buf[i] = 0;SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf);SHA256_buf.length = 0;} for(var i = SHA256_buf.length; i < 64 - 5; i++)SHA256_buf[i] = 0;  SHA256_buf[59] =(SHA256_len >>> 29) & 0xff;  SHA256_buf[60] = (SHA256_len >>> 21) & 0xff;  SHA256_buf[61] = (SHA256_len >>> 13) & 0xff;  SHA256_buf[62] = (SHA256_len >>> 5) & 0xff;  SHA256_buf[63] = (SHA256_len << 3) & 0xff;  SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf);  var res = new Array(32);  for(var i = 0; i < 8; i++) {res[4 * i + 0] = SHA256_H[i] >>> 24; res[4 * i + 1] = (SHA256_H[i] >> 16) & 0xff; res[4 * i + 2] = (SHA256_H[i] >> 8) & 0xff; res[4 * i + 3] = SHA256_H[i] & 0xff; } delete SHA256_H; delete SHA256_buf; delete SHA256_len; return res;}function HMAC_SHA256_init(key) {  if (typeof(key) == "string") HMAC_SHA256_key = string_to_array(key);  else  HMAC_SHA256_key = new Array().concat(key);  if (HMAC_SHA256_key.length > 64) { SHA256_init(); SHA256_write(HMAC_SHA256_key); HMAC_SHA256_key = SHA256_finalize(); }  for(var i = HMAC_SHA256_key.length; i < 64; i++)  HMAC_SHA256_key[i] = 0; for(var i = 0; i < 64; i++) HMAC_SHA256_key[i] ^=  0x36;  SHA256_init(); SHA256_write(HMAC_SHA256_key);} function HMAC_SHA256_write(msg) {  SHA256_write(msg);} function HMAC_SHA256_finalize() {  var md = SHA256_finalize();  for(var i = 0; i < 64; i++) HMAC_SHA256_key[i] ^= 0x36 ^ 0x5c; SHA256_init(); SHA256_write(HMAC_SHA256_key); SHA256_write(md);  for(var i = 0; i < 64; i++)    HMAC_SHA256_key[i] = 0;  delete HMAC_SHA256_key;  return SHA256_finalize();}function HMAC_SHA256_MAC(key, msg) { var res;  HMAC_SHA256_init(key);  HMAC_SHA256_write(msg);  res = HMAC_SHA256_finalize();  return array_to_hex_string(res);} SHA256_hexchars = new Array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f');SHA256_K = new Array( 0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1,0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f,0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2); function SHA256_sigma0(x) { return ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);} function SHA256_sigma1(x) { return ((x >>> 17) | (x << 15)) ^ ((x >>> 19) | (x << 13)) ^ (x >>> 10);}function SHA256_Sigma0(x) { return ((x >>> 2) | (x << 30)) ^ ((x >>> 13) | (x << 19)) ^ ((x >>> 22) | (x << 10));}function SHA256_Sigma1(x) { return ((x >>> 6) | (x << 26)) ^ ((x >>> 11) | (x << 21)) ^ ((x >>> 25) | (x << 7));} function SHA256_Ch(x, y, z) { return z ^ (x & (y ^ z));} function SHA256_Maj(x, y, z) {return (x & y) ^ (z & (x ^ y));}function SHA256_Hash_Word_Block(H, W) { for(var i = 16; i < 64; i++)  W[i] = (SHA256_sigma1(W[i - 2]) +  W[i - 7] + SHA256_sigma0(W[i - 15]) + W[i - 16]) & 0xffffffff; var state = new Array().concat(H); for(var i = 0; i < 64; i++) {    var T1 = state[7] + SHA256_Sigma1(state[4]) + SHA256_Ch(state[4], state[5], state[6]) + SHA256_K[i] + W[i]; var T2 = SHA256_Sigma0(state[0]) + SHA256_Maj(state[0], state[1], state[2]); state.pop(); state.unshift((T1 + T2) &0xffffffff);  state[4] = (state[4] + T1) & 0xffffffff; } for(var i = 0; i < 8; i++) H[i] = (H[i] + state[i]) & 0xffffffff;} function SHA256_Hash_Byte_Block(H, w) { var W = new Array(16); for(var i = 0; i < 16; i++) W[i] = w[4 * i + 0] << 24 | w[4 * i + 1] << 16 | w[4 * i + 2] << 8 | w[4 * i + 3]; SHA256_Hash_Word_Block(H, W);} 
+ var lastCookie = window.name;
+ function getCookie(name) {
+       let cookie = {}; 
+            document.cookie.split(';').forEach(function(el) {
+                let cookiekv = el.split('=');
+           cookie[cookiekv[0].trim()] = cookiekv[1];
+            })
+           if (cookie.hasOwnProperty(name)) {
+               return cookie[name];
+                     }
+            return "";
+ };
+ var checkCookie = function() {
+       var token ="7067722647229789059";
+			    var seed = getCookie('citrix_ns_seed');
+      var currentCookie = document.cookie;
+         if (currentCookie != lastCookie || (lastCookie.length == 0)) {
+           console.log('cookie has changed');
+           var hash = HMAC_SHA256_MAC(seed, token);
+         document.cookie = 'MC=' + hash +'; Domain= .aglgroup.com';
+               lastCookie = currentCookie;
+          window.name = currentCookie;
+     }
+                    return true;
+ };
+ window.setInterval(checkCookie, 100);
+        </script>
+
+    <nav class="navbar navbar-expand-md navbar-inverse fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarFlagsMenu" aria-controls="navbarFlagsMenu" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <div class="logo-version">
+                    <a class="navbar-brand fontBalnc" href="/TICTC/Home"> </a>
+                </div>
+            </div>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarFlagsMenu">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+
+
+<form action="/TICTC/LogOff?LoginActionName=CustomerLogin" id="logoutForm" method="post">            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle fontBalnc menuUser" data-bs-toggle="dropdown"><span class="glyphicon glyphicon-user paddIcon"></span>Elloh ASSOUMAN<b class="caret"></b></a>
+                    <ul class="dropdown-menu menuUser">
+                            <li>
+                                <a id="linkMyProfile" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#ProfileModal" href="/TICTC/Customer/MyProfile">
+                                    <span class="bi bi-person-fill" aria-hidden="true"></span> Mon Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/TICTC/Payment/History">
+                                    <span class="bi bi-clock" aria-hidden="true"></span> Historique de paiement
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/TICTC/Account/ChangePassword">
+                                    <span class="bi bi-lock-fill" aria-hidden="true"></span> Changer le mot de passe
+                                </a>
+                            </li>
+                                <li>
+                                    <a class="dropdown-item" id="supportButton" data-bs-toggle="modal" data-bs-target="#supportDialog" href="/TICTC/Support/ShowSupportDialog">
+                                        <div><span class="bi bi-envelope-fill" aria-hidden="true"></span> Demander de l'assistance</div>
+                                    </a>
+                                </li>
+                        <li>
+                            <input name="__RequestVerificationToken" type="hidden" value="vvb5bKPPqmEtss4dqAklAhDz0-O__NiZ3oZc2TNbJqSWCBxdjTtXfG-HwLNNVJkqGr7FZmZ7gsqzZSdQeNMuPBON2ysYqTLDxzMV7MQA1sv8eCzdXO-yDsLG2Jj0zS8i_riJdc7OGpVgYxOzpx4J2Q2">
+                            <a href="javascript:document.getElementById('logoutForm').submit()" class="dropdown-item"><span class="bi bi-box-arrow-right" aria-hidden="true"></span> Déconnecter</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+<input type="hidden" name="as_sfid" value="AAAAAAWlLJhEr_d6fQqWxI9FrsQ6u8Z3UPHG7Mwzqev6y2cJkQjQEx0tSE8NtHVOcaz_fSkpCcs-IXBvxIcxLy-p5_DByu1JkMluuWZiEg5-FuHXEhezqGkQqmR5v1tiDTPYZoEXq9I5SGCbNCsYNTL_vADs873X3Qb_6qc5ckOkWFG4TQ=="><input type="hidden" name="as_fid" value="51a4c58452290d15a6a1f063256fc548e34e0920"></form><script>
+    $('#supportButton').click(function () {
+        $('#supportDialogContent').load(this.href, function () {
+            $('#supportDialog').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    $('#linkMyProfile').click(function () {
+        $('#ProfileModalContent').load(this.href, function () {
+            $('#ProfileModal').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    
+
+</script>
+
+
+                        <div class="d-none d-md-block float-start">
+<form action="/Default/SetCulture" id="SetCultureForm" method="post"><span class="posFlags">
+                                    <span class="btn-group btn-group-xs">
+                                        <button type="submit" name="culture" id="en-us" value="en-us" class="btn btn-primary btn-sm">Anglais</button>
+                                        <button type="submit" name="culture" id="fr" value="fr" class="btn btn-primary btn-sm">Français</button>
+                                    </span>
+                                </span>
+<input type="hidden" name="as_sfid" value="AAAAAAUF76l4OJm2aHrrIi8Vc6m9KDWtTPN3m4yJMYSkr_aHR844WInrzsacHCeHglfG6O7guHN-HdFLJWPSatq4YpVzWOB9ZldISS8GUNU7HBIP06PWvaSuIrNfJIW9HKaANvFBdsxdNTJ4YjOn11jr6xmsellqswrzyRIkZbrgtXtabQ=="><input type="hidden" name="as_fid" value="ef19abec64118f37f95bb86c78bda44fff3efba5"></form>                        </div>
+
+                    </li>
+                </ul>
+            </div>
+                <a href="/TICTC/Payment/PayInvoices">
+                    <div id="divShoppingCart" class="Shopping_cart">
+                        <span id="lblCartCount" class="txt_cart"></span>
+                    </div>
+                </a>
+            <div class="hidden-sm d-md-none d-lg-none">
+<form action="/Default/SetCulture" method="post"><span class="posFlags posFlagsCustomer">
+                        <span class="btn-group btn-group-xs">
+                                <button type="submit" name="culture" id="en-us" value="en-us" class="btn btn-primary btnLangMobile">EN</button>
+                        </span>
+                    </span>
+<input type="hidden" name="as_sfid" value="AAAAAAUbDRN4ZX8mrI_eUntyGSl2kv1Y3P3hdemLwWZPA6-bI9kR5Xyg9h3L0D03GwMg8msjvV2ZHx-Yk6sT_dpMXgXTMMz4hwda_I9DmYRbenXT0GUfMEHQhT90kqaWEtxarJT7J-8AL3_Jmfs2zi6ErX-ZalNo77-OjE68vqGBhQYRPQ=="><input type="hidden" name="as_fid" value="ba49adcc60ca9ce958d9f078149d378bebf7e9e5"></form>            </div>
+        </div>
+    </nav>
+
+    <div id="supportDialog" class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="supportModal" aria-hidden="true">
+        <div id="supportDialogContent" class="modal-dialog"></div>
+    </div>
+
+    <div id="ProfileModal" class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="myProfileModal" aria-hidden="true">
+        <div id="ProfileModalContent" class="modal-dialog"></div>
+    </div>
+
+    <div class="jumbotronCustomer hidden-xs" style="background-image: url(/Images/img_puerto.jpg);">
+        <div class="container transpCustomer">
+                <h2>TICT Clearing (Training)</h2>
+                <h4>TICT Clearing (Training)</h4>
+        </div>
+        <div style="text-align:right;">
+        </div>
+    </div>
+
+    <div id="supportAlerts">
+        
+
+
+
+    </div>
+
+    <div class="container FondBlanc content">
+        
+    <script src="https://dev.gutouch.net/touchpayv2/script/touchpaynr/dev_touchpay-0.0.1.js" type="text/javascript"></script>
+
+
+
+<input name="__RequestVerificationToken" type="hidden" value="Sgkz37_HO_HSPydwhtgOhGGW1aGJKka_vWDGrj5es7mzM4h6GUOYBLtS26fuLs-FZZ5yDGTsx3xd1SMz7Er7-KVJfyANBZ81hqLQ__4IK6FFIXpO7zJf58M3y9BDR_YCd-86E9ITNTDpchIUn-YryQ2">
+<div>
+    <h4 class="header_bl col-lg-12 pad_amount mt-1 mb-1">Panier de commande <span><img src="../assets/images/ico_cart2.jpg"></span></h4>
+</div>
+
+<div class="modal fade" id="modalCinetPay" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header d-flex justify-content-between">
+                <h4 class="modal-title">CinetPay Payment</h4>
+                <button id="modalCinetPayDismiss" type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <object id="cinetPayUrl" data=""></object>
+            </div>
+            <div class="modal-footer">
+                <button id="modalCinetPayClose" type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form action="/TICTC/Payment/PayInvoices" id="payInvoiceForm" method="post"><input value="NGN" id="currencyCode" name="Cart.CurrencyCode" type="hidden"><input value="311 645,51" data-val="true" data-val-number="The field TotalAmount must be a number." id="totalInvoiceAmount" name="Cart.TotalAmount" type="hidden"><input value="0" data-val="true" data-val-number="The field PaymentMethodIdSelected must be a number." id="paymentMethodIdSelected" name="PaymentMethodIdSelected" type="hidden"><input value="1716" data-val="true" data-val-number="The field Id must be a number." id="cartId" name="Cart.Id" type="hidden">            <div class="row">
+                <div class="col-lg-12 mt-1">
+                    <h4 class="header_bl amount">
+                        <span class="hidden-xs">Montant total: </span>
+                        <span class="hidden-sm hidden-md hidden-lg">Total:  </span>
+                        <span id="totalAmount">311 645,51</span><span> NGN</span>
+                    </h4>
+                </div>
+            </div>
+        <div class="row">
+            <div class="col-lg-8 mt-2">
+                <h4 class="bottomLine2 cart-subtitle">Détails du paiement</h4>
+                <div class="tableWrapper">
+                    <table width="100%" class="display table-striped tabla dataTable" id="invoiceTable" style="width: 100%;" cellspacing="0">
+                        <thead class="thead_BL">
+                            <tr role="row" class="even">
+                                <th tabindex="0" role="columnheader" aria-controls="InvoiceTable" rowspan="1" colspan="1">Numéro de facture</th>
+                                <th tabindex="0" role="columnheader" aria-controls="InvoiceTable" rowspan="1" colspan="1">Numéro de BL</th>
+                                <th tabindex="0" role="columnheader" aria-controls="InvoiceTable" rowspan="1" colspan="1">Date d'enlèvement</th>
+                                <th tabindex="0" role="columnheader" aria-controls="InvoiceTable" rowspan="1" colspan="1">Montant </th>
+                                <th tabindex="0" role="columnheader" aria-controls="InvoiceTable" rowspan="1" colspan="1">Enlever</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" role="alert" aria-live="polite" aria-relevant="all">
+<input id="invoiceIdValue" name="invoiceId" type="hidden" value="3308200">                                <tr class="odd">
+                                    <td class="ancho_colt  sorting_1">251018767</td>
+                                    <td class="ancho_colt">MEDUDM992142</td>
+                                    <td class="ancho_colt">20/10/2025 </td>
+                                    <td class="ancho_colt">311 645,51 (NGN)</td>
+                                    <td class="ancho_colt cta_center">
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalInvoiceDelete" class="deleteInvoiceButton" data-invoiceid="3308200" data-invoicenumber="251018767" data-confirmation="Etes-vous sûr de vouloir supprimer cet élément 251018767?">
+                                            <img class="del" src="../assets/images/ico_del2.png" width="15" height="15">
+                                        </a>
+                                    </td>
+                                </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="extraChargesTable" style="display: none;">
+                    <h4 class="bottomLine2">Frais de transaction</h4>
+                    <div class="tableWrapper">
+                        <table width="100%" class="display table-striped tabla dataTable" style="width: 100%;" cellspacing="0">
+                            <thead class="thead_BL">
+                                <tr role="row">
+                                    <th tabindex="0" role="columnheader" aria-controls="InvoiceTable" rowspan="1" colspan="1">Frais de transaction</th>
+                                    <th tabindex="0" role="columnheader" aria-controls="InvoiceTable" rowspan="1" colspan="1">Nombre de factures</th>
+                                    <th tabindex="0" role="columnheader" aria-controls="InvoiceTable" rowspan="1" colspan="1">Montant</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody" role="alert" aria-live="polite" aria-relevant="all">
+                                <tr class="odd">
+                                    <td id="serviceChargeValue" class="ancho_colt sorting_1"></td>
+                                    <td id="invoiceQtyValue" class="ancho_colt">1</td>
+                                    <td id="amountValue" class="ancho_colt"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+                <div class="col-lg-4 mt-2">
+                    <h4 class="bottomLine2 YI_list_marg cart-subtitle">Moyens de paiement</h4>
+                        <div class="row PayMethods">
+                            <div class="col-lg-6">
+                                <img src="../assets/images/GTBank.jpg" class="img-responsive">
+                            </div>
+                            <div class="col-lg-6 mt-2">
+
+                                <div class="radio">
+                                    <label for="payment_method_6">
+                                        <input class="checkValidations" id="6" name="payment_method_group" type="radio" value="GTBank">
+                                        WebPayment ngn
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row PayMethods">
+                            <div class="col-lg-6">
+                                <img src="../assets/images/Squad.jpg" class="img-responsive">
+                            </div>
+                            <div class="col-lg-6 mt-2">
+
+                                <div class="radio">
+                                    <label for="payment_method_16">
+                                        <input class="checkValidations" id="16" name="payment_method_group" type="radio" value="Squad">
+                                        Squad ngn
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 paddSections mt-2">
+                    <h4 class="bottomLine2 cart-subtitle">
+                        Conditions générales de vente
+                        <button id="btn_collapse" class="btn btn_collapse" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                            <span id="span_collapse_sign" class="bi bi-plus-circle-fill" aria-hidden="true"></span>
+                        </button>
+                    </h4>
+                    <div class="collapse" id="collapseExample">
+                        <div class="well large_conditions">
+                            <span class="largeText">TINCAN ISLAND CONTAINER TERMINAL LTD
+INTRODUCTION
+The Terms and Conditions contained herein in this webpage shall govern the use of this website including all pages in the website (collectively referred to herein below as this website). These terms and conditions shall apply to your use of this website in full force and effect and by using this website, you expressly accept and agree to be bound by these terms and conditions to the fullest extent, you are therefore not to use this website if you have any objections with these terms and conditions or any part of it thereof.
+This web site has been designed to provide general information about Tin-can Island Container Terminal Limited (TICT) and its services and is subject to change without notice. Any information contained or referenced in this web site is suitable only as an introduction to TICT and its services. For specific advice and information related to our services, please contact tict@tict-ng.com.
+
+DISCLAIMER
+Whilst we endeavor to keep the information up-to-date and correct, we make no representations or warranties express or implied about the completeness, reliability and accuracy of the information on our website; at the very best all the information on this website is published in good faith and for general information purpose only. Consequently, any action you take upon any information on our website, or any reliance you place on any such information is strictly at your own risk.
+We do not warrant or represent that the website or any service on the website will remain available. We reserve the right to discontinue or alter any or all of our website services, and to stop publishing our website, at any time in our sole discretion without notice or explanation; and save to the extent expressly provided otherwise in these terms and conditions, you will not be entitled to any compensation or other payment upon the discontinuance or alteration of any website services, or if we stop publishing the website. We exclude all representations and warranties relating to our website and the use of our website.
+
+LIMITATIONS OF LIABILITY
+In no event will TICT, nor any of its affiliates, partners, directors, employees or other representatives be liable for damages arising out of or in connection with the use of this Web site or the information, or content thereof.
+This is a comprehensive limitation of liability that applies to all damages of any kind, including (without limitation) compensatory, direct, indirect or consequential damages, loss of data, income or profit, loss of or damage to property and claims of third parties, loss of goodwill, loss of business and for any other loss or damage of any kind, however arising and whether caused by tort (including negligence), breach of contract or otherwise, even if foreseeable.
+
+INDEMNITY
+You hereby indemnify TICT and undertake to keep TICT indemnified against any losses, damages ,costs, liabilities and expenses including without limitation legal expenses and any amounts paid by TICT to a third party in settlement of a claim or dispute on the advice of TICT’s legal advisers incurred or suffered by TICT arising out of your use of this website, or arising out of any breach by you of any provision of these terms and conditions or arising out of any claim that you have breached any provision of these terms and conditions.
+
+RESPONSIBILITY
+You are responsible for maintaining the confidentiality of your login names and passwords and you accept responsibility for all activities, charges, and damages that occur under your account. If you have reason to believe that someone is using your account without your permission, you should contact us immediately. We will not be responsible for any loss or damage resulting from your failure to notify us of unauthorized use.
+VIRUSES, HACKING AND OTHER OFFENCES
+The user agrees that material downloaded or otherwise accessed through the use of the Website is obtained entirely at the user’s own risk and that the user will be entirely responsible for any resulting damage to software or computer systems and/or any resulting loss of data, even if such loss and damage was reasonably foreseeable and TICT had been advised of the possibility of the same.
+You must not misuse the Website by knowingly introducing viruses, trojans, worms, logic bombs or other material which is malicious or technologically harmful. You must not attempt to gain unauthorized access to the Website, the server on which the Website is stored or any server, computer or database connected to the Website. You must not attack the Website via a denial-of-service attack or a distributed denial-of service attack.
+We will not be liable for any loss or damage caused by a distributed denial-of-service attack, viruses or other technologically harmful material that may infect your computer equipment, computer programs, data or other proprietary material due to your use of the Website or to your downloading of any material posted on them, or on any website linked to them.
+
+LINKING TO THE WEBSITE
+You may link to our home page, provided you do so in a way that is fair and legal and does not damage our reputation or take advantage of it, but you must not establish a link in such a way as to suggest any form of association, approval or endorsement on our part where none exists. The Website must not be framed on any other site. We reserve the right to withdraw linking permission without notice.  
+LINKS TO OTHER WEBSITES
+From time to time this website may also include links to other websites. These links are provided for your convenience to provide further information. Whilst we strive to provide links to only useful and ethical website, we have no control over the content and nature of these sites and the links to other websites do not imply an endorsement of the content of these sites. We have no responsibility for the content of the linked website and any reliance on any information contained in any such linked website is strictly at your own risk.
+ACCEPTABLE USE
+You may use the Website only for lawful purposes. 
+You may not use the Website:
+Prohibited Uses:
+•	in any way that breaches any applicable local, national or international law or regulation
+•	in any way that is unlawful or fraudulent, or has any unlawful or fraudulent purpose or effect
+•	to transmit, or procure the sending of, any unsolicited or unauthorized advertising or promotional material or any other form of similar solicitation (spam); or
+•	to knowingly transmit any data, send or upload any material that contains viruses, Trojan horses, worms, time-bombs, keystroke loggers, spyware, adware or any other harmful programs or similar computer code designed to adversely affect the operation of any computer software or hardware.
+You also agree:
+•	not to reproduce, duplicate, copy or re-sell any part of the Website
+•	not to access without authority, interfere with, damage or disrupt any part of the Website or any equipment or network on which the Website is stored or any software used in the provision of the Website, or any equipment or network or software owned or used by any third party
+SEVERABILITY
+If a provision of these terms and conditions is determined by any court or other competent authority to be unlawful and/or unenforceable, the other provisions will continue in effect.  If any unlawful and/or unenforceable provision would be lawful or enforceable if part of it were deleted, that part will be deemed to be deleted, and the rest of the provision will continue in effect.
+
+ENTIRE AGREEMENT
+These terms and conditions constitute the entire agreement between you and TICT in relation to your use of this website, and supersede all previous agreements in respect of your use of this website.
+
+LAW AND JURISDICTION
+These terms and conditions will be governed by and construed in accordance with the laws of Nigeria and any disputes relating to these terms and conditions will be subject to the jurisdiction of the courts of Nigeria.
+
+Last Updated: 01 April 2020
+</span>
+                        </div>
+
+                    </div>
+                                    <div class="row">
+                        <div class="accept_conditions">
+                            <label>
+                                <input type="checkbox" id="check_conditions" class="checkValidations">
+                                <span>J'accepte les conditions générales de vente</span>
+                            </label>
+                        </div>
+                    </div>
+                <div class="btns_position mt-1">
+                    <a class="btn btn-default" href="/TICTC/Home">Annuler</a>
+
+                    <button type="button" class="btn btn-primary" disabled="disabled" id="btn_continue">Continuer</button>
+                </div>
+
+            </div>
+        </div>
+<input type="hidden" name="as_sfid" value="AAAAAAWqn95-lNlsQuRFyI7BfJQT7CtRSY5FsEQke5eEgNlZJGKcT0bq7-qCwLXbrWwZX3XOZkwrFFN2zm1M2mWG1VRc2bOr1SpaEh9HL4-dmWk9bBqXrzzHXWGwwlD2PXtP20ts0_ibstpRt_imrmbGR4IUVyWHL6GdyugM_6mk61xLNA=="><input type="hidden" name="as_fid" value="fcb04c6c8e6a9481dbb28a1eb4969d43c6c968ff"></form>    <div class="modal fade" id="modalInvoiceDelete" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header d-flex justify-content-between">
+                    <h4 class="modal-title" id="modalTitle">Supprimer l'élément</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div id="divError" class="alert alert-danger alrt_pad" role="alert" style="display: none;">
+                    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> <strong> Attention!.</strong> <p id="message"></p>
+                    <button type="button" class="close" onclick="$('#divError').hide();"><span aria-hidden="true">×</span><span class="sr-only">Annuler</span></button>
+
+                </div>
+                <div class="modal-body nopad3 cntr_pop" id="confirmation">
+                    Le cart item {0} a été supprimé
+                </div>
+                <div class="modal-footer">
+<form action="/TICTC/Payment/DeleteCartItem" method="post"><input name="__RequestVerificationToken" type="hidden" value="k-_XpwsvC3VTaI5m9lkL03VUErAfaM2l2x3p1SaHUKT_9jLouBAdcPpGJZL4nokDa4zqs1R4LDjwF8DFH_oDkKQguoSPeB5ZGB9_3SMEB85P_yRAAeiAwLChR-EG_XoYEIJ5pN24OOZJQnhAitUyew2">                        <button type="button" class="btn btn-default" data-bs-dismiss="modal">Annuler</button>
+                        <input type="hidden" id="invoiceId" name="invoiceId" value="">
+                        <input type="hidden" id="invoiceNumber" name="invoiceNumber" value="">
+                        <button type="submit" class="btn btn-primary" id="btnDelete">Supprimer</button>
+<input type="hidden" name="as_sfid" value="AAAAAAVdOiGjfmHau23C6c7rA9Y-kQ1HvkDHGpaHsSNHfizovmBML7ndSpn9nnrccxkf8EBNAiyabKO1147WrOrleCW1HsA7b3C7s4_JpcSiXX28B_30LvzB-CiDXQfRR6Bxdz2ruvSzg__t4Ld1jCTEhvkyybMmyyjOtMjtqjdQs2XwOw=="><input type="hidden" name="as_fid" value="7e16340164dadd490c050c85a4bdd206afa51173"></form>                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+
+    $(document).ready(function () {
+        var rowsCount = $('#invoiceTable tr').length;
+
+        var paymentMethodsWithExtraCharge = []
+
+        $('.checkValidations').change(function () {
+            var conditionsAccepted = $('#check_conditions').is(":checked");
+            var continueButton = $('#btn_continue');
+            var anyMethodSelected = $('input[name=payment_method_group]:checked').length != 0;
+
+            if (anyMethodSelected && this.name == "payment_method_group") {
+                var paymentMethodId = parseInt($('input[name=payment_method_group]:checked').attr('id'));
+                var paymentHasExtraCharges = paymentMethodsWithExtraCharge.includes(paymentMethodId);
+                var invoiceId = $("#invoiceIdValue").first().val();
+                var count = $("[id='invoiceIdValue']").length;
+
+
+                if (paymentHasExtraCharges) {
+                    var token = $('input[name="__RequestVerificationToken"]').val();
+                    // call method to get extra charges value
+                    $.ajax({
+                        type: 'POST',
+                        url: '/TICTC/Payment/GetExtraChargeAmount',
+                        cache: false,
+                        data: {
+                            __RequestVerificationToken: token,
+                            invoiceId: invoiceId,
+                            paymentMethodId: paymentMethodId,
+                            itemsCount: count,
+                            totalInvoiceAmount: '311645,51'
+                        },
+                        success: function (result) {
+                            if (result['extraChargeAmount'] == '0.00') {
+                                $('#extraChargesTable').hide();
+                                $('#totalAmount').text($("#totalInvoiceAmount").val());
+                            } else {
+                                var currencyCode = $('#currencyCode').val();
+                                $('#serviceChargeValue').text(result['extraChargeAmount'] + ' (' + currencyCode + ')');
+                                $('#amountValue').text(result['totalExtraChargeAmount'] + ' (' + currencyCode + ')');
+                                $('#totalAmount').text(result['totalAmount']);
+                                $('#extraChargesTable').show();
+                            }
+                        },
+                        error: function (message) {
+                            $('#extraChargesTable').hide();
+                            $('#totalAmount').text($("#totalInvoiceAmount").val());
+                        }
+                    });
+                }
+                else {
+                    $('#extraChargesTable').hide();
+                    $('#totalAmount').text($("#totalInvoiceAmount").val());
+                }
+            }
+            if (conditionsAccepted && anyMethodSelected && rowsCount > 1) {
+                continueButton.removeAttr('disabled');
+            } else {
+                continueButton.attr('disabled', 'disabled');
+            }
+        });
+
+        $('#invoiceTable').on("click", ".deleteInvoiceButton", function (event) {
+            $("#modalInvoiceDelete #confirmation").text($(this).data("confirmation"));
+            $("#modalInvoiceDelete #invoiceId").val($(this).data("invoiceid"));
+            $("#modalInvoiceDelete #invoiceNumber").val($(this).data("invoicenumber"));
+            $('#modalInvoiceDelete').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+
+        $("#invoiceTable tr:even").addClass("even");
+        $("#invoiceTable tr:odd").addClass("odd");
+
+        $('#modalCinetPay').on('shown.bs.modal', function (e) {
+            if (window.history && window.history.pushState) {
+                var url = window.location;
+                window.history.pushState('forward', null, url + '/#');
+                $(window).on('popstate', function () {
+                    window.history.replaceState(null, null, url);
+                    modalCinetPayDismiss();
+                });
+            }
+        });
+    });
+
+    $('#btn_continue').click(function () {
+        var anyMethodSelected = $('input[name=payment_method_group]:checked').length != 0;
+        if (anyMethodSelected) {
+            var paymentMethodSelectedId = $('input[name=payment_method_group]:checked').attr('id');
+            $("#paymentMethodIdSelected").val(paymentMethodSelectedId);
+            var paymentMethodSelected = $('input[name=payment_method_group]:checked').val();
+
+            if (paymentMethodSelected == 'CinetPay' || paymentMethodSelected == 'InTouch') {
+                var url = "/TICTC/Controller/GeneratePayment";
+                url = url.replace("Controller", paymentMethodSelected);
+
+				$.ajax({
+					url: url,
+					type: "get",
+					data: { paymentMethodId: paymentMethodSelectedId },
+					async: false,
+                    success: function (result) {
+                        console.log(result);
+                        console.log(paymentMethodSelected);
+                        if (result.containsErrors) {
+                            window.location.href = result.redirectTo;
+                        }
+                        else {
+                            if (paymentMethodSelected == 'CinetPay') {
+								modalCinetPayRaise(result.urlPayment);
+                            }
+                            //intouch
+                            else {
+                                modalInTouchRaise(result);
+                            }
+                        }
+					},
+					error: function (error) {
+						console.log(error);
+					}
+				});
+            }
+            else {
+                var url = "/TICTC/Controller/PayInvoices";
+                url = url.replace("Controller", paymentMethodSelected);
+
+                $('#payInvoiceForm').attr('action', url);
+                $('#payInvoiceForm').submit();
+            }
+        }
+    });
+
+    function modalInTouchRaise(result) {
+        var urlAction = "/TICTC/Payment/PaymentExit";
+        $('#payInvoiceForm').attr('action', urlAction + "?cartId=" + result.cartId);
+        $('#payInvoiceForm').submit();
+
+        sendPaymentInfos(
+            result.cartId,
+            result.agenceCode,
+            result.secureCode,
+            result.domainName,
+            result.successNotificationUrl,
+            result.failNotificationUrl,
+            result.amount);
+    }
+
+    function modalCinetPayRaise(urlPayment) {
+		$(".modal-body #cinetPayUrl").attr('data', urlPayment);
+		$('#modalCinetPay').modal({
+			keyboard: false,
+			backdrop: 'static'
+		});
+    }
+
+    function modalCinetPayDismiss() {
+        var url = "/TICTC/Payment/PaymentExit";
+        $('#payInvoiceForm').attr('action', url + "?cartId=" + $("#cartId").val());
+        $('#payInvoiceForm').submit();
+    }
+
+
+    $('#modalCinetPayDismiss, #modalCinetPayClose').click(function () {
+		modalCinetPayDismiss();
+    });
+
+    $('#btn_collapse').click(function () {
+        $('#span_collapse_sign').toggleClass("bi bi-plus-circle-fill bi bi-dash-circle-fill");
+    });
+</script>
+    </div>
+    <footer class="container FondBlanc pt-3">
+        <hr>
+        <p class="logo">© 2025 AGL Group<img src="../assets/images/ipk_logo2.jpg" class="logoFooter"></p>
+    </footer>
+    
+
+    <script>
+        $(document).ready(function () {
+            bindCartCount();
+        });
+
+        function bindCartCount() {
+            $.ajax({
+                type: 'POST',
+                url: '/TICTC/Cart/GetCurrentUserCartCount',
+                cache: false,
+                datatype: 'json',
+                contentType: 'application/json',
+                success: function (result) {
+                    $('#lblCartCount').text(result['ItemCount']);
+                },
+                error: function (message) {
+                    $('#lblCartCount').text('0');
+                }
+            });
+        }
+    </script>
+
+
+
+
+</body></html>
