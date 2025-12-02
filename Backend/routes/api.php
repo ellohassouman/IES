@@ -18,3 +18,5 @@ use App\Http\Controllers\GlobalController;
 Route::post('GetUserBLPerNumber', [GlobalController::class, 'GetUserBLPerNumber']);
 Route::post('GetUserBLHistory', [GlobalController::class, 'GetUserBLHistory']);
 Route::post('GetDetailsPerBLNumber', [GlobalController::class, 'GetDetailsPerBLNumber']);
+Route::post('GetInvoicesPerBLNumber', [GlobalController::class, 'GetInvoicesPerBLNumber']);
+Route::post('GetPendingInvoicingItemsPerBLNumber', [GlobalController::class, 'GetPendingInvoicingItemsPerBLNumber']);

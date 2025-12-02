@@ -139,5 +139,100 @@ END //
 DELIMITER ;
 
 -- ============================================================================
+-- 4. GetInvoicesPerBLNumber - Récupère les factures associées à un BL
+-- ============================================================================
+DELIMITER //
+
+CREATE PROCEDURE `GetInvoicesPerBLNumber`(
+    IN p_BlNumber VARCHAR(100)
+)
+BEGIN
+    SELECT 
+        inv.`Id` AS `id`,
+        inv.`InvoiceNumber` AS `invoiceNumber`,
+        'Invoice' AS `invoiceType`,
+        COALESCE(tp.`Label`, '') AS `client`,
+        DATE_FORMAT(inv.`ValIdationDate`, '%d/%m/%Y') AS `billingDate`,
+        DATE_FORMAT(inv.`ValIdationDate`, '%d/%m/%Y') AS `withdrawalDate`,
+        CONCAT(FORMAT(inv.`TotalAmount`, 2), ' CFA') AS `total`,
+        'CFA' AS `currencyCode`,
+        inv.`Id` AS `filterId`,
+        'STI' AS `journalType`,
+        bl.`BlNumber` AS `blNumber`,
+        bl.`Id` AS `blId`,
+        inv.`StatusId` AS `statusId`,
+        COALESCE(invs.`Label`, '') AS `statusLabel`,
+        COALESCE(
+            JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'id', CAST(bli.`Id` AS CHAR),
+                    'number', COALESCE(bli.`Number`, ''),
+                    'type', CONCAT('[', COALESCE(bit.`Label`, ''), ']'),
+                    'description', COALESCE(ci.`NumberOfPackages`, ''),
+                    'isDraft', FALSE,
+                    'dnPrintable', FALSE
+                )
+            ),
+            JSON_ARRAY()
+        ) AS `yardItems`
+    FROM `invoice` inv
+    LEFT JOIN `invoicestatus` invs ON inv.`StatusId` = invs.`Id`
+    LEFT JOIN `thirdparty` tp ON inv.`BilledThirdPartyId` = tp.`Id`
+    LEFT JOIN `invoiceitem` ii ON inv.`Id` = ii.`InvoiceId`
+    LEFT JOIN `jobfile` jf ON ii.`JobFileId` = jf.`Id`
+    LEFT JOIN `blitem_jobfile` bij ON jf.`Id` = bij.`JobFile_Id`
+    LEFT JOIN `blitem` bli ON bij.`BLItem_Id` = bli.`Id`
+    LEFT JOIN `yarditemtype` bit ON bli.`ItemTypeId` = bit.`Id`
+    LEFT JOIN `commodityitem` ci ON bli.`Id` = ci.`BlItemId`
+    LEFT JOIN `bl` bl ON bli.`BlId` = bl.`Id`
+    WHERE bl.`BlNumber` = p_BlNumber
+    GROUP BY inv.`Id`, inv.`InvoiceNumber`, tp.`Label`, inv.`ValIdationDate`, inv.`TotalAmount`, bl.`BlNumber`, bl.`Id`, inv.`StatusId`, invs.`Label`
+    ORDER BY inv.`ValIdationDate` DESC;
+END //
+
+DELIMITER ;
+
+-- ============================================================================
+-- 5. GetPendingInvoicingItemsPerBLNumber - Récupère les conteneurs en attente de facturation
+-- Filtrage : items dont les événements sont facturables et liés à un contrat,
+-- mais n'ont pas encore été facturés
+-- ============================================================================
+DELIMITER //
+
+CREATE PROCEDURE `GetPendingInvoicingItemsPerBLNumber`(
+    IN p_BlNumber VARCHAR(100)
+)
+BEGIN
+    SELECT DISTINCT
+        CAST(bli.`Id` AS CHAR) AS `id`,
+        COALESCE(bli.`Number`, '') AS `number`,
+        CONCAT('[', COALESCE(bit.`Label`, ''), ']') AS `type`,
+        COALESCE(ci.`NumberOfPackages`, '') AS `description`,
+        FALSE AS `isDraft`,
+        FALSE AS `dnPrintable`
+    FROM `blitem` bli
+    LEFT JOIN `yarditemtype` bit ON bli.`ItemTypeId` = bit.`Id`
+    LEFT JOIN `commodityitem` ci ON bli.`Id` = ci.`BlItemId`
+    LEFT JOIN `bl` bl ON bli.`BlId` = bl.`Id`
+    LEFT JOIN `blitem_jobfile` bij ON bli.`Id` = bij.`BLItem_Id`
+    LEFT JOIN `jobfile` jf ON bij.`JobFile_Id` = jf.`Id`
+    LEFT JOIN `event` evt ON jf.`Id` = evt.`JobFileId`
+    LEFT JOIN `eventtype` et ON evt.`EventTypeId` = et.`Id`
+    LEFT JOIN `contract_eventtype` cet ON et.`Id` = cet.`EventType_Id`
+    WHERE bl.`BlNumber` = p_BlNumber
+    -- L'événement doit avoir un type facturable (lié à un contrat)
+    AND cet.`Contract_Id` IS NOT NULL
+    -- L'événement ne doit pas encore avoir été facturé
+    AND NOT EXISTS (
+        SELECT 1 
+        FROM `invoiceitem` ii 
+        WHERE ii.`EventId` = evt.`Id`
+    )
+    ORDER BY bli.`Number`;
+END //
+
+DELIMITER ;
+
+-- ============================================================================
 -- FIN DES PROCÉDURES STOCKÉES
 -- ============================================================================

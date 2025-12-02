@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3306
--- Généré le : dim. 30 nov. 2025 à 23:42
+-- Généré le : mar. 02 déc. 2025 à 21:16
 -- Version du serveur : 8.0.27
 -- Version de PHP : 7.4.26
 
@@ -29,7 +29,7 @@ DROP PROCEDURE IF EXISTS `GetDetailsPerBLNumber`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `GetDetailsPerBLNumber` (IN `p_BlNumber` VARCHAR(100))  BEGIN
     SELECT 
         bl.`BlNumber` AS `blNumber`,
-        '' AS `manifest`,
+        COALESCE(c.`CallNumber`, '') AS `manifest`,
         'Export' AS `impExp`,
         'FCL' AS `transportMode`,
         '' AS `masterBL`,
@@ -52,15 +52,76 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetDetailsPerBLNumber` (IN `p_BlNum
         '' AS `finalDestination`,
         '' AS `transshipmentPort`,
         '' AS `dischargePort`,
-        COALESCE(tp_consignee.`Label`, '') AS `shipName`,
+        COALESCE(tp_carrier.`Label`, '') AS `shipName`,
         c.`CallNumber` AS `voyageNumber`,
-        DATE_FORMAT(c.`VesselArrivalDate`, '%Y-%m-%d') AS `blDate`
+        DATE_FORMAT(c.`VesselArrivalDate`, '%Y-%m-%d') AS `blDate`,
+        c.`CallNumber` AS `callNumber`,
+        DATE_FORMAT(c.`VesselArrivalDate`, '%Y-%m-%d %H:%i:%s') AS `arrivalDate`,
+        DATE_FORMAT(c.`VesselArrivalDate`, '%Y-%m-%d %H:%i:%s') AS `estimatedArrivalDate`,
+        DATE_FORMAT(c.`VesselArrivalDate`, '%Y-%m-%d %H:%i:%s') AS `actualArrivalDate`,
+        DATE_FORMAT(c.`VesselDepatureDate`, '%Y-%m-%d %H:%i:%s') AS `estimatedDepartureDate`,
+        DATE_FORMAT(c.`VesselArrivalDate`, '%Y-%m-%d %H:%i:%s') AS `shipAvailabilityDate`,
+        DATE_FORMAT(c.`VesselDepatureDate`, '%Y-%m-%d %H:%i:%s') AS `lastLineUnsecured`,
+        DATE_FORMAT(c.`VesselDepatureDate`, '%Y-%m-%d %H:%i:%s') AS `shipDepartureDate`,
+        '' AS `stevedore`,
+        'Maritime' AS `transportedBy`,
+        COALESCE(tp_consignee.`Label`, '') AS `callPort`,
+        c.`CallNumber` AS `callReference`,
+        '' AS `grossWeight`,
+        COALESCE(tp_carrier.`Label`, '') AS `shipVoyageName`,
+        c.`CallNumber` AS `incomingVoyage`,
+        c.`CallNumber` AS `outgoingVoyage`,
+        COALESCE(tp_carrier.`code`, '') AS `shipOperator`,
+        '' AS `departureLocation`
     FROM `BL` bl
     LEFT JOIN `Call` c ON bl.`CallId` = c.`Id`
-    LEFT JOIN `ThirdParty` tp_consignee ON c.ThirdPartyId = tp_consignee.`Id`
+    LEFT JOIN `ThirdParty` tp_consignee ON c.`ThirdPartyId` = tp_consignee.`Id`
     LEFT JOIN `ThirdParty` tp_customer ON bl.`RelatedCustomerId` = tp_customer.`Id`
+    LEFT JOIN `ThirdParty` tp_carrier ON c.`ThirdPartyId` = tp_carrier.`Id`
     WHERE bl.`BlNumber` = p_BlNumber
     LIMIT 1;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetInvoicesPerBLNumber`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetInvoicesPerBLNumber` (IN `p_BlNumber` VARCHAR(100))  BEGIN
+    SELECT 
+        inv.`Id` AS `id`,
+        inv.`InvoiceNumber` AS `invoiceNumber`,
+        'Invoice' AS `invoiceType`,
+        COALESCE(tp.`Label`, '') AS `client`,
+        DATE_FORMAT(inv.`ValIdationDate`, '%d/%m/%Y') AS `billingDate`,
+        DATE_FORMAT(inv.`ValIdationDate`, '%d/%m/%Y') AS `withdrawalDate`,
+        CONCAT(FORMAT(inv.`TotalAmount`, 2), ' CFA') AS `total`,
+        'CFA' AS `currencyCode`,
+        inv.`Id` AS `filterId`,
+        'STI' AS `journalType`,
+        bl.`BlNumber` AS `blNumber`,
+        bl.`Id` AS `blId`,
+        COALESCE(
+            JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'id', CAST(bli.`Id` AS CHAR),
+                    'number', COALESCE(bli.`Number`, ''),
+                    'type', CONCAT('[', COALESCE(bit.`Label`, ''), ']'),
+                    'description', COALESCE(ci.`NumberOfPackages`, ''),
+                    'isDraft', FALSE,
+                    'dnPrintable', FALSE
+                )
+            ),
+            JSON_ARRAY()
+        ) AS `yardItems`
+    FROM `invoice` inv
+    LEFT JOIN `thirdparty` tp ON inv.`BilledThirdPartyId` = tp.`Id`
+    LEFT JOIN `invoiceitem` ii ON inv.`Id` = ii.`InvoiceId`
+    LEFT JOIN `jobfile` jf ON ii.`JobFileId` = jf.`Id`
+    LEFT JOIN `blitem_jobfile` bij ON jf.`Id` = bij.`JobFile_Id`
+    LEFT JOIN `blitem` bli ON bij.`BLItem_Id` = bli.`Id`
+    LEFT JOIN `yarditemtype` bit ON bli.`ItemTypeId` = bit.`Id`
+    LEFT JOIN `commodityitem` ci ON bli.`Id` = ci.`BlItemId`
+    LEFT JOIN `bl` bl ON bli.`BlId` = bl.`Id`
+    WHERE bl.`BlNumber` = p_BlNumber
+    GROUP BY inv.`Id`, inv.`InvoiceNumber`, tp.`Label`, inv.`ValIdationDate`, inv.`TotalAmount`, bl.`BlNumber`, bl.`Id`
+    ORDER BY inv.`ValIdationDate` DESC;
 END$$
 
 DROP PROCEDURE IF EXISTS `GetUserBLHistory`$$
@@ -73,6 +134,34 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetUserBLHistory` (IN `p_UserId` IN
     FROM `CustomerUserBLSearchHistory`
     WHERE `UserId` = p_UserId
     ORDER BY `SearchDate` DESC;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetPendingInvoicingItemsPerBLNumber`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetPendingInvoicingItemsPerBLNumber` (IN `p_BlNumber` VARCHAR(100))  BEGIN
+    SELECT DISTINCT
+        CAST(bli.`Id` AS CHAR) AS `id`,
+        COALESCE(bli.`Number`, '') AS `number`,
+        CONCAT('[', COALESCE(bit.`Label`, ''), ']') AS `type`,
+        COALESCE(ci.`NumberOfPackages`, '') AS `description`,
+        FALSE AS `isDraft`,
+        FALSE AS `dnPrintable`
+    FROM `blitem` bli
+    LEFT JOIN `yarditemtype` bit ON bli.`ItemTypeId` = bit.`Id`
+    LEFT JOIN `commodityitem` ci ON bli.`Id` = ci.`BlItemId`
+    LEFT JOIN `bl` bl ON bli.`BlId` = bl.`Id`
+    LEFT JOIN `blitem_jobfile` bij ON bli.`Id` = bij.`BLItem_Id`
+    LEFT JOIN `jobfile` jf ON bij.`JobFile_Id` = jf.`Id`
+    LEFT JOIN `event` evt ON jf.`Id` = evt.`JobFileId`
+    LEFT JOIN `eventtype` et ON evt.`EventTypeId` = et.`Id`
+    LEFT JOIN `contract_eventtype` cet ON et.`Id` = cet.`EventType_Id`
+    WHERE bl.`BlNumber` = p_BlNumber
+    AND cet.`Contract_Id` IS NOT NULL
+    AND NOT EXISTS (
+        SELECT 1 
+        FROM `invoiceitem` ii 
+        WHERE ii.`EventId` = evt.`Id`
+    )
+    ORDER BY bli.`Number`;
 END$$
 
 DELIMITER ;
@@ -613,6 +702,34 @@ INSERT INTO `family` (`Id`, `Label`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `invoicestatus`
+--
+
+DROP TABLE IF EXISTS `invoicestatus`;
+CREATE TABLE IF NOT EXISTS `invoicestatus` (
+  `Id` int NOT NULL,
+  `Label` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `invoicestatus`
+--
+
+INSERT INTO `invoicestatus` (`Id`, `Label`) VALUES
+(1, 'Draft'),
+(2, 'Saved'),
+(3, 'Validated'),
+(4, 'Paid'),
+(5, 'PartiallyPaid'),
+(6, 'Reconciled'),
+(7, 'Applied'),
+(8, 'Settled'),
+(9, 'SettledCash');
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `invoice`
 --
 
@@ -625,20 +742,22 @@ CREATE TABLE IF NOT EXISTS `invoice` (
   `TotalTaxAmount` decimal(10,0) DEFAULT NULL,
   `TotalAmount` decimal(10,0) DEFAULT NULL,
   `BilledThirdPartyId` int DEFAULT NULL,
+  `StatusId` int DEFAULT 1,
   PRIMARY KEY (`Id`),
-  KEY `FK_Invoice_BilledThirdParty` (`BilledThirdPartyId`)
+  KEY `FK_Invoice_BilledThirdParty` (`BilledThirdPartyId`),
+  KEY `FK_Invoice_Status` (`StatusId`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `invoice`
 --
 
-INSERT INTO `invoice` (`Id`, `InvoiceNumber`, `ValIdationDate`, `SubTotalAmount`, `TotalTaxAmount`, `TotalAmount`, `BilledThirdPartyId`) VALUES
-(1, 251018767, '2025-11-12', '5000', '1000', '6000', 10),
-(2, 251018791, '2025-11-12', '4500', '900', '5400', 10),
-(3, 251083041, '2025-11-19', '3800', '760', '4560', 11),
-(4, 251083042, '2025-11-20', '2500', '500', '3000', 12),
-(5, 251083043, '2025-11-20', '6000', '1200', '7200', 13);
+INSERT INTO `invoice` (`Id`, `InvoiceNumber`, `ValIdationDate`, `SubTotalAmount`, `TotalTaxAmount`, `TotalAmount`, `BilledThirdPartyId`, `StatusId`) VALUES
+(1, 251018767, '2025-11-12', '5000', '1000', '6000', 10, 3),
+(2, 251018791, '2025-11-12', '4500', '900', '5400', 10, 4),
+(3, 251083041, '2025-11-19', '3800', '760', '4560', 11, 3),
+(4, 251083042, '2025-11-20', '2500', '500', '3000', 12, 1),
+(5, 251083043, '2025-11-20', '6000', '1200', '7200', 13, 2);
 
 -- --------------------------------------------------------
 

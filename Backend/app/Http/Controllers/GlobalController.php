@@ -99,4 +99,89 @@ class GlobalController extends Controller
         }
 
     }
+
+    public function GetInvoicesPerBLNumber(Request $request)
+    {
+        try
+        {
+            $invoices = DB::select(
+                "CALL GetInvoicesPerBLNumber(?)",
+                array(
+                    $request->input('blNumber')
+                )
+            );
+
+            // Process invoices to properly decode JSON fields and format data
+            foreach ($invoices as $invoice) {
+                // Decode yardItems if it's a string
+                if (isset($invoice->yardItems) && is_string($invoice->yardItems)) {
+                    $invoice->yardItems = json_decode($invoice->yardItems, true);
+                    // Ensure yardItems is an array, not null
+                    if ($invoice->yardItems === null) {
+                        $invoice->yardItems = [];
+                    }
+                }
+
+                // Cast statusId to integer
+                if (isset($invoice->statusId)) {
+                    $invoice->statusId = (int)$invoice->statusId;
+                }
+
+                // Cast blId to integer
+                if (isset($invoice->blId)) {
+                    $invoice->blId = (int)$invoice->blId;
+                }
+
+                // Cast id to integer
+                if (isset($invoice->id)) {
+                    $invoice->id = (int)$invoice->id;
+                }
+            }
+
+            return response()->json($invoices);
+        }
+        catch(Exception $exp)
+        {
+            throw $exp;
+        }
+
+    }
+
+    public function GetPendingInvoicingItemsPerBLNumber(Request $request)
+    {
+        try
+        {
+            $pendingItems = DB::select(
+                "CALL GetPendingInvoicingItemsPerBLNumber(?)",
+                array(
+                    $request->input('blNumber')
+                )
+            );
+
+            // Process items to ensure proper data types
+            foreach ($pendingItems as $item) {
+                // Cast id to string (it's already a string from CAST in stored procedure)
+                if (isset($item->id)) {
+                    $item->id = (string)$item->id;
+                }
+
+                // Ensure isDraft is boolean
+                if (isset($item->isDraft)) {
+                    $item->isDraft = (bool)$item->isDraft;
+                }
+
+                // Ensure dnPrintable is boolean
+                if (isset($item->dnPrintable)) {
+                    $item->dnPrintable = (bool)$item->dnPrintable;
+                }
+            }
+
+            return response()->json($pendingItems);
+        }
+        catch(Exception $exp)
+        {
+            throw $exp;
+        }
+
+    }
 }
