@@ -1,0 +1,228 @@
+Autre chose que je veux que tu fasse
+Un job file est un cylce de vide d'un élement , il commence par un evènement de la famille des in et se termine par un évèneemnt de la famille des outs, il peut y avoir plusieurs évènements intermediaire provenenta par exemple de la famillles des fees, des transfert, des cleans etc...
+Si le le cycle est terminé (donc l'item est sortie du parc), la date close est renseigné à la date de sorite, la dateopen elle porte la date de in donc de début du cyle
+ basé sur cette explication, je veux que tu fasse 3 choses
+1 - Que t'assures que les jobfile respectes cetet logique
+
+2- Que tu génères des données noteament de BL, di'tem, de facture, délements à facturer etc...
+
+
+
+
+
+
+
+bien à présent je veux que tu te connecte à ma base de dnonée pour me générer des données de sortes à ce que l'application soit exploitable tu pourras utiliser powershell ou python à ta convenance
+Ci dessous les règles à respecter
+
+1- Toutes les champs de la tables BL doivent êre renseigné, je ne veux aucune colonne vide
+Les numéros de Bl doivent ressembler à la nomanclature de ceux mis dans l'historique actuellement (EBKG08737243 ,AEV0239463, MEDUDM992142) etc...
+
+2- La colonne ThirdParty dans la table call doit être liée à des tiers type shipping line n'héiste pas à en créer en te reférant a des vrai information, les shippings line du genre MSC, MAERSK,CMA CGM etc...
+
+3-Chaque bl contient plusieur blitem qui peuvent être soit des conteneur, véhicules, bulk, et cistern
+En fonction du type de chaque item, le numéro doit correspondre a des vrai numéro de conteneur, de numéro de chassis de numéro de colis etc..., le but est que ma base se rapproche de la réalité
+
+4-Les Bl que tu vas créer doivent avoir une correspondance dans la table customerusers_thirdparty, cette table permet de faire la liaison entre les clients externe et ceux sur des Bls de sorte à ce qu'on puisse clairement identifier que tel client est en lien avec tous les Bl de tels ThirdParTy, cette table est très importante dans le cadre de mon application à noter qu'un client externe peut être en lien avec plusieurs tiers de différents BL
+
+5-Tous les items que tu vas créer doivent avoir un cycle de vie (jobfile). Un cycle de vie se caractérise par un évènement d'entrée de la famille des IN, des évèenemts intermédiaire du styles nettoyage, transfert, dépotage etc.. et se termine par une sortie donc un évènement de la famille des outs
+La règle est que si un conteneur est toujours sur le parc (donc qu'il n'a pas fait de out), la dateclosed du jobfile reste à null
+La dateopen prend la date de réalisation de l'éèvnement d'entrée tandis que la dateout prend de la date de réalisation de l'vèenement de sortie.
+Attention, un item ne peut pas être sur deux cycle ouverts (cycle dont la dateclos est null) en même temps
+
+6-Si un blitem à un cycle de vie, il doit impérativement être enregistré dans la table blitem_jobfile qui agit comme un table d'historique car un blitem peut avoir été sur un jobfile puis être ce jobfile va être supprimé de sorte à ce que ce blitem soit positionner sur un autre jobfile mais dans notre cas on va considéré une que chaque blitem ou jobfileid peut se trouver qu'une seule fois dans cette table
+
+7-Les informations se trouvant dans la table userblserarchhistory doivent exister dans la base, donc que les bl doivent existé et les shipName doivent existé en tant que tiers de typeshippingline
+La date arrivaldate doit être la même que celle définit sur l'escale, la colonne itemcount va compter pour bl rechercher le nombre de blitem présent dessus , le userid va être celui issu de la table customerusers et la searchdate serra la date de recherche
+
+8-Comme type de la table utilisateur on ne peut avoir que client, siteadmin et appadmin
+
+9-Considère tous les utilisateurs que tu vas créer dans users comme étant des clients
+
+10- Pour la table invoice, les clients facturer doivent ceux issus des bls qu'il facture veille donc à respecter cette règles pour les données que tu vas  générés. Génères des factures de différents stauts mais plus particulièrement les suivant, draft, validated et paid
+Une facture ne va concerner un seule et unique BL mais un BL peut faire l'objet de plusieurs factures
+
+11-Pour la table invoiceitem, Un évènements peut décelencher plusieurs souscriptions et plusieurs contrats, mais une fois que cette souscription fait partie des lignes de facturation d'un jobfile, elle ne peut pas apparaître une deuxième fois uniquqment pour ce jobfile ce qui veut donc dire que la même souscription peut être appellé pour plusieurs jobfile du même contrats
+
+12 -Les lignes invoiceitem de ma base sont sensé fonctionné de la façon suivante
+1 - Un contrat va être liée à un lot d'évènements, le contrat à son tours va être lié à une souscriptions et un taux
+Chaque fois que item va avoir un évènements paramétré dans cette table d'association contract_evenement une ligne de facture doit être généré avec le montant paramétré sur le taux en quesiton de cette soucriptions. Tu pourras au besoin renseigner ces tables pour avoir quelque chose d'interesasnt avec des contrats nommé sur la base de la réalité
+
+12 - Les tables rate rateperiod et raterange
+La table rate va définir le code d'un taux par exemple Magasinnage conteneur Import
+La table RatePeriod va définir jusqu'a quand ce taux est-il valide
+A noter qu'un rate peut avoir plusieur rateperiod mais que seulement un d'entre peut être actif, l'actif est celui qui auras la date de fin la plus grande, donc en général le dernier va se postioner au 31/12/2099
+Ensuite pour le raterangeperiod, il va contenir des valeur de début, de fin et le taux proprement dit donc si une prestation à un taux unique le debut serra 1 la fin 999999 et le taux 5 par exemple
+Par compte s'il une valeur de taux multiple basé sur la durée par exemple, chaque tranche va avoir son taux donc par exmple de 1 à 9 0 de 10 à 30 50 etc... la dernière tranche elle va allé de par exemple 51 à 9999 qui indique la dernière valeur
+
+Vas-y mais laisse moi savoir si tu as besoin de plus détails
+
+
+1- 50
+2- 50% conteneur, 50% vehicule
+3-Toutes l'année 2025
+4-Crée de nouveau surtout les shipping line, pour les clients tu peux conserver les existant
+5-Ci dessous la règle pour les soucriptions
+AppliesTo peut avoir 3 valeur TP qui signie Tiers, GR qui signifie groupe et GL qui signifie glable, crée toutes les souscriptions sur globale , ce qui signifie donc que la colonne thirdparty serra null
+6-crée les factures sur une repartition de 33% chacune de sorte à ce que chaque client ait à peu près 5 à 8 factures mais au moins 2 de chaque statut
+
+7- Suit un logique oui mais tous les conteneurs ne sont pas nécessairement obligé d'être arrivé au OUT
+
+8 - Reste sur Abdian terminal
+
+
+
+
+
+Contexte
+Je souhaite générer des données réalistes dans ma base de données pour rendre mon application exploitable. Tu peux utiliser PowerShell ou Python selon ta convenance.
+Volume de données
+
+50 BLs (Bills of Lading)
+Items : 50% conteneurs, 50% véhicules
+Période : Toute l'année 2025
+Shipping lines : Créer de nouveaux tiers (MSC, MAERSK, CMA CGM, etc.)
+Clients : Conserver les existants
+Localisation : Abidjan Terminal
+
+Règles de génération
+1. Table BL
+
+Tous les champs doivent être renseignés (aucune colonne vide)
+Format des numéros de BL : Respecter la nomenclature existante
+
+Exemples : EBKG08737243, AEV0239463, MEDUDM992142
+
+
+
+2. Table Call & ThirdParty
+
+La colonne ThirdParty doit être liée à des tiers de type Shipping Line
+Créer de nouveaux shipping lines réalistes : MSC, MAERSK, CMA CGM, etc.
+
+3. Table BLItem
+
+Chaque BL contient plusieurs blitem qui peuvent être :
+
+Conteneurs (avec numéros réels de conteneur)
+Véhicules (avec numéros de châssis réels)
+Bulk (avec numéros de colis réels)
+Cistern
+
+
+Important : Les numéros doivent correspondre à de vrais formats pour se rapprocher de la réalité
+
+4. Table CustomerUsers_ThirdParty
+
+Liaison obligatoire : Les BLs créés doivent avoir une correspondance dans cette table
+Cette table lie les clients externes aux ThirdParty des BLs
+Un client externe peut être lié à plusieurs tiers de différents BLs
+
+5. Cycle de vie (JobFile)
+Tous les items doivent avoir un cycle de vie caractérisé par :
+
+Événement d'entrée : Famille "IN"
+Événements intermédiaires : Nettoyage, transfert, dépotage, etc.
+Événement de sortie : Famille "OUT"
+
+Règles importantes :
+
+Si un conteneur est toujours sur le parc (pas de OUT) : dateClosed = NULL
+dateOpen = date de réalisation de l'événement d'entrée
+dateOut = date de réalisation de l'événement de sortie
+Un item ne peut pas être sur deux cycles ouverts simultanément (dateClosed = NULL)
+Logique flexible : Tous les conteneurs ne sont pas obligés d'avoir atteint le OUT
+
+6. Table BLItem_JobFile
+
+Table d'historique : Enregistrer chaque blitem ayant un cycle de vie
+Unicité : Chaque combinaison blitem/jobfileid ne peut apparaître qu'une seule fois
+
+7. Table UserBLSearchHistory
+
+Les informations doivent exister dans la base :
+
+Les BLs doivent exister
+Les shipName doivent exister en tant que tiers type Shipping Line
+
+
+arrivalDate = date définie sur l'escale
+itemCount = nombre de blitem sur le BL recherché
+userId = issu de la table customerusers
+searchDate = date de la recherche
+
+8. Table Users
+
+Types possibles : client, siteadmin, appadmin
+Tous les utilisateurs créés = clients
+
+9. Table Invoice
+
+BL facturé : Doit provenir des BLs qu'il facture
+Statuts des factures : Répartition de 33% chacun
+
+draft
+validated
+paid
+
+
+Chaque BL doit avoir 5 à 8 factures, dont au moins 2 de chaque statut
+Une facture = un seul BL (mais un BL peut avoir plusieurs factures)
+
+10. Table InvoiceItem
+
+Un événement peut déclencher plusieurs souscriptions et contrats
+Règle d'unicité : Une souscription d'un JobFile ne peut apparaître qu'une seule fois pour ce JobFile
+La même souscription peut être appelée pour plusieurs JobFile du même contrat
+
+11. Logique Contract → Event → Subscription → Rate
+Le système fonctionne ainsi :
+
+Un contrat est lié à un lot d'événements
+Le contrat est lié à une souscription et un taux
+Quand un item a un événement paramétré dans contract_evenement, une ligne de facture doit être générée avec le montant du taux de la souscription
+
+Tu peux renseigner ces tables avec des contrats nommés de façon réaliste.
+12. Table Subscription
+
+AppliesTo peut avoir 3 valeurs :
+
+TP : Tiers (ThirdParty)
+GR : Groupe
+GL : Global
+
+
+Créer toutes les souscriptions sur GL (Global) → colonne thirdparty = NULL
+
+13. Tables Rate, RatePeriod, RateRange
+Rate
+Définit le code d'un taux (ex : "Magasinage conteneur Import")
+RatePeriod
+
+Définit la validité du taux
+Un rate peut avoir plusieurs ratePeriod, mais un seul est actif
+Actif = celui avec la date de fin la plus grande
+En général, le dernier est positionné au 31/12/2099
+
+RateRange
+Contient les valeurs de début, fin et le taux proprement dit :
+
+Taux unique : début = 1, fin = 999999, taux = 5 (par exemple)
+Taux multiple (basé sur la durée) :
+
+De 1 à 9 : 0
+De 10 à 30 : 50
+De 51 à 9999 : (dernière tranche)
+
+
+Ci dessous des chekcs que j'aimerais que tu fasse sur mes données
+les factures liée à un Bl doivent contenir les items de ce bl si ce n'est pas le cas fais les ajustements nécessaires de sorte à ce que tous les bls ai au moins 7 factures de 2 staut au moins (draft, validated, paid)
+
+
+2-
+
+Comme expliqué un jobfile est un cycle de vie d'un item qui va débuter par un évènement de la famille des IN puis se terminer par évènement de la familles des OUTs, toutes les autres familles sont des évènements intermédiaire qui peuvent intervenir entre le IN et le OUT
+La dateopen du jobfile correspond à la date d'entrée et la dateclose à la date de sortie donc pas de sortie dateclose=null
+je t'avais demander de généré des cycles de vies pour tous les items
+j'aimerais que tu limtes à 4 évènements max pour chaque cycle de vie
+vérifie donc que chaque item à bien un cycle avec des évènemst qui respect cette règle et gère ceux qui ne la respectent pas

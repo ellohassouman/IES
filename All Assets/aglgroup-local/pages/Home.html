@@ -23,7 +23,8 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js" type="text/javascript" async=""></script><script src="../assets/js/modernizr-2_5_3.js"></script>
 
-    <script src="../assets/js/jquery-3_7_1.js"></script>
+    <script src="../assets/js/jquery-1_11_0.js"></script>
+<script src="../assets/js/jquery-3_7_1.js"></script>
 
     <script src="../assets/js/bootstrap_bundle_min.js"></script>
 <script src="../assets/js/bootstrap-datetimepicker.js"></script>
@@ -42,7 +43,7 @@
 
     <script src="../assets/js/generalFunctions.js"></script>
 <script src="../assets/js/Validations.js"></script>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,700&amp;subset=latin" media="all"><script src="../assets/js/js-cookie.js"></script>
+<script src="../assets/js/js-cookie.js"></script>
 <script src="../assets/js/perfect-scrollbar_jquery.js"></script>
 <script src="../assets/js/perfect-scrollbar.js"></script>
 
@@ -55,40 +56,10 @@
         if (window.top !== window.self) {
 			window.location.href = '/Error/FrameError';
 		}
-    </script>
-<script>NS_CSM_td=275888682;NS_CSM_pd=275116658;NS_CSM_u="/clm10";NS_CSM_col="AAAAAAUTs3DFXoO8Za9fu9wVWeJsATdbQ27RCSDDNP2jYE2omVhso9RZFyjUx7VuNC6+b8sqHRNZ0U9gxG9aZv/J/0Rf";</script><script type="text/javascript">function sendTimingInfoInit(){setTimeout(sendTimingInfo,0)}function sendTimingInfo(){var wp=window.performance;if(wp){var c1,c2,t;c1=wp.timing;if(c1){var cm={};cm.ns=c1.navigationStart;if((t=c1.unloadEventStart)>0)cm.us=t;if((t=c1.unloadEventEnd)>0)cm.ue=t;if((t=c1.redirectStart)>0)cm.rs=t;if((t=c1.redirectEnd)>0)cm.re=t;cm.fs=c1.fetchStart;cm.dls=c1.domainLookupStart;cm.dle=c1.domainLookupEnd;cm.cs=c1.connectStart;cm.ce=c1.connectEnd;if((t=c1.secureConnectionStart)>0)cm.scs=t;cm.rqs=c1.requestStart;cm.rss=c1.responseStart;cm.rse=c1.responseEnd;cm.dl=c1.domLoading;cm.di=c1.domInteractive;cm.dcls=c1.domContentLoadedEventStart;cm.dcle=c1.domContentLoadedEventEnd;cm.dc=c1.domComplete;if((t=c1.loadEventStart)>0)cm.ls=t;if((t=c1.loadEventEnd)>0)cm.le=t;cm.tid=NS_CSM_td;cm.pid=NS_CSM_pd;cm.ac=NS_CSM_col;var xhttp=new XMLHttpRequest();if(xhttp){var JSON=JSON||{};JSON.stringify=JSON.stringify||function(ob){var t=typeof(ob);if(t!="object"||ob===null){if(t=="string")ob='"'+ob+'"';return String(ob);}else{var n,v,json=[],arr=(ob&&ob.constructor==Array);for(n in ob){v=ob[n];t=typeof(v);if(t=="string")v='"'+v+'"';else if(t=="object"&&v!==null)v=JSON.stringify(v);json.push((arr?"":'"'+n+'":')+String(v));}return(arr?"[":"{")+String(json)+(arr?"]":"}");}};xhttp.open("POST",NS_CSM_u,true);xhttp.send(JSON.stringify(cm));}}}}if(window.addEventListener)window.addEventListener("load",sendTimingInfoInit,false);else if(window.attachEvent)window.attachEvent("onload",sendTimingInfoInit);else window.onload=sendTimingInfoInit;</script></head>
+    </script><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,700&amp;subset=latin" media="all">
+</head>
 
 <body>
-<script>
- function string_to_array(str) {var len = str.length;var res = new Array(len);for(var i = 0; i < len; i++)res[i] = str.charCodeAt(i);return res;}function array_to_hex_string(ary) {var res = "";for(var i = 0; i < ary.length; i++)res += SHA256_hexchars[ary[i] >> 4] + SHA256_hexchars[ary[i] & 0x0f];return res;}function SHA256_init() {SHA256_H = new Array(0x6a09e667, 0xbb67ae85,0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19);SHA256_buf = new Array();SHA256_len = 0;}function SHA256_write(msg) {if (typeof(msg) == "string") SHA256_buf = SHA256_buf.concat(string_to_array(msg));else SHA256_buf = SHA256_buf.concat(msg); for(var i = 0; i + 64 <= SHA256_buf.length; i += 64) SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf.slice(i, i +64)); SHA256_buf = SHA256_buf.slice(i); SHA256_len += msg.length;}function SHA256_finalize() { SHA256_buf[SHA256_buf.length] = 0x80;  if (SHA256_buf.length > 64 - 8) {for(var i = SHA256_buf.length; i < 64; i++)SHA256_buf[i] = 0;SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf);SHA256_buf.length = 0;} for(var i = SHA256_buf.length; i < 64 - 5; i++)SHA256_buf[i] = 0;  SHA256_buf[59] =(SHA256_len >>> 29) & 0xff;  SHA256_buf[60] = (SHA256_len >>> 21) & 0xff;  SHA256_buf[61] = (SHA256_len >>> 13) & 0xff;  SHA256_buf[62] = (SHA256_len >>> 5) & 0xff;  SHA256_buf[63] = (SHA256_len << 3) & 0xff;  SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf);  var res = new Array(32);  for(var i = 0; i < 8; i++) {res[4 * i + 0] = SHA256_H[i] >>> 24; res[4 * i + 1] = (SHA256_H[i] >> 16) & 0xff; res[4 * i + 2] = (SHA256_H[i] >> 8) & 0xff; res[4 * i + 3] = SHA256_H[i] & 0xff; } delete SHA256_H; delete SHA256_buf; delete SHA256_len; return res;}function HMAC_SHA256_init(key) {  if (typeof(key) == "string") HMAC_SHA256_key = string_to_array(key);  else  HMAC_SHA256_key = new Array().concat(key);  if (HMAC_SHA256_key.length > 64) { SHA256_init(); SHA256_write(HMAC_SHA256_key); HMAC_SHA256_key = SHA256_finalize(); }  for(var i = HMAC_SHA256_key.length; i < 64; i++)  HMAC_SHA256_key[i] = 0; for(var i = 0; i < 64; i++) HMAC_SHA256_key[i] ^=  0x36;  SHA256_init(); SHA256_write(HMAC_SHA256_key);} function HMAC_SHA256_write(msg) {  SHA256_write(msg);} function HMAC_SHA256_finalize() {  var md = SHA256_finalize();  for(var i = 0; i < 64; i++) HMAC_SHA256_key[i] ^= 0x36 ^ 0x5c; SHA256_init(); SHA256_write(HMAC_SHA256_key); SHA256_write(md);  for(var i = 0; i < 64; i++)    HMAC_SHA256_key[i] = 0;  delete HMAC_SHA256_key;  return SHA256_finalize();}function HMAC_SHA256_MAC(key, msg) { var res;  HMAC_SHA256_init(key);  HMAC_SHA256_write(msg);  res = HMAC_SHA256_finalize();  return array_to_hex_string(res);} SHA256_hexchars = new Array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f');SHA256_K = new Array( 0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1,0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f,0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2); function SHA256_sigma0(x) { return ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);} function SHA256_sigma1(x) { return ((x >>> 17) | (x << 15)) ^ ((x >>> 19) | (x << 13)) ^ (x >>> 10);}function SHA256_Sigma0(x) { return ((x >>> 2) | (x << 30)) ^ ((x >>> 13) | (x << 19)) ^ ((x >>> 22) | (x << 10));}function SHA256_Sigma1(x) { return ((x >>> 6) | (x << 26)) ^ ((x >>> 11) | (x << 21)) ^ ((x >>> 25) | (x << 7));} function SHA256_Ch(x, y, z) { return z ^ (x & (y ^ z));} function SHA256_Maj(x, y, z) {return (x & y) ^ (z & (x ^ y));}function SHA256_Hash_Word_Block(H, W) { for(var i = 16; i < 64; i++)  W[i] = (SHA256_sigma1(W[i - 2]) +  W[i - 7] + SHA256_sigma0(W[i - 15]) + W[i - 16]) & 0xffffffff; var state = new Array().concat(H); for(var i = 0; i < 64; i++) {    var T1 = state[7] + SHA256_Sigma1(state[4]) + SHA256_Ch(state[4], state[5], state[6]) + SHA256_K[i] + W[i]; var T2 = SHA256_Sigma0(state[0]) + SHA256_Maj(state[0], state[1], state[2]); state.pop(); state.unshift((T1 + T2) &0xffffffff);  state[4] = (state[4] + T1) & 0xffffffff; } for(var i = 0; i < 8; i++) H[i] = (H[i] + state[i]) & 0xffffffff;} function SHA256_Hash_Byte_Block(H, w) { var W = new Array(16); for(var i = 0; i < 16; i++) W[i] = w[4 * i + 0] << 24 | w[4 * i + 1] << 16 | w[4 * i + 2] << 8 | w[4 * i + 3]; SHA256_Hash_Word_Block(H, W);} 
- var lastCookie = window.name;
- function getCookie(name) {
-       let cookie = {}; 
-            document.cookie.split(';').forEach(function(el) {
-                let cookiekv = el.split('=');
-           cookie[cookiekv[0].trim()] = cookiekv[1];
-            })
-           if (cookie.hasOwnProperty(name)) {
-               return cookie[name];
-                     }
-            return "";
- };
- var checkCookie = function() {
-       var token ="7067722647229789059";
-			    var seed = getCookie('citrix_ns_seed');
-      var currentCookie = document.cookie;
-         if (currentCookie != lastCookie || (lastCookie.length == 0)) {
-           console.log('cookie has changed');
-           var hash = HMAC_SHA256_MAC(seed, token);
-         document.cookie = 'MC=' + hash +'; Domain= .aglgroup.com';
-               lastCookie = currentCookie;
-          window.name = currentCookie;
-     }
-                    return true;
- };
- window.setInterval(checkCookie, 100);
-        </script>
-
     <nav class="navbar navbar-expand-md navbar-inverse fixed-top">
         <div class="container">
             <div class="navbar-header">
@@ -98,7 +69,7 @@
                     <span class="icon-bar"></span>
                 </button>
                 <div class="logo-version">
-                    <a class="navbar-brand fontBalnc" href="/TICTC/Home"> </a>
+                    <a class="navbar-brand fontBalnc" href="/ATLCIVP/Home"> </a>
                 </div>
             </div>
             <div class="collapse navbar-collapse justify-content-end" id="navbarFlagsMenu">
@@ -106,38 +77,38 @@
                     <li class="nav-item">
 
 
-<form action="/TICTC/LogOff?LoginActionName=CustomerLogin" id="logoutForm" method="post">            <ul class="nav navbar-nav navbar-right">
+<form action="/ATLCIVP/LogOff?LoginActionName=CustomerLogin" id="logoutForm" method="post">            <ul class="nav navbar-nav navbar-right">
                 <li class="dropdown">
-                    <a href="#" class="dropdown-toggle fontBalnc menuUser" data-bs-toggle="dropdown"><span class="glyphicon glyphicon-user paddIcon"></span>Elloh ASSOUMAN<b class="caret"></b></a>
+                    <a href="#" class="dropdown-toggle fontBalnc menuUser" data-bs-toggle="dropdown"><span class="glyphicon glyphicon-user paddIcon"></span>Daouda COULIBALY<b class="caret"></b></a>
                     <ul class="dropdown-menu menuUser">
                             <li>
-                                <a id="linkMyProfile" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#ProfileModal" href="/TICTC/Customer/MyProfile">
+                                <a id="linkMyProfile" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#ProfileModal" href="/ATLCIVP/Customer/MyProfile">
                                     <span class="bi bi-person-fill" aria-hidden="true"></span> Mon Profile
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="/TICTC/Payment/History">
+                                <a class="dropdown-item" href="/ATLCIVP/Payment/History">
                                     <span class="bi bi-clock" aria-hidden="true"></span> Historique de paiement
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="/TICTC/Account/ChangePassword">
+                                <a class="dropdown-item" href="/ATLCIVP/Account/ChangePassword">
                                     <span class="bi bi-lock-fill" aria-hidden="true"></span> Changer le mot de passe
                                 </a>
                             </li>
                                 <li>
-                                    <a class="dropdown-item" id="supportButton" data-bs-toggle="modal" data-bs-target="#supportDialog" href="/TICTC/Support/ShowSupportDialog">
+                                    <a class="dropdown-item" id="supportButton" data-bs-toggle="modal" data-bs-target="#supportDialog" href="/ATLCIVP/Support/ShowSupportDialog">
                                         <div><span class="bi bi-envelope-fill" aria-hidden="true"></span> Demander de l'assistance</div>
                                     </a>
                                 </li>
                         <li>
-                            <input name="__RequestVerificationToken" type="hidden" value="CdsHGcATz2tHAyQFr_Tk-bsJNOvumZBhe0LQUcnf8dwUCK3l66b6Oe-DttF0hAU7S9e84aLELu2Zhk8mIjIJvTTteDtfrzkyRZctIJduWTy9n3F5QMTIyMs-1p8favzSdVuEph-L1zlfnCB8ChblGQ2">
+                            <input name="__RequestVerificationToken" type="hidden" value="vDqr5h-GQfNVCDQVsL_LuygOqOspiusUcqtl-PVS5He0hTxQWqkCgtKjbj3gmN8cz3G-hIbgbO6N5Gu5lkXmIzCiZk7sQA7_d9GcJ75tVpqGY6hQoqJct6_vSMXGQCestCMWX3rDh7ypQnXltJ9PLA2">
                             <a href="javascript:document.getElementById('logoutForm').submit()" class="dropdown-item"><span class="bi bi-box-arrow-right" aria-hidden="true"></span> Déconnecter</a>
                         </li>
                     </ul>
                 </li>
             </ul>
-<input type="hidden" name="as_sfid" value="AAAAAAUVmyWeaMlG6ut1XlTzSlnpGj1vE8MyB5f7O9VFCmuCwHpYBUu1F3vq0PI93swGVwm9_AuMXhofWiryrfAK9pBwSL4xgiLP2XyiHwoVYfjia-3YCaXw46BNx6NJIS17yxzc0gSjxIqTvyMaAmHM9qyKY4Vg756LoeMpQPv5y8f1ww=="><input type="hidden" name="as_fid" value="1d4832e78fddb3343c4ae1f33ac6639ed777c363"></form><script>
+</form><script>
     $('#supportButton').click(function () {
         $('#supportDialogContent').load(this.href, function () {
             $('#supportDialog').modal({
@@ -170,23 +141,18 @@
                                         <button type="submit" name="culture" id="fr" value="fr" class="btn btn-primary btn-sm">Français</button>
                                     </span>
                                 </span>
-<input type="hidden" name="as_sfid" value="AAAAAAXndyTo-r4JBiqGJtZwqAsJ_1gzKy_aUs9jjrwALnQ861pfqR0WcdAv3CuyhBKwuVm50B1ZM1NjEt0qYvJCpiAfbcfCXLDmC-JIuMcLXvwvkzvEoItH3CWsFGOIrnmpIKvR-uCTRDNQhSZmILewmEC4Gi2Jini5QZ-eoZR3EsAs0A=="><input type="hidden" name="as_fid" value="401b06c483d4961caaedb1e373789e01ac00b8ee"></form>                        </div>
+</form>                        </div>
 
                     </li>
                 </ul>
             </div>
-                <a href="/TICTC/Payment/PayInvoices">
-                    <div id="divShoppingCart" class="Shopping_cart">
-                        <span id="lblCartCount" class="txt_cart"></span>
-                    </div>
-                </a>
             <div class="hidden-sm d-md-none d-lg-none">
 <form action="/Default/SetCulture" method="post"><span class="posFlags posFlagsCustomer">
                         <span class="btn-group btn-group-xs">
                                 <button type="submit" name="culture" id="en-us" value="en-us" class="btn btn-primary btnLangMobile">EN</button>
                         </span>
                     </span>
-<input type="hidden" name="as_sfid" value="AAAAAAXOnPnMPZEbE6OOJWRWpM0c9EJjmlk7HtZ5DcfWa3e_CehAyfoi5zSQKE4KZghNlKiubxg-95RpELCYtBpusQWahBdoqYW2qXFQMVYUz5mlGGpfVmF5mY26qMNdPWGjEmK90w2ekYsfnuQR-4jSZNWMY8xOwxsNOI_qBwbjePFEJw=="><input type="hidden" name="as_fid" value="e0cf2daed5b0b5bd40c799f93a561e6f3c14a6e2"></form>            </div>
+</form>            </div>
         </div>
     </nav>
 
@@ -200,8 +166,8 @@
 
     <div class="jumbotronCustomer hidden-xs" style="background-image: url(/Images/img_puerto.jpg);">
         <div class="container transpCustomer">
-                <h2>TICT Clearing (Training)</h2>
-                <h4>TICT Clearing (Training)</h4>
+                <h2>ATL - Abidjan Terminal</h2>
+                <h4>ATL (Production)</h4>
         </div>
         <div style="text-align:right;">
         </div>
@@ -216,185 +182,528 @@
 
     <div class="container FondBlanc content">
         
-<div id="wrapper" class="toggled">
-    <div id="page-content-wrapper">
+
+<div class="contBlank">
+    <script src="../assets/js/dataTables_min.js"></script>
+
+<script src="../assets/js/jquery_dataTables_Resources.js"></script>
+
+
+<div class="d-flex flex-column">
+
+    <input type="hidden" id="activeTabindex" value="0">
+    
 
 
 
-<div id="divError" class="alert alert-danger alrt_pad" role="alert" style="display:none;">
-	<div class="d-flex justify-content-between">
-		<div>
-			<span class="fas fa-exclamation-circle" aria-hidden="true"></span>
-			<b>Attention!</b>
-			<span id="spanError"></span>
-		</div>
-		<div>
-			<button type="button" class="btn-close" aria-label="Close" onclick="$('#divError').hide();"></button>
-		</div>
-	</div>
-</div>
+<div class="container-fluid">
+    <div id="divError_Cart" class="alert alert-danger alert-dismissible fade" role="alert" style="display: none;">
+        <span class="bi bi-exclamation-circle-fill" aria-hidden="true"></span>
+        <b>Rappeler!</b>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="$('#divError_Cart').hide();">
+            <span class="visually-hidden">Fermer</span>
+        </button>
 
-        <div>
-            <div class="header_bl4">
-                <div class="row">
-                    <div class="col-10 num_Bl">
-                        <h2 class="tit_bl left-padding titleBlSummaryMobile">BL MEDUDM992142</h2>
-                    </div>
-                    <div class="col-2 Bl_hist_btn side-padding" style=" cursor:pointer;">
-                        <a href="/TICTC/Home" title="Retour à la Recherche">
-                            <h4 class="col_link">
-                                <span class="fas fa-arrow-circle-left" aria-hidden="true"></span>
-                                <span class="d-none d-lg-inline">Retour à la Recherche</span>
-                            </h4>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div id="blSummaryButtonsContent" class="row pb-4">
-<nav>
-    <a class="btn btn-default blnavbar_btn active" href="/TICTC/Customer/BillOfLadingDetails?blNumber=MEDUDM992142" title="Détails du BL" onclick="$.blockScreen();">
-       Détails du BL
-    </a>
-    <a class="btn btn-default blnavbar_btn " href="/TICTC/Customer/BillOfLadingInvoices?blNumber=MEDUDM992142" title="Factures" onclick="$.blockScreen();">
-       Factures
-    </a>
-    <a class="btn btn-default blnavbar_btn " href="/TICTC/Customer/BillOfLadingPendingInvoicing?blId=792416&amp;blNumber=MEDUDM992142" title="Eléments à Facturer " onclick="$.blockScreen();">
-       Eléments à Facturer 
-    </a>
-    <a class="btn btn-default blnavbar_btn " href="/TICTC/Customer/BillOfLadingYITrakingInfo?blId=792416&amp;blNumber=MEDUDM992142" title="Suivi" onclick="$.blockScreen();">
-       Suivi
-    </a>
-</nav>
-
-        </div>
-        <div id="card-bl">
-            <div id="bLdetailsContent">
-                <div class="row pad_BLGroup fs_BLGroup" id="bl" role="tabpanel">
-                    <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Numéro B/L: </strong>MEDUDM992142</p></div>
-                    <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Manifeste: </strong>FIAMMETTAMT507</p></div>
-                    <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Imp/Exp: </strong>Import TINCAN</p></div>
-                    <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Mode de transport: </strong>FF</p></div>
-                    <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>BL maitre: </strong>NA</p></div>
-                    <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Incoterm: </strong></p></div>
-                    <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Statut BL: </strong>PartiallyInvoiced</p></div>
-                </div>
-            </div>
-        </div>
-        <div id="blDetailsAccordion">
-            <div class="card bl-card" id="card-ownership">
-                <div class="card-header" id="headingOwnership">
-                    <div class="collapsed bl-collapse-title" data-bs-toggle="collapse" data-bs-target="#collapseOwnership" aria-expanded="false" aria-controls="collapseOwnership">
-                        <i class="fa fa-caret-right bl-card-header-icon" aria-hidden="true"></i>
-                        <span class="bl-details-titles"> Armateur</span>
-                    </div>
-                </div>
-                <div id="collapseOwnership" class="collapse" aria-labelledby="headingOwnership">
-                    <div class="card-body">
-                        <div class="row pad_BLGroup fs_BLGroup" id="ownership">
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Réceptionnaire: </strong>SHIVLILA POLYMERS LIMITED</p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Expéditeur: </strong>Cash Client</p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Client secondaire: </strong>SHIVLILA POLYMERS LIMITED</p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Commissionnaire de transport: </strong>Cash Client</p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Transitaire: </strong>Cash Client</p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Bon à enlever: </strong></p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Date Bon à Enlever: </strong></p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Bon à délivrer: </strong></p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Date du BAD: </strong></p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Nom de l'agence: </strong></p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Nom de l'expéditeur: </strong></p></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card bl-card" id="card-portslocations">
-                <div class="card-header" id="headingPortsLocations">
-                    <div class="collapsed bl-collapse-title" data-bs-toggle="collapse" data-bs-target="#collapsePortsLocations" aria-expanded="false" aria-controls="collapsePortsLocations">
-                        <i class="fa fa-caret-right bl-card-header-icon" aria-hidden="true"></i>
-                        <span class="bl-details-titles"> Ports et emplacements</span>
-                    </div>
-                </div>
-                <div id="collapsePortsLocations" class="collapse" aria-labelledby="headingPortsLocations">
-                    <div class="card-body">
-                        <div class="row pad_BLGroup fs_BLGroup" id="portslocations" role="tabpanel">
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Port de Chargement: </strong>Dumyat</p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Sens: </strong></p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Lieu de réception: </strong>Tincan/Los</p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Destination finale: </strong>NIGERIA</p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Final City Destination: </strong></p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Transshipment Port 1: </strong></p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Transshipment Port 2: </strong></p></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card bl-card" id="card-call">
-                <div class="card-header" id="headingCall">
-                    <div class="collapsed bl-collapse-title" data-bs-toggle="collapse" data-bs-target="#collapseCall" aria-expanded="false" aria-controls="collapseCall">
-                        <i class="fa fa-caret-right bl-card-header-icon" aria-hidden="true"></i>
-                        <span class="bl-details-titles"> Escale</span>
-                    </div>
-                </div>
-                <div id="collapseCall" class="collapse" aria-labelledby="headingCall">
-                    <div class="card-body">
-                        <div class="row pad_BLGroup fs_BLGroup" id="call" role="tabpanel">
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Numéro d'escale: </strong>MSCFIAMMETTAMT507</p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Date d’arrivée: </strong>13/03/2025 </p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Date d’arrivée prévue: </strong>14/03/2025 </p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Date d’arrivée réelle: </strong>14/03/2025 </p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Estimated Departure Date: </strong>13/05/2025 </p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Date de disponibilité du navire: </strong>14/03/2025 </p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Dernière amarre du navire: </strong>16/03/2025 </p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Date de départ du navire: </strong>13/05/2025 </p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Manutentionnaire: </strong></p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Transporté par: </strong>Mer</p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Port d'Escale: </strong>Tincan/Los</p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Référence: </strong></p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Poids brut: </strong></p></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card bl-card" id="card-voyage">
-                <div class="card-header" id="headingVoyage">
-                    <div class="collapsed bl-collapse-title" data-bs-toggle="collapse" data-bs-target="#collapseVoyage" aria-expanded="false" aria-controls="collapseVoyage">
-                        <i class="fa fa-caret-right bl-card-header-icon" aria-hidden="true"></i>
-                        <span class="bl-details-titles"> Voyage Sortant</span>
-                    </div>
-                </div>
-                <div id="collapseVoyage" class="collapse" aria-labelledby="headingVoyage">
-                    <div class="card-body">
-                        <div class="row pad_BLGroup fs_BLGroup" id="voyage" role="tabpanel">
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Navires: </strong>MSC FIAMMETTA</p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Voyage entrants: </strong>MT507A</p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Voyage Sortant: </strong>MT510R</p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Armateur: </strong>MEDITERRANEAN SHIPPING COMPANY NIG</p></div>
-                            <div class="col-xs-12 col-sm-6 col-md-4"><p><strong>Lieu de départ: </strong>Abidjan</p></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <span id="spanError"></span>
     </div>
 </div>
 
-<script type="text/javascript">
-    updateCardStatus();
-    function updateCardStatus() {
-        $(".fs_BLGroup").each(function () {
-            if ($(this).html().trim() == '') {
-                if ($(this).hasClass("active")) {
-                    if ($(".fs_BLGroup").length > 0) {
-                        $($("#invoicingTabPane ul[role='tablist'] a")[0]).tab('show');
-                    }
-                }
+<div role="tabpanel">
+    <div class="row m-0 tab-container">
+        <div class="col-sm-12 col-md-12 col-lg-6 col-xl-6 col-xxl-6 tab-group p-0">
+            <ul class="nav nav-tabs pad_tab" role="tablist" id="tabPanel">
+                <li class="nav-item cursorPointer search_tab" role="presentation">
+                    <a class="nav-link customerSearchPageTab active" onclick="showTabContent('home')" aria-controls="home" role="tab" data-bs-toggle="tab" data-searchtag="BLsearch" data-tabindex="0" aria-selected="true">
+                        <h4 class="custumers-tabs-size">BL</h4>
+                    </a>
+                </li>
+                <li class="nav-item cursorPointer search_tab" role="presentation">
+                    <a class="nav-link customerSearchPageTab" onclick="showTabContent('profile')" aria-controls="profile" role="tab" data-bs-toggle="tab" data-searchtag="YIsearch" data-tabindex="1" aria-selected="false" tabindex="-1">
+                        <h4 class="custumers-tabs-size">Yard Item</h4>
+                    </a>
+                </li>
+                    <li class="nav-item cursorPointer search_tab" role="presentation">
+                        <a class="nav-link customerSearchPageTab" onclick="showTabContent('invoiceList')" aria-controls="invoiceList" role="tab" data-bs-toggle="tab" data-searchtag="invoiceList" data-tabindex="2" aria-selected="false" tabindex="-1">
+                            <h4 class="custumers-tabs-size">Liste des factures</h4>
+                        </a>
+                    </li>
+            </ul>
+        </div>
 
-                $(this).remove();
-                $("#card-" + this.id).remove();
-            }
+        <div class="col-sm-12 col-md-12 col-lg-6 col-xl-6 col-xxl-6 search-container">
+<form action="/ATLCIVP/Customer/Home" class="form-horizontal form-blSearch" method="post" role="form">                <div id="BLsearch" class="row search_flt">
+                    <input class="form-control TitBl" id="BlNumber" name="BlNumber" onblur="this.placeholder = 'Saisir numéro de BL'" onfocus="this.placeholder = ''" placeholder="Saisir numéro de BL" type="text" value="">
+                    <button type="submit" class="btn btn-primary input-group-addon btnSearch_BL">
+                        <span class="bi bi-search" aria-hidden="true"></span>
+                        <span class="prue_submt" id="btnSearchBL">Rechercher</span>
+                    </button>
+                </div>
+</form>            <form action="/ATLCIVP/Customer/SearchYardItemSummary" class="form-horizontal form-blSearch" method="post" role="form">                <div id="YIsearch" class="row search_flt" style="display: none;">
+                    <input class="form-control TitBl" id="yardItemNumber" name="yardItemNumber" onblur="this.placeholder = 'Entrer numéro de Yard Item'" onfocus="this.placeholder = ''" placeholder="Entrer numéro de Yard Item" type="text" value="">
+
+                    <button type="submit" class="btn btn-primary input-group-addon btnSearch_BL">
+                        <span class="bi bi-search" aria-hidden="true"></span>
+                        <span class="prue_submt" id="btnSearchBL">Rechercher</span>
+                    </button>
+                </div>
+</form>        </div>
+
+    </div>
+
+    <div class="tab-content continer_tabs">
+        <div class="tab-pane" id="home" role="tabpanel" aria-labelledby="home-tab" style="display: block;">
+            
+
+    <div id="blHistoryDataTable_wrapper" class="dt-container"><div class="dt-layout-row dt-layout-table"><div class="dt-layout-cell  dt-layout-full"><table width="100%" class="display table-striped tabla dataTable" id="blHistoryDataTable" cellspacing="0" style="width: 100%;" aria-describedby="blHistoryDataTable_info"><colgroup><col data-dt-column="0" style="width: 0px;"><col data-dt-column="1" style="width: 0px;"><col data-dt-column="2" style="width: 0px;"><col data-dt-column="3" style="width: 0px;"></colgroup>
+        <thead>
+            <tr class="header_Filters"><th class="text-search" data-dt-column="0" rowspan="1" colspan="1"><input type="text" class="custumer-filter-input" placeholder="Saisir numéro de BL"></th><th class="text-search" data-dt-column="1" rowspan="1" colspan="1"><input type="text" class="custumer-filter-input" placeholder="Saisir Navire"></th><th class="text-search" data-dt-column="2" rowspan="1" colspan="1"><input type="text" class="custumer-filter-input" placeholder="Saisir date d'arrivée du navire"></th><th data-dt-column="3" rowspan="1" colspan="1" class="dt-type-numeric"><span class="dt-column-title"></span><span class="dt-column-order"></span></th></tr>
+            <tr class="header_tabla"><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="0" rowspan="1" colspan="1" aria-label="Saisir numéro de BL: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Recherches précédentes Connaissement</span><span class="dt-column-order"></span></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="1" rowspan="1" colspan="1" aria-label="Saisir Navire: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Navire</span><span class="dt-column-order"></span></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="2" rowspan="1" colspan="1" aria-label="Saisir date d'arrivée du navire: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Date d'arrivée</span><span class="dt-column-order"></span></th><th data-dt-column="3" rowspan="1" colspan="1" class="dt-type-numeric dt-orderable-none" aria-label="Items"><span class="dt-column-title">Items</span><span class="dt-column-order"></span></th></tr>
+        </thead>
+
+        <tbody role="alert" aria-live="polite" aria-relevant="all"><tr>
+                    <td class="ancho_colt  sorting_1 existing-bl"><a href="/ATLCIVP/Customer/BillOfLadingDetails?blNumber=AEV0238293">AEV0238293</a></td>
+                    <td class="ancho_colt "></td>
+                    <td class="ancho_colt "></td>
+                    <td class="ancho_num centerAlign dt-type-numeric">1</td>
+                </tr><tr>
+                    <td class="ancho_colt  sorting_1 existing-bl"><a href="/ATLCIVP/Customer/BillOfLadingDetails?blNumber=AEV0239463">AEV0239463</a></td>
+                    <td class="ancho_colt "></td>
+                    <td class="ancho_colt "></td>
+                    <td class="ancho_num centerAlign dt-type-numeric">1</td>
+                </tr><tr>
+                    <td class="ancho_colt  sorting_1 existing-bl"><a href="/ATLCIVP/Customer/BillOfLadingDetails?blNumber=EBKG08737243">EBKG08737243</a></td>
+                    <td class="ancho_colt "></td>
+                    <td class="ancho_colt "></td>
+                    <td class="ancho_num centerAlign dt-type-numeric">1</td>
+                </tr><tr>
+                    <td class="ancho_colt  sorting_1 existing-bl"><a href="/ATLCIVP/Customer/BillOfLadingDetails?blNumber=EBKG08802405">EBKG08802405</a></td>
+                    <td class="ancho_colt "></td>
+                    <td class="ancho_colt "></td>
+                    <td class="ancho_num centerAlign dt-type-numeric">1</td>
+                </tr><tr>
+                    <td class="ancho_colt  sorting_1 existing-bl"><a href="/ATLCIVP/Customer/BillOfLadingDetails?blNumber=EBKG09585368">EBKG09585368</a></td>
+                    <td class="ancho_colt "></td>
+                    <td class="ancho_colt "></td>
+                    <td class="ancho_num centerAlign dt-type-numeric">1</td>
+                </tr></tbody>
+        <tfoot class="tfoot_BL footer_tabla">
+            <tr><th class="fontWeigthNormal" data-dt-column="0" rowspan="1" colspan="1"><span class="dt-column-title">Recherches précédentes Connaissement</span></th><th class="fontWeigthNormal" data-dt-column="1" rowspan="1" colspan="1"><span class="dt-column-title">Navire</span></th><th class="fontWeigthNormal" data-dt-column="2" rowspan="1" colspan="1"><span class="dt-column-title">Date d'arrivée</span></th><th class="fontWeigthNormal dt-type-numeric" data-dt-column="3" rowspan="1" colspan="1"><span class="dt-column-title">Items</span></th></tr>
+        </tfoot>
+    </table></div></div><div class="dt-layout-row"><div class="dt-layout-cell dt-layout-start"><div class="dt-info" aria-live="polite" id="blHistoryDataTable_info" role="status">Showing 1 to 5 of 5 entries</div></div><div class="dt-layout-cell dt-layout-end"><div class="dt-paging"><nav aria-label="pagination"><button class="dt-paging-button disabled first" role="link" type="button" aria-controls="blHistoryDataTable" aria-disabled="true" aria-label="First" data-dt-idx="first" tabindex="-1">&lt;&lt;</button><button class="dt-paging-button disabled previous" role="link" type="button" aria-controls="blHistoryDataTable" aria-disabled="true" aria-label="Previous" data-dt-idx="previous" tabindex="-1">Previous</button><button class="dt-paging-button current" role="link" type="button" aria-controls="blHistoryDataTable" aria-current="page" data-dt-idx="0">1</button><button class="dt-paging-button disabled next" role="link" type="button" aria-controls="blHistoryDataTable" aria-disabled="true" aria-label="Next" data-dt-idx="next" tabindex="-1">Next</button><button class="dt-paging-button disabled last" role="link" type="button" aria-controls="blHistoryDataTable" aria-disabled="true" aria-label="Last" data-dt-idx="last" tabindex="-1">&gt;&gt;</button></nav></div></div></div></div>
+
+
+        </div>
+        <div class="tab-pane" id="profile" role="tabpanel" aria-labelledby="profile-tab" style="display: none;">
+            <div id="YIHistoryDataTable_wrapper" class="dataTables_wrapper" role="grid">
+    <div id="YIHistoryDataTable_wrapper" class="dt-container"><div class="dt-layout-row dt-layout-table"><div class="dt-layout-cell  dt-layout-full"><table width="100%" class="display table-striped tabla dataTable" id="YIHistoryDataTable" cellspacing="0" style="width: 100%;" aria-describedby="YIHistoryDataTable_info"><colgroup><col data-dt-column="0" style="width: 0px;"><col data-dt-column="1" style="width: 0px;"><col data-dt-column="2" style="width: 0px;"></colgroup>
+        <thead>
+            <tr class="header_Filters"><th class="text-search" data-dt-column="0" rowspan="1" colspan="1"><input type="text" class="custumer-filter-input" placeholder="Entrer numéro de Yard Item"></th><th class="text-search" data-dt-column="1" rowspan="1" colspan="1"><input type="text" class="custumer-filter-input" placeholder="Entrer type"></th><th class="text-search" data-dt-column="2" rowspan="1" colspan="1"><input type="text" class="custumer-filter-input" placeholder="Entrer description"></th></tr>
+            <tr class="header_tabla"><th data-dt-column="0" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc" aria-label="Entrer numéro de Yard Item: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Recherches précédents Item Parc</span><span class="dt-column-order"></span></th><th data-dt-column="1" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc" aria-label="Entrer type: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Type</span><span class="dt-column-order"></span></th><th data-dt-column="2" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc" aria-label="Entrer description: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Description</span><span class="dt-column-order"></span></th></tr>
+        </thead>
+
+        <tbody role="alert" aria-live="polite" aria-relevant="all"><tr><td colspan="3" class="dt-empty"><span class="data-table-empty-text">No data available at this table</span></td></tr></tbody>
+        <tfoot class="tfoot_BL footer_tabla">
+            <tr><th class="fontWeigthNormal" data-dt-column="0" rowspan="1" colspan="1"><span class="dt-column-title">Recherches précédents Item Parc</span></th><th class="fontWeigthNormal" data-dt-column="1" rowspan="1" colspan="1"><span class="dt-column-title">Type</span></th><th class="fontWeigthNormal" data-dt-column="2" rowspan="1" colspan="1"><span class="dt-column-title">Description</span></th></tr>
+        </tfoot>
+    </table></div></div><div class="dt-layout-row"><div class="dt-layout-cell dt-layout-start"><div class="dt-info" aria-live="polite" id="YIHistoryDataTable_info" role="status">Showing 0 to 0 of 0 records</div></div><div class="dt-layout-cell dt-layout-end"><div class="dt-paging"><nav aria-label="pagination"><button class="dt-paging-button disabled first" role="link" type="button" aria-controls="YIHistoryDataTable" aria-disabled="true" aria-label="First" data-dt-idx="first" tabindex="-1">&lt;&lt;</button><button class="dt-paging-button disabled previous" role="link" type="button" aria-controls="YIHistoryDataTable" aria-disabled="true" aria-label="Previous" data-dt-idx="previous" tabindex="-1">Previous</button><button class="dt-paging-button disabled next" role="link" type="button" aria-controls="YIHistoryDataTable" aria-disabled="true" aria-label="Next" data-dt-idx="next" tabindex="-1">Next</button><button class="dt-paging-button disabled last" role="link" type="button" aria-controls="YIHistoryDataTable" aria-disabled="true" aria-label="Last" data-dt-idx="last" tabindex="-1">&gt;&gt;</button></nav></div></div></div></div>
+</div>
+
+
+
+
+        </div>
+            <div class="tab-pane" id="invoiceList" role="tabpanel" aria-labelledby="invoiceList-tab" style="display: none;">
+                
+
+<div class="container-fluid margin_tit_bl2">
+    <div id="divError_InvoiceList" class="alert alert-danger alert-dismissible alrt_pad" role="alert" style="display: none;">
+        <span class="bi bi-exclamation-circle-fill" aria-hidden="true"></span> <b>Rappeler!</b>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" onclick="$('#divError_InvoiceList').hide();"><span aria-hidden="true">×</span><span class="sr-only">Fermer</span></button>
+
+        <span id="spanError"></span>
+    </div>
+</div>
+
+<div class="container-fluid p-0">
+
+<form action="/ATLCIVP/Customer/InvoiceSearchSummary" class="mb-4" method="post" role="form">        <div class="row g-3 p-4">
+            <div class="col-sm-12 col-md-12 col-lg-6 col-xl-6 col-xxl-6">
+                <div class="row mb-3 align-items-center">
+                        <label class="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4 col-form-label text-start" for="BillingDateFrom">Date de facturation de</label>
+                        <div class="col-8 col-sm-8 col-md-8 col-lg-8 col-xl-8 col-xxl-8">
+                            <div id="datetimepickerBillingDateFrom" class="input-group date">
+                                <input class="form-control" data-val="true" data-val-date="The field Date de facturation de must be a date." id="BillingDateFrom" name="BillingDateFrom" type="text" value="" placeholder="dd/MM/yyyy">
+                                <span class="input-group-text"><span class="bi bi-calendar"></span></span>
+                            </div>
+                        </div>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-12 col-lg-6 col-xl-6 col-xxl-6">
+                <div class="row mb-3 align-items-center">
+                        <label class="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4 col-form-label text-start" for="BillingDateTo">Date de facturation à</label>
+                        <div class="col-8 col-sm-8 col-md-8 col-lg-8 col-xl-8 col-xxl-8">
+                            <div id="datetimepickerBillingDateTo" class="input-group date">
+                                <input class="form-control" data-val="true" data-val-date="The field Date de facturation à must be a date." id="BillingDateTo" name="BillingDateTo" type="text" value="" placeholder="dd/MM/yyyy">
+                                <span class="input-group-text"><span class="bi bi-calendar"></span></span>
+                            </div>
+                        </div>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-12 col-lg-6 col-xl-6 col-xxl-6">
+                <div class="row mb-3 align-items-center">
+                        <label class="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4 col-form-label text-start" for="InvoiceStatus">Statut</label>
+                        <div class="col-8 col-sm-8 col-md-8 col-lg-8 col-xl-8 col-xxl-8">
+                            <select class="form-select" id="InvoiceStatus" name="InvoiceStatus"><option selected="selected" value="0">All</option>
+<option value="1">Draft</option>
+<option value="2">Saved</option>
+<option value="3">Validated</option>
+<option value="4">Paid</option>
+<option value="5">Partially Paid</option>
+<option value="6">Reconciled</option>
+<option value="7">Applied</option>
+<option value="8">Settled</option>
+<option value="9">Settled Cash</option>
+</select>
+                        </div>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-12 col-lg-6 col-xl-6 col-xxl-6">
+                <div class="row mb-3 align-items-center">
+                        <label class="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4 col-form-label text-start" for="InvoiceNumber">Numéro de Facture</label>
+                        <div class="col-8 col-sm-8 col-md-8 col-lg-8 col-xl-8 col-xxl-8">
+                            <input class="form-control" id="InvoiceNumber" maxlength="19" name="InvoiceNumber" onkeyup="enableDisableSearchButton()" oninput="enableDisableSearchButton()" type="text" value="">
+                        </div>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-12 col-lg-6 col-xl-6 col-xxl-6">
+                <div class="row mb-3 align-items-center">
+                        <label class="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4 col-form-label text-start" for="YINumber">Numéro d'Item Parc</label>
+                        <div class="col-8 col-sm-8 col-md-8 col-lg-8 col-xl-8 col-xxl-8">
+                            <input class="form-control" id="YINumber" maxlength="50" name="YINumber" onkeyup="enableDisableSearchButton()" oninput="enableDisableSearchButton()" type="text" value="">
+                        </div>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-12 col-lg-6 col-xl-6 col-xxl-6">
+                <div class="row mb-3 align-items-center">
+                        <label class="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4 col-form-label text-start" for="BillOfLadingNumber">Numéro de BL</label>
+                        <div class="col-8 col-sm-8 col-md-8 col-lg-8 col-xl-8 col-xxl-8">
+                            <input class="form-control" id="BillOfLadingNumber" maxlength="50" name="BillOfLadingNumber" onkeyup="enableDisableSearchButton()" oninput="enableDisableSearchButton()" type="text" value="">
+                        </div>
+                </div>
+            </div>
+
+
+            <div class="col-12 text-start" id="searchButtonRow">
+                <div class="InvoiceSearchButton" id="invoiceSearchButton">
+                    <button id="btnInvoiceSearch" type="submit" class="input-group-addon btnSearch_Invoices searchButtonDisabled" onclick="$.blockScreen();" disabled="">
+                        <span class="bi bi-search" aria-hidden="true"></span>
+                        <span class="prue_submt hidden-xs">Rechercher</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <div id="invoiceListTable_wrapper" class="dt-container"><div class="dt-layout-row"><div class="dt-layout-cell dt-layout-start"><div class="dt-length"><label for="dt-length-0">Display <select name="invoiceListTable_length" aria-controls="invoiceListTable" class="dt-input" id="dt-length-0"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> records per page</label></div></div></div><div class="dt-layout-row dt-layout-table"><div class="dt-layout-cell  dt-layout-full"><table width="100%" class="display table-striped tabla dataTable" id="invoiceListTable" cellspacing="0" style="width: 100%;" aria-describedby="invoiceListTable_info"><colgroup><col data-dt-column="0" style="width: 0px;"><col data-dt-column="1" style="width: 0px;"><col data-dt-column="2" style="width: 0px;"><col data-dt-column="3" style="width: 0px;"><col data-dt-column="4" style="width: 0px;"><col data-dt-column="5" style="width: 0px;"><col data-dt-column="6" style="width: 0px;"><col data-dt-column="7" style="width: 0px;"></colgroup>
+                <thead>
+                    <tr class="header_Filters"><th class="text-search" data-dt-column="0" rowspan="1" colspan="1"><input type="text" class="custumer-filter-input" placeholder="Numéro de Facture"></th><th class="text-search" data-dt-column="1" rowspan="1" colspan="1"><input type="text" class="custumer-filter-input" placeholder="Date de Facturation"></th><th class="text-search" data-dt-column="2" rowspan="1" colspan="1"><input type="text" class="custumer-filter-input" placeholder="Montant de la facture"></th><th class="text-search" data-dt-column="3" rowspan="1" colspan="1"><input type="text" class="custumer-filter-input" placeholder="Statut"></th><th class="text-search" data-dt-column="4" rowspan="1" colspan="1"><input type="text" class="custumer-filter-input" placeholder="Numéro de BL "></th><th class="text-search" data-dt-column="5" rowspan="1" colspan="1"><input type="text" class="custumer-filter-input" placeholder="Liste d'Items Parc"></th><th class="text-search" data-dt-column="6" rowspan="1" colspan="1"><input type="text" class="custumer-filter-input" placeholder="Client Facturé"></th><th data-dt-column="7" rowspan="1" colspan="1"><span class="dt-column-title"></span><span class="dt-column-order"></span></th></tr>
+                    <tr class="header_tabla"><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="0" rowspan="1" colspan="1" aria-label="Numéro de Facture: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Numéro de Facture</span><span class="dt-column-order"></span></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="1" rowspan="1" colspan="1" aria-label="Date de Facturation: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Date de Facturation</span><span class="dt-column-order"></span></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="2" rowspan="1" colspan="1" aria-label="Montant de la facture: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Montant de la facture</span><span class="dt-column-order"></span></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="3" rowspan="1" colspan="1" aria-label="Statut: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Statut</span><span class="dt-column-order"></span></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="4" rowspan="1" colspan="1" aria-label="Numéro de BL : Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Numéro de BL</span><span class="dt-column-order"></span></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="5" rowspan="1" colspan="1" aria-label="Liste d'Items Parc: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Liste d'Items Parc</span><span class="dt-column-order"></span></th><th class="invoice-header dt-orderable-asc dt-orderable-desc" data-dt-column="6" rowspan="1" colspan="1" aria-label="Client Facturé: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Client Facturé</span><span class="dt-column-order"></span></th><th data-dt-column="7" rowspan="1" colspan="1" class="dt-orderable-none" aria-label=""><span class="dt-column-title"></span><span class="dt-column-order"></span></th></tr>
+                </thead>
+
+                <tbody role="alert" aria-live="polite" aria-relevant="all"><tr><td colspan="8" class="dt-empty"><span class="data-table-empty-text">No data available at this table</span></td></tr></tbody>
+                <tfoot class="tfoot_BL footer_tabla">
+                    <tr><th class="fontWeigthNormal" data-dt-column="0" rowspan="1" colspan="1"><span class="dt-column-title">Numéro de Facture</span></th><th class="fontWeigthNormal" data-dt-column="1" rowspan="1" colspan="1"><span class="dt-column-title">Date de Facturation</span></th><th class="fontWeigthNormal" data-dt-column="2" rowspan="1" colspan="1"><span class="dt-column-title">Montant de la facture</span></th><th class="fontWeigthNormal" data-dt-column="3" rowspan="1" colspan="1"><span class="dt-column-title">Statut</span></th><th class="fontWeigthNormal" data-dt-column="4" rowspan="1" colspan="1"><span class="dt-column-title">Numéro de BL</span></th><th class="fontWeigthNormal" data-dt-column="5" rowspan="1" colspan="1"><span class="dt-column-title">Liste d'Items Parc</span></th><th class="fontWeigthNormal" data-dt-column="6" rowspan="1" colspan="1"><span class="dt-column-title">Client Facturé</span></th><th class="fontWeigthNormal" data-dt-column="7" rowspan="1" colspan="1"><span class="dt-column-title">Imprimer</span></th></tr>
+                </tfoot>
+            </table></div></div><div class="dt-layout-row"><div class="dt-layout-cell dt-layout-start"><div class="dt-info" aria-live="polite" id="invoiceListTable_info" role="status">Showing 0 to 0 of 0 records</div></div><div class="dt-layout-cell dt-layout-end"><div class="dt-paging"><nav aria-label="pagination"><button class="dt-paging-button disabled first" role="link" type="button" aria-controls="invoiceListTable" aria-disabled="true" aria-label="First" data-dt-idx="first" tabindex="-1">&lt;&lt;</button><button class="dt-paging-button disabled previous" role="link" type="button" aria-controls="invoiceListTable" aria-disabled="true" aria-label="Previous" data-dt-idx="previous" tabindex="-1">Previous</button><button class="dt-paging-button disabled next" role="link" type="button" aria-controls="invoiceListTable" aria-disabled="true" aria-label="Next" data-dt-idx="next" tabindex="-1">Next</button><button class="dt-paging-button disabled last" role="link" type="button" aria-controls="invoiceListTable" aria-disabled="true" aria-label="Last" data-dt-idx="last" tabindex="-1">&gt;&gt;</button></nav></div></div></div></div>
+        </div>
+        <script type="text/javascript">
+            $(document).ready(function () {
+                $.unblockScreen();
+            });
+        </script>
+</form></div>
+
+<script type="text/javascript">
+
+    function enableDisableSearchButton() {
+        if ($('#InvoiceNumber').val() || $('#YINumber').val() || $('#BillOfLadingNumber').val()) {
+            $('#btnInvoiceSearch').prop("disabled", false);
+            $('#btnInvoiceSearch').removeClass('searchButtonDisabled');
+
+        } else {
+            $('#btnInvoiceSearch').prop("disabled", true);
+            $('#btnInvoiceSearch').addClass("searchButtonDisabled");
+        }
+    }
+
+    function updateCalendarStyle() {
+        $('#datetimepickerBillingDateFrom, #datetimepickerBillingDateTo')
+            .find('.input-group-addon')
+            .removeClass('input-group-addon')
+            .addClass('input-group-text')
+            .find('span')
+            .removeClass('glyphicon glyphicon-calendar')
+            .addClass('bi bi-calendar');
+
+        $('.glyphicon.glyphicon-arrow-right').each(function () {
+            $(this).removeClass('glyphicon glyphicon-arrow-right').addClass('bi bi-arrow-right');
+        });
+
+        $('.glyphicon.glyphicon-arrow-left').each(function () {
+            $(this).removeClass('glyphicon glyphicon-arrow-left').addClass('bi bi-arrow-left');
         });
     }
+
+    $(document).ready(function () {
+
+        $("#datetimepickerBillingDateFrom").datetimepicker({
+            weekStart: 1,
+            todayBtn: 1,
+            autoclose: 1,
+            todayHighlight: 1,
+            minuteStep: 30,
+            forceParse: 0,
+            pickTime: false,
+            minView: 2,
+            format: 'dd/mm/yyyy',
+            language: 'fr',
+            pickerPosition: 'bottom-left',
+        });
+
+        $("#datetimepickerBillingDateTo").datetimepicker({
+            weekStart: 1,
+            todayBtn: 1,
+            autoclose: 1,
+            todayHighlight: 1,
+            minuteStep: 30,
+            forceParse: 0,
+            pickTime: false,
+             minView: 2,
+            format: 'dd/mm/yyyy',
+            language: 'fr',
+            pickerPosition: 'bottom-left',
+        });
+
+        $("#datetimepickerBillingDateFrom input").attr("placeholder", 'dd/MM/yyyy');
+        $("#datetimepickerBillingDateTo input").attr("placeholder", 'dd/MM/yyyy');
+
+        $(".datetimepicker-days").click(function () {
+            $(".datetimepicker-hours .table-condensed tfoot").remove();
+            $(".datetimepicker-minutes .table-condensed tfoot").remove();
+        });
+
+        $("#datetimepickerBillingDateFrom").datetimepicker().on('show.bs.modal', function (event) {
+            event.stopPropagation();
+        });
+
+        $("#datetimepickerBillingDateTo").datetimepicker().on('show.bs.modal', function (event) {
+            event.stopPropagation();
+        });
+
+        enableDisableSearchButton();
+        updateCalendarStyle();
+    });
 </script>
+
+            </div>
+    </div>
+</div>
+
+</div>
+
+<script>
+    $(document).ready(function () {
+
+        var blHistoryDataTable = $('#blHistoryDataTable').DataTable({
+            "aaSorting": [],
+            "oLanguage": currentLang,
+            "aoColumnDefs": [{ "bSortable": false, "aTargets": [3] },
+                { "sWidth": "28%", "aTargets": [1]}],
+            layout: {
+                topStart: null,
+                topEnd: null
+            },
+            orderCellsTop: false,
+            fixedHeader: false
+        });
+
+
+        $('#blHistoryDataTable thead tr:eq(0) .text-search').each(function (i) {
+            var title = $(this).text();
+            $(this).html('<input type="text" class="custumer-filter-input" placeholder="' + title + '" />');
+
+            $('input', this).on('keyup change', function () {
+                if (blHistoryDataTable.column(i).search() !== this.value) {
+                    blHistoryDataTable
+                        .column(i)
+                        .search(this.value)
+                        .draw();
+                }
+            });
+        });
+
+        var YIHistoryDataTable = $('#YIHistoryDataTable').DataTable({
+            "aaSorting": [],
+            "oLanguage": currentLang,
+            layout: {
+                topStart: null,
+                topEnd: null
+            },
+            orderCellsTop: false,
+            fixedHeader: false
+        });
+
+        $('#YIHistoryDataTable thead tr:eq(0) .text-search').each(function (i) {
+            var title = $(this).text();
+            $(this).html('<input type="text" class="custumer-filter-input" placeholder="' + title + '" />');
+
+            $('input', this).on('keyup change', function () {
+                if (YIHistoryDataTable.column(i).search() !== this.value) {
+                    YIHistoryDataTable
+                        .column(i)
+                        .search(this.value)
+                        .draw();
+                }
+            });
+        });
+
+
+        var invoiceListTable = $('#invoiceListTable').DataTable({
+            "aaSorting": [],
+            "oLanguage": currentLang,
+            "aoColumnDefs": [{ "bSortable": false, "aTargets": [7] },
+                { "sWidth": "20%", "aTargets": [1] }],
+            layout: {
+                topStart: 'pageLength',
+                topEnd: null
+            },
+            orderCellsTop: false,
+            fixedHeader: false,
+            "initComplete": function (settings, json) {
+            }
+        });
+
+        $('#invoiceListTable thead tr:eq(0) .text-search').each(function (i) {
+            var title = $(this).text();
+            $(this).html('<input type="text" class="custumer-filter-input" placeholder="' + title + '" />');
+
+            $('input', this).on('keyup change', function () {
+                if (invoiceListTable.column(i).search() !== this.value) {
+                    invoiceListTable
+                        .column(i)
+                        .search(this.value)
+                        .draw();
+                }
+            });
+        });
+
+        var index = $("#activeTabindex").val();
+
+        if (index == "")
+            index = "0";
+
+        var activeTab = $($("ul[role='tablist'] a")[index]).attr('data-searchtag');
+        $('#' + activeTab).show();
+
+        $($("ul[role='tablist'] a")[index]).tab('show');
+
+        //and the search button
+            
+            if (index === "0")
+            {
+                showTabContent('home');
+                $('#YIsearch').hide();
+                $('#BLsearch').show();
+            }
+            else if (index === "1")
+            {
+                showTabContent('profile');
+                $('#YIsearch').show();
+                $('#BLsearch').hide();
+            }
+            else
+            {
+                showTabContent('invoiceList');
+                $('#YIsearch').hide();
+                $('#BLsearch').hide();
+            }
+            
+    });
+
+    $('#btnSearchBL, .existing-bl a').on('click', function (event) {
+        if (event.which < 2) { // 1 left click | 2 or greater middle or right click
+            $.blockScreen();
+        }
+    });
+
+    $(window).on('pageshow', function () {
+        $.unblockScreen();
+    });
+
+    $('*[data-bs-toggle="tab"]').click(function () {
+        $('.search_flt').hide();
+        var searchBoxId = $(this).data('searchtag');
+
+        $('#' + searchBoxId).show();
+    });
+
+    //I apply an index for each tab
+    $("ul[role='tablist'] a").each(function (index) {
+        $(this).attr("data-tabindex", index);
+    });
+
+    $("ul[role='tablist'] a").click(function () {
+        var index = $(this).attr("data-tabindex");
+        SetActiveTab(index);
+    });
+
+    function SetActiveTab(tab) {
+        $.ajax({
+            url: '/ATLCIVP/Customer/SetActiveTab',
+            data: JSON.stringify({ tab: tab, view: 'Home' }),
+            type: 'POST',
+            async: true,
+            cache: false,
+            datatype: 'json',
+            contentType: "application/json"
+        });
+    }
+
+
+
+    function showTabContent(clickedTabPanel) {
+        $("div[class='tab-pane']").hide();
+
+        //set the custom empty table text for invoice List table
+        if (clickedTabPanel == "invoiceList") {
+            setEmptyTextLabelForInvoiceListTable();
+        } else {
+            setEmptyTextLabelForTable();
+        }
+
+        $("#" + clickedTabPanel).show();
+    }
+
+    function setEmptyTextLabelForInvoiceListTable() {
+        if (culture == 'fr') {
+            $('.data-table-empty-text').text("Il n'y a pas de factures correspondant à votre recherche");
+        } else {
+            $('.data-table-empty-text').text("There are no invoices matching your search");
+        }
+    }
+
+    function setEmptyTextLabelForTable() {
+        if (culture == 'fr') {
+            $('.data-table-empty-text').text("Pas de données disponibles à ce tableau");
+        } else {
+            $('.data-table-empty-text').text("No data available at this table");
+        }
+    }
+
+</script>
+
+
+</div>
     </div>
     <footer class="container FondBlanc pt-3">
         <hr>
@@ -410,7 +719,7 @@
         function bindCartCount() {
             $.ajax({
                 type: 'POST',
-                url: '/TICTC/Cart/GetCurrentUserCartCount',
+                url: '/ATLCIVP/Cart/GetCurrentUserCartCount',
                 cache: false,
                 datatype: 'json',
                 contentType: 'application/json',
@@ -427,4 +736,4 @@
 
 
 
-</body></html>
+<div class="datetimepicker datetimepicker-dropdown-bottom-left dropdown-menu" style="left: -160px; z-index: 1095;"><div class="datetimepicker-minutes" style="display: none;"><table class=" table-condensed"><thead><tr><th class="prev" style="visibility: visible;"><i class="bi bi-arrow-left"></i> </th><th colspan="5" class="switch">18 Novembre 2025</th><th class="next" style="visibility: visible;"><i class="bi bi-arrow-right"></i> </th></tr></thead><tbody><tr><td colspan="7"><span class="minute">21:00</span><span class="minute active">21:30</span></td></tr></tbody><tfoot><tr><th colspan="7" class="today">Aujourd'hui</th></tr></tfoot></table></div><div class="datetimepicker-hours" style="display: none;"><table class=" table-condensed"><thead><tr><th class="prev" style="visibility: visible;"><i class="bi bi-arrow-left"></i> </th><th colspan="5" class="switch">18 Novembre 2025</th><th class="next" style="visibility: visible;"><i class="bi bi-arrow-right"></i> </th></tr></thead><tbody><tr><td colspan="7"><span class="hour">0:00</span><span class="hour">1:00</span><span class="hour">2:00</span><span class="hour">3:00</span><span class="hour">4:00</span><span class="hour">5:00</span><span class="hour">6:00</span><span class="hour">7:00</span><span class="hour">8:00</span><span class="hour">9:00</span><span class="hour">10:00</span><span class="hour">11:00</span><span class="hour">12:00</span><span class="hour">13:00</span><span class="hour">14:00</span><span class="hour">15:00</span><span class="hour">16:00</span><span class="hour">17:00</span><span class="hour">18:00</span><span class="hour">19:00</span><span class="hour">20:00</span><span class="hour active">21:00</span><span class="hour">22:00</span><span class="hour">23:00</span></td></tr></tbody><tfoot><tr><th colspan="7" class="today">Aujourd'hui</th></tr></tfoot></table></div><div class="datetimepicker-days" style="display: block;"><table class=" table-condensed"><thead><tr><th class="prev" style="visibility: visible;"><i class="bi bi-arrow-left"></i> </th><th colspan="5" class="switch">Novembre 2025</th><th class="next" style="visibility: visible;"><i class="bi bi-arrow-right"></i> </th></tr><tr><th class="dow">L</th><th class="dow">Ma</th><th class="dow">Me</th><th class="dow">J</th><th class="dow">V</th><th class="dow">S</th><th class="dow">D</th></tr></thead><tbody><tr><td class="day old">27</td><td class="day old">28</td><td class="day old">29</td><td class="day old">30</td><td class="day old">31</td><td class="day">1</td><td class="day">2</td></tr><tr><td class="day">3</td><td class="day">4</td><td class="day">5</td><td class="day">6</td><td class="day">7</td><td class="day">8</td><td class="day">9</td></tr><tr><td class="day">10</td><td class="day">11</td><td class="day">12</td><td class="day">13</td><td class="day">14</td><td class="day">15</td><td class="day">16</td></tr><tr><td class="day">17</td><td class="day today active">18</td><td class="day">19</td><td class="day">20</td><td class="day">21</td><td class="day">22</td><td class="day">23</td></tr><tr><td class="day">24</td><td class="day">25</td><td class="day">26</td><td class="day">27</td><td class="day">28</td><td class="day">29</td><td class="day">30</td></tr><tr><td class="day new">1</td><td class="day new">2</td><td class="day new">3</td><td class="day new">4</td><td class="day new">5</td><td class="day new">6</td><td class="day new">7</td></tr></tbody><tfoot><tr><th colspan="7" class="today">Aujourd'hui</th></tr></tfoot></table></div><div class="datetimepicker-months" style="display: none;"><table class="table-condensed"><thead><tr><th class="prev" style="visibility: visible;"><i class="bi bi-arrow-left"></i> </th><th colspan="5" class="switch">2025</th><th class="next" style="visibility: visible;"><i class="bi bi-arrow-right"></i> </th></tr></thead><tbody><tr><td colspan="7"><span class="month">Jan</span><span class="month">Fev</span><span class="month">Mar</span><span class="month">Avr</span><span class="month">Mai</span><span class="month">Jui</span><span class="month">Jul</span><span class="month">Aou</span><span class="month">Sep</span><span class="month">Oct</span><span class="month active">Nov</span><span class="month">Dec</span></td></tr></tbody><tfoot><tr><th colspan="7" class="today">Aujourd'hui</th></tr></tfoot></table></div><div class="datetimepicker-years" style="display: none;"><table class="table-condensed"><thead><tr><th class="prev" style="visibility: visible;"><i class="bi bi-arrow-left"></i> </th><th colspan="5" class="switch">2020-2029</th><th class="next" style="visibility: visible;"><i class="bi bi-arrow-right"></i> </th></tr></thead><tbody><tr><td colspan="7"><span class="year old">2019</span><span class="year">2020</span><span class="year">2021</span><span class="year">2022</span><span class="year">2023</span><span class="year">2024</span><span class="year active">2025</span><span class="year">2026</span><span class="year">2027</span><span class="year">2028</span><span class="year">2029</span><span class="year old">2030</span></td></tr></tbody><tfoot><tr><th colspan="7" class="today">Aujourd'hui</th></tr></tfoot></table></div></div><div class="datetimepicker datetimepicker-dropdown-bottom-left dropdown-menu" style="left: -160px; z-index: 1135;"><div class="datetimepicker-minutes" style="display: none;"><table class=" table-condensed"><thead><tr><th class="prev" style="visibility: visible;"><i class="bi bi-arrow-left"></i> </th><th colspan="5" class="switch">18 Novembre 2025</th><th class="next" style="visibility: visible;"><i class="bi bi-arrow-right"></i> </th></tr></thead><tbody><tr><td colspan="7"><span class="minute">21:00</span><span class="minute active">21:30</span></td></tr></tbody><tfoot><tr><th colspan="7" class="today">Aujourd'hui</th></tr></tfoot></table></div><div class="datetimepicker-hours" style="display: none;"><table class=" table-condensed"><thead><tr><th class="prev" style="visibility: visible;"><i class="bi bi-arrow-left"></i> </th><th colspan="5" class="switch">18 Novembre 2025</th><th class="next" style="visibility: visible;"><i class="bi bi-arrow-right"></i> </th></tr></thead><tbody><tr><td colspan="7"><span class="hour">0:00</span><span class="hour">1:00</span><span class="hour">2:00</span><span class="hour">3:00</span><span class="hour">4:00</span><span class="hour">5:00</span><span class="hour">6:00</span><span class="hour">7:00</span><span class="hour">8:00</span><span class="hour">9:00</span><span class="hour">10:00</span><span class="hour">11:00</span><span class="hour">12:00</span><span class="hour">13:00</span><span class="hour">14:00</span><span class="hour">15:00</span><span class="hour">16:00</span><span class="hour">17:00</span><span class="hour">18:00</span><span class="hour">19:00</span><span class="hour">20:00</span><span class="hour active">21:00</span><span class="hour">22:00</span><span class="hour">23:00</span></td></tr></tbody><tfoot><tr><th colspan="7" class="today">Aujourd'hui</th></tr></tfoot></table></div><div class="datetimepicker-days" style="display: block;"><table class=" table-condensed"><thead><tr><th class="prev" style="visibility: visible;"><i class="bi bi-arrow-left"></i> </th><th colspan="5" class="switch">Novembre 2025</th><th class="next" style="visibility: visible;"><i class="bi bi-arrow-right"></i> </th></tr><tr><th class="dow">L</th><th class="dow">Ma</th><th class="dow">Me</th><th class="dow">J</th><th class="dow">V</th><th class="dow">S</th><th class="dow">D</th></tr></thead><tbody><tr><td class="day old">27</td><td class="day old">28</td><td class="day old">29</td><td class="day old">30</td><td class="day old">31</td><td class="day">1</td><td class="day">2</td></tr><tr><td class="day">3</td><td class="day">4</td><td class="day">5</td><td class="day">6</td><td class="day">7</td><td class="day">8</td><td class="day">9</td></tr><tr><td class="day">10</td><td class="day">11</td><td class="day">12</td><td class="day">13</td><td class="day">14</td><td class="day">15</td><td class="day">16</td></tr><tr><td class="day">17</td><td class="day today active">18</td><td class="day">19</td><td class="day">20</td><td class="day">21</td><td class="day">22</td><td class="day">23</td></tr><tr><td class="day">24</td><td class="day">25</td><td class="day">26</td><td class="day">27</td><td class="day">28</td><td class="day">29</td><td class="day">30</td></tr><tr><td class="day new">1</td><td class="day new">2</td><td class="day new">3</td><td class="day new">4</td><td class="day new">5</td><td class="day new">6</td><td class="day new">7</td></tr></tbody><tfoot><tr><th colspan="7" class="today">Aujourd'hui</th></tr></tfoot></table></div><div class="datetimepicker-months" style="display: none;"><table class="table-condensed"><thead><tr><th class="prev" style="visibility: visible;"><i class="bi bi-arrow-left"></i> </th><th colspan="5" class="switch">2025</th><th class="next" style="visibility: visible;"><i class="bi bi-arrow-right"></i> </th></tr></thead><tbody><tr><td colspan="7"><span class="month">Jan</span><span class="month">Fev</span><span class="month">Mar</span><span class="month">Avr</span><span class="month">Mai</span><span class="month">Jui</span><span class="month">Jul</span><span class="month">Aou</span><span class="month">Sep</span><span class="month">Oct</span><span class="month active">Nov</span><span class="month">Dec</span></td></tr></tbody><tfoot><tr><th colspan="7" class="today">Aujourd'hui</th></tr></tfoot></table></div><div class="datetimepicker-years" style="display: none;"><table class="table-condensed"><thead><tr><th class="prev" style="visibility: visible;"><i class="bi bi-arrow-left"></i> </th><th colspan="5" class="switch">2020-2029</th><th class="next" style="visibility: visible;"><i class="bi bi-arrow-right"></i> </th></tr></thead><tbody><tr><td colspan="7"><span class="year old">2019</span><span class="year">2020</span><span class="year">2021</span><span class="year">2022</span><span class="year">2023</span><span class="year">2024</span><span class="year active">2025</span><span class="year">2026</span><span class="year">2027</span><span class="year">2028</span><span class="year">2029</span><span class="year old">2030</span></td></tr></tbody><tfoot><tr><th colspan="7" class="today">Aujourd'hui</th></tr></tfoot></table></div></div></body></html>

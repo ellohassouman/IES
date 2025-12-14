@@ -433,6 +433,22 @@ INSERT INTO `CustomerUserBLSearchHistory` (`Id`, `BlNumber`, `ShipName`, `Arriva
 (10, 'MEDUDM992142', 'Atlantic Express', '2025-11-10 08:00:00', 1, 3, '2025-11-22 12:00:00');
 
 -- ============================================================================
+-- DONNÉES: Panier (Cart) et Articles du Panier (CartItem)
+-- ============================================================================
+
+-- Sample Cart Data
+INSERT INTO `Cart` (`Id`, `CustomerUserId`, `CreatedDate`, `Deleted`) VALUES
+(1, 1, NOW(), 0),
+(2, 2, NOW(), 0);
+
+-- Sample CartItem Data
+INSERT INTO `CartItem` (`CartId`, `InvoiceId`, `InvoicePaidAmount`, `InvoiceNumber`, `BillingDate`) VALUES
+(1, 3308200, 311645.51, '251018767', NOW()),
+(1, 3308300, 150000.00, '251018768', NOW()),
+(2, 3308400, 200000.00, '251018769', NOW());
+
+-- ============================================================================
 -- FIN DES DONNÉES FICTIVES
 -- ============================================================================
+
 
