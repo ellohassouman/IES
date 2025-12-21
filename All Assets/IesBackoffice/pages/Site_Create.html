@@ -1,0 +1,1136 @@
+<!DOCTYPE html><html class="js no-flexbox flexbox-legacy canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers no-applicationcache svg inlinesvg smil svgclippaths wf-nunitosans-n4-active wf-nunitosans-n7-active wf-active"><head>
+    <meta charset="utf-8">
+    <title>Backoffice</title>
+    <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon">
+
+    <meta name="viewport" content="width=device-width">
+
+    <link href="../assets/css/Content_datatables_dataTables.css" rel="stylesheet">
+
+    <link href="../assets/css/Content_bootstrap.css" rel="stylesheet">
+<link href="../assets/css/Content_bootstrap_rtl.css" rel="stylesheet">
+
+    <link href="../assets/css/Content_bootstrap-icons_font_bootstrap-icons_min.css" rel="stylesheet">
+
+    <link href="../assets/css/Content_fontawesome-all.css" rel="stylesheet">
+<link href="../assets/css/Content_sassStyle.css" rel="stylesheet">
+<link href="../assets/css/Content_perfect-scrollbar.css" rel="stylesheet">
+
+    
+    <link href="../assets/css/Content_smalot-datetimepicker_bootstrap-datetimepicker.css" rel="stylesheet">
+
+    <link href="../assets/css/Content_botdetect-captcha_captcha-stylesheet.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js" type="text/javascript" async=""></script><script src="../assets/js/Scripts_modernizr-2_5_3.js"></script>
+
+    <script src="../assets/js/Scripts_jquery-3_7_1.js"></script>
+
+    <script src="../assets/js/Scripts_bootstrap_bundle_min.js"></script>
+<script src="../assets/js/Scripts_bootstrap-datetimepicker.js"></script>
+<script src="../assets/js/Scripts_bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/Scripts_resources_en-US.js"></script>
+
+    <script src="../assets/js/Scripts_respond.js"></script>
+
+    <script src="../assets/js/Scripts_bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/Scripts_spin.js"></script><style type="text/css"></style>
+<script src="../assets/js/Scripts_jquery_spin.js"></script>
+
+    <script src="../assets/js/Scripts_IES_Scripts_generalFunctions.js"></script>
+<script src="../assets/js/Scripts_IES_Scripts_Validations.js"></script>
+<script src="../assets/js/Scripts_js-cookie.js"></script>
+<script src="../assets/js/Scripts_perfect-scrollbar_jquery.js"></script>
+<script src="../assets/js/Scripts_perfect-scrollbar.js"></script>
+
+    <script src="../assets/js/Scripts_dataTables_min.js"></script>
+
+    <script src="../assets/js/Scripts_IES_Scripts_jquery_dataTables_columnFilter.js"></script>
+
+    <script src="../assets/js/Scripts_IES_Scripts_jquery_dataTables_Resources.js"></script>
+
+
+    <script>
+        if (window.top !== window.self) {
+			window.location.href = '/Error/FrameError';
+		}
+    </script>
+
+<script>NS_CSM_td=274348667;NS_CSM_pd=275116668;NS_CSM_u="/clm10";NS_CSM_col="AAAAAAW1tAh8foQrVstaNV3uVVaYsi8v0CyO6y+UDKBUR2lmsCoZjClhF99Umcb5H/GDTu8OxNRKJs5ghdhwFnVDS7BV";</script><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,700&amp;subset=latin" media="all"><script type="text/javascript">function sendTimingInfoInit(){setTimeout(sendTimingInfo,0)}function sendTimingInfo(){var wp=window.performance;if(wp){var c1,c2,t;c1=wp.timing;if(c1){var cm={};cm.ns=c1.navigationStart;if((t=c1.unloadEventStart)>0)cm.us=t;if((t=c1.unloadEventEnd)>0)cm.ue=t;if((t=c1.redirectStart)>0)cm.rs=t;if((t=c1.redirectEnd)>0)cm.re=t;cm.fs=c1.fetchStart;cm.dls=c1.domainLookupStart;cm.dle=c1.domainLookupEnd;cm.cs=c1.connectStart;cm.ce=c1.connectEnd;if((t=c1.secureConnectionStart)>0)cm.scs=t;cm.rqs=c1.requestStart;cm.rss=c1.responseStart;cm.rse=c1.responseEnd;cm.dl=c1.domLoading;cm.di=c1.domInteractive;cm.dcls=c1.domContentLoadedEventStart;cm.dcle=c1.domContentLoadedEventEnd;cm.dc=c1.domComplete;if((t=c1.loadEventStart)>0)cm.ls=t;if((t=c1.loadEventEnd)>0)cm.le=t;cm.tid=NS_CSM_td;cm.pid=NS_CSM_pd;cm.ac=NS_CSM_col;var xhttp=new XMLHttpRequest();if(xhttp){var JSON=JSON||{};JSON.stringify=JSON.stringify||function(ob){var t=typeof(ob);if(t!="object"||ob===null){if(t=="string")ob='"'+ob+'"';return String(ob);}else{var n,v,json=[],arr=(ob&&ob.constructor==Array);for(n in ob){v=ob[n];t=typeof(v);if(t=="string")v='"'+v+'"';else if(t=="object"&&v!==null)v=JSON.stringify(v);json.push((arr?"":'"'+n+'":')+String(v));}return(arr?"[":"{")+String(json)+(arr?"]":"}");}};xhttp.open("POST",NS_CSM_u,true);xhttp.send(JSON.stringify(cm));}}}}if(window.addEventListener)window.addEventListener("load",sendTimingInfoInit,false);else if(window.attachEvent)window.attachEvent("onload",sendTimingInfoInit);else window.onload=sendTimingInfoInit;</script></head>
+
+<body>
+<script>
+ function string_to_array(str) {var len = str.length;var res = new Array(len);for(var i = 0; i < len; i++)res[i] = str.charCodeAt(i);return res;}function array_to_hex_string(ary) {var res = "";for(var i = 0; i < ary.length; i++)res += SHA256_hexchars[ary[i] >> 4] + SHA256_hexchars[ary[i] & 0x0f];return res;}function SHA256_init() {SHA256_H = new Array(0x6a09e667, 0xbb67ae85,0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19);SHA256_buf = new Array();SHA256_len = 0;}function SHA256_write(msg) {if (typeof(msg) == "string") SHA256_buf = SHA256_buf.concat(string_to_array(msg));else SHA256_buf = SHA256_buf.concat(msg); for(var i = 0; i + 64 <= SHA256_buf.length; i += 64) SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf.slice(i, i +64)); SHA256_buf = SHA256_buf.slice(i); SHA256_len += msg.length;}function SHA256_finalize() { SHA256_buf[SHA256_buf.length] = 0x80;  if (SHA256_buf.length > 64 - 8) {for(var i = SHA256_buf.length; i < 64; i++)SHA256_buf[i] = 0;SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf);SHA256_buf.length = 0;} for(var i = SHA256_buf.length; i < 64 - 5; i++)SHA256_buf[i] = 0;  SHA256_buf[59] =(SHA256_len >>> 29) & 0xff;  SHA256_buf[60] = (SHA256_len >>> 21) & 0xff;  SHA256_buf[61] = (SHA256_len >>> 13) & 0xff;  SHA256_buf[62] = (SHA256_len >>> 5) & 0xff;  SHA256_buf[63] = (SHA256_len << 3) & 0xff;  SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf);  var res = new Array(32);  for(var i = 0; i < 8; i++) {res[4 * i + 0] = SHA256_H[i] >>> 24; res[4 * i + 1] = (SHA256_H[i] >> 16) & 0xff; res[4 * i + 2] = (SHA256_H[i] >> 8) & 0xff; res[4 * i + 3] = SHA256_H[i] & 0xff; } delete SHA256_H; delete SHA256_buf; delete SHA256_len; return res;}function HMAC_SHA256_init(key) {  if (typeof(key) == "string") HMAC_SHA256_key = string_to_array(key);  else  HMAC_SHA256_key = new Array().concat(key);  if (HMAC_SHA256_key.length > 64) { SHA256_init(); SHA256_write(HMAC_SHA256_key); HMAC_SHA256_key = SHA256_finalize(); }  for(var i = HMAC_SHA256_key.length; i < 64; i++)  HMAC_SHA256_key[i] = 0; for(var i = 0; i < 64; i++) HMAC_SHA256_key[i] ^=  0x36;  SHA256_init(); SHA256_write(HMAC_SHA256_key);} function HMAC_SHA256_write(msg) {  SHA256_write(msg);} function HMAC_SHA256_finalize() {  var md = SHA256_finalize();  for(var i = 0; i < 64; i++) HMAC_SHA256_key[i] ^= 0x36 ^ 0x5c; SHA256_init(); SHA256_write(HMAC_SHA256_key); SHA256_write(md);  for(var i = 0; i < 64; i++)    HMAC_SHA256_key[i] = 0;  delete HMAC_SHA256_key;  return SHA256_finalize();}function HMAC_SHA256_MAC(key, msg) { var res;  HMAC_SHA256_init(key);  HMAC_SHA256_write(msg);  res = HMAC_SHA256_finalize();  return array_to_hex_string(res);} SHA256_hexchars = new Array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f');SHA256_K = new Array( 0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1,0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f,0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2); function SHA256_sigma0(x) { return ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);} function SHA256_sigma1(x) { return ((x >>> 17) | (x << 15)) ^ ((x >>> 19) | (x << 13)) ^ (x >>> 10);}function SHA256_Sigma0(x) { return ((x >>> 2) | (x << 30)) ^ ((x >>> 13) | (x << 19)) ^ ((x >>> 22) | (x << 10));}function SHA256_Sigma1(x) { return ((x >>> 6) | (x << 26)) ^ ((x >>> 11) | (x << 21)) ^ ((x >>> 25) | (x << 7));} function SHA256_Ch(x, y, z) { return z ^ (x & (y ^ z));} function SHA256_Maj(x, y, z) {return (x & y) ^ (z & (x ^ y));}function SHA256_Hash_Word_Block(H, W) { for(var i = 16; i < 64; i++)  W[i] = (SHA256_sigma1(W[i - 2]) +  W[i - 7] + SHA256_sigma0(W[i - 15]) + W[i - 16]) & 0xffffffff; var state = new Array().concat(H); for(var i = 0; i < 64; i++) {    var T1 = state[7] + SHA256_Sigma1(state[4]) + SHA256_Ch(state[4], state[5], state[6]) + SHA256_K[i] + W[i]; var T2 = SHA256_Sigma0(state[0]) + SHA256_Maj(state[0], state[1], state[2]); state.pop(); state.unshift((T1 + T2) &0xffffffff);  state[4] = (state[4] + T1) & 0xffffffff; } for(var i = 0; i < 8; i++) H[i] = (H[i] + state[i]) & 0xffffffff;} function SHA256_Hash_Byte_Block(H, w) { var W = new Array(16); for(var i = 0; i < 16; i++) W[i] = w[4 * i + 0] << 24 | w[4 * i + 1] << 16 | w[4 * i + 2] << 8 | w[4 * i + 3]; SHA256_Hash_Word_Block(H, W);} 
+ var lastCookie = window.name;
+ function getCookie(name) {
+       let cookie = {}; 
+            document.cookie.split(';').forEach(function(el) {
+                let cookiekv = el.split('=');
+           cookie[cookiekv[0].trim()] = cookiekv[1];
+            })
+           if (cookie.hasOwnProperty(name)) {
+               return cookie[name];
+                     }
+            return "";
+ };
+ var checkCookie = function() {
+       var token ="17905226099625079964";
+			    var seed = getCookie('citrix_ns_seed');
+      var currentCookie = document.cookie;
+         if (currentCookie != lastCookie || (lastCookie.length == 0)) {
+           console.log('cookie has changed');
+           var hash = HMAC_SHA256_MAC(seed, token);
+         document.cookie = 'MC=' + hash +'; Domain= .aglgroup.com';
+               lastCookie = currentCookie;
+          window.name = currentCookie;
+     }
+                    return true;
+ };
+ window.setInterval(checkCookie, 100);
+        </script>
+
+    <nav class="navbar navbar-expand-md navbar-inverse fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarFlagsMenu" aria-controls="navbarFlagsMenu" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <div class="logo-version">
+                    <a class="navbar-brand fontBalnc" href="/Backoffice/SitesAdmin"> </a>
+                    <p class="version-number">2.4.0.0</p>
+                </div>
+            </div>
+            <div class="justify-content-end" id="iesDropdownMenu">
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a href="#" class="dropdown-toggle fontBalnc" data-bs-toggle="dropdown" role="button" aria-expanded="false">Menu<span class="caret"></span></a>
+                        <ul class="dropdown-menu dropdown-menu-ies">
+                            <li><a class="dropdown-item" href="/Backoffice/SiteAdminUsers">Compte administrateur du site</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/SitesAdmin">Liste des sites</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/BankUser/Index">Utilisateurs bancaires</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/Backoffice/AppAdminAccounts">Compte IES manager</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/Backoffice/FieldSettings/FieldSettings">Paramètres du champ</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/SiteAdmin">Comptes utilisateur client</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/TemplateConfigurator">Mail Type</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/BillOfLadingSearch">Rechercher BL</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/EpaymentErrorCode/Index">Codes erreur du WS E-Payment</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarFlagsMenu">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+
+
+<form action="/Backoffice/LogOff?LoginActionName=AdminLogin" id="logoutForm" method="post">            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle fontBalnc menuUser" data-bs-toggle="dropdown"><span class="glyphicon glyphicon-user paddIcon"></span>elloh.assouman@ascens-services.com<b class="caret"></b></a>
+                    <ul class="dropdown-menu menuUser">
+                        <li>
+                            <input name="__RequestVerificationToken" type="hidden" value="A2YOTWtrVhQvlTyWYVe4mN1W9ZDr2MVZRfZfULn1OgjtA4dDIWMwY3g5OrLQmrLtbEXsLQke1u1GMFylGRLdWsno_Wuc1xk9-_kFgERP3vbjnp5FMBeoSo6zdwgVmMpZlpYSj4IC7ogujs3WnI3yPA2">
+                            <a href="javascript:document.getElementById('logoutForm').submit()" class="dropdown-item"><span class="bi bi-box-arrow-right" aria-hidden="true"></span> Déconnecter</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+<input type="hidden" name="as_sfid" value="AAAAAAV308x16CTYgEtO0go2ighlwrwwMWLvmvRlPcfZXGtga92FZ78YdxWJS21aml7G715hBRo4C443cRKQaDIcuFoYy4Ctbx99xIlFxbMREOR8Ew6_rIqhqB6G_XlgRdPR7zzfYyosuUcNAj2mTUu07w7set6aLffw5I0HaVFviiBnOA=="><input type="hidden" name="as_fid" value="27a7521b5aee98e40563f55daa2c5baff5dfaf0f"></form><script>
+    $('#supportButton').click(function () {
+        $('#supportDialogContent').load(this.href, function () {
+            $('#supportDialog').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    $('#linkMyProfile').click(function () {
+        $('#ProfileModalContent').load(this.href, function () {
+            $('#ProfileModal').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    
+
+</script>
+
+
+<form action="/Default/SetCulture" id="SetCultureForm" method="post"><span class="posFlags">
+                                <span class="btn-group btn-group-xs">
+                                    <button type="submit" name="culture" id="en-us" value="en-us" class="btn btn-primary btn-sm">Anglais</button>
+                                    <button type="submit" name="culture" id="fr" value="fr" class="btn btn-primary btn-sm">Français</button>
+                                </span>
+                            </span>
+<input type="hidden" name="as_sfid" value="AAAAAAXjGR1OrcFnLjZwxNMtZrLjZGwZAWp295jHpBJJyx5r7L4_XWNIekDC4FNjl8_DWjsbrjkYyKX-N_Dlf6IkuzLvWwVaVy-Wq7idruStFnqGGdcaZ3YLD8OWZq9c39xJ6G_6QwcH4_muFbceVq2tcPhC2CJzk2lMbWCQcWKHqIqQ2g=="><input type="hidden" name="as_fid" value="01c7f95a9b3b06bd3e9ae8066b78c2b888386f5d"></form>                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="jumbotronSuperAdmin">
+        <div class="container transpSuperadmin">
+            <h1>Ajouter un nouveau site</h1>
+        </div>
+    </div>
+
+    <div class="container FondBlanc">
+        
+
+
+
+
+
+
+
+<div id="divCreateEdit">
+<form action="/Backoffice/Site/Create" enctype="multipart/form-data" id="formCreateEditSite" method="post" role="form"><input name="__RequestVerificationToken" type="hidden" value="WRuVUEZYefcU9zWNJLEsGqREU2FX70mxn1U2ekfS6l6JRQQiSgLdQStUO-Pe7O9KSA9hp0XrPB6mfGUBzld2-3T8UG7uq_apZhbIH_FRSwrr_PRaHJqhICIznelcCKu2MzImLcJhFG8rjfWddAl2ww2"><input data-val="true" data-val-required="'Is Password Configured' ne doit pas avoir la valeur null." id="IsPasswordConfigured" name="IsPasswordConfigured" type="hidden" value="False"><input data-val="true" data-val-number="The field SiteId must be a number." data-val-required="'Site Id' ne doit pas avoir la valeur null." id="SiteId" name="SiteId" type="hidden" value="0">        <div id="divError" class="alert alert-danger alert-dismissible-right alrt_pad alert-log" role="alert" style="display: none;">
+            <span class="bi bi-exclamation-circle-fill" aria-hidden="true"></span>
+            <b> Attention!</b>
+            <span data-error="" id="fileSizeExceededError">La taille du fichier doit être inférieure ou égale à 1 Mo</span>
+            <span data-error="" id="fileLogoSizeExceededError">La taille du fichier doit être inférieure ou égale à 20 ko</span>
+            <span data-error="" id="ajaxCallError">Error occurred. Please contact with the Administrator.</span>
+            <button type="button" class="btn-close" onclick="$('#divError').hide();"><span aria-hidden="true"></span><span class="sr-only">Fermer</span></button>
+
+        </div>
+        <h5 class="bottomLine2 padSubtit">Informations principales</h5>
+        <div class="modal-body nopad3 p-3">
+            <div class="row">
+                <div class="row col-lg-6 paddFields col-md-6 col-12">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-4 pad_field nopad-left">
+                        <label class="control-label textplain" for="SiteName">Nom du site :</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-8 pad_field nopad-left">
+                        <input class="form-control" data-val="true" data-val-required="Le nom du site doit être renseigné." id="SiteName" name="SiteName" placeholder="Saisir nom du site" type="text" value="">
+                    </div>
+                </div>
+                <div class="row col-lg-6 paddFields col-md-6 col-12">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-4 pad_field nopad-left">
+                        <label class="control-label textplain" for="SiteTitle">Titre du site :</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-8 pad_field nopad-left">
+                        <input class="form-control" id="SiteTitle" name="SiteTitle" placeholder="Saisir titre du site" type="text" value="">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="row col-lg-6 paddFields col-md-6 col-12">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-4 pad_field nopad-left">
+                        <label class="control-label textplain" for="SiteSubtitle">Sous-titre du site :</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-8 pad_field nopad-left">
+                        <input class="form-control" id="SiteSubtitle" name="SiteSubtitle" placeholder="Saisir sous-titre du site" type="text" value="">
+                    </div>
+                </div>
+                <div class="row col-lg-6 paddFields col-md-6 col-12">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-4 pad_field nopad-left">
+                        <label class="control-label textplain" for="SiteUrl">URL du service IPAKI :</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-8 pad_field nopad-left">
+                        <input class="form-control" data-val="true" data-val-regex="Format d'url non valide" data-val-regex-pattern="^http(s?)\:\/\/[0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*(:(0-9)*)*(\/?)([a-zA-Z0-9\-\.\?\,\'\/\\\+&amp;amp;%\$#_]*)?$" data-val-required="L'url du site est obligatoire" id="SiteUrl" name="SiteUrl" placeholder="http://site.example.com" type="text" value="">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="row col-lg-6 paddFields col-md-6 col-12">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-4 pad_field nopad-left">
+                        <label class="control-label textplain nomargin-left" for="Username">Compte de Service IPAKI :</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-8 pad_field nopad-left">
+                        <input class="form-control" data-val="true" data-val-required="L'identifiant du compte de service est requis" id="Username" maxlength="50" name="Username" placeholder="Entrez l'identifiant du compte de service IPAKI" type="text" value="">
+                    </div>
+                </div>
+                <div class="row col-lg-6 paddFields col-md-6 col-12">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-4 pad_field nopad-left">
+                        <label class="control-label textplain" for="Password">Mot de passe du compte de service IPAKI : </label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-8 pad_field nopad-left">
+                        <input passwordchar="*" value="" autocomplete="off" class="form-control" id="Password" maxlength="64" name="Password" placeholder="Entrez le mot de passe du compte de service IPAKI" type="password">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="row col-lg-6 paddFields col-md-6 col-12">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-4 pad_field nopad-left">
+                        <label class="control-label textplain" for="SiteCode">Code du site :</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-8 pad_field nopad-left">
+                        <input class="form-control" data-val="true" data-val-regex="Le format du code spécifié est incorrect." data-val-regex-pattern="^([a-zA-Z0-9][^*/&gt;&lt;?\|:]*)$" data-val-required="Le code du site doit être renseigné." id="SiteCode" name="SiteCode" placeholder="Saisir code du site" type="text" value="">
+                    </div>
+                </div>
+                <div class="row col-lg-6 paddFields col-md-6 col-12">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-4 pad_field nopad-left">
+                        <label class="control-label textplain" for="DateTimeFormat">Format de la date :</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-8 pad_field nopad-left">
+                        <select class="form-control" id="DateTimeFormat" name="DateTimeFormat"><option>dd/MM/yyyy</option>
+<option>MM/dd/yyyy</option>
+<option>dd/MM/yyyy HH:mm</option>
+<option>MM/dd/yyyy HH:mm</option>
+</select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="row col-lg-6 paddFields col-md-6 col-12">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-4 pad_field nopad-left">
+                        <label class="control-label textplain" for="SupportEmail">Email Support :</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-8 pad_field nopad-left">
+                        <input class="form-control" data-val="true" data-val-email="Veuillez saisir une adresse e-mail valide" id="SupportEmail" name="SupportEmail" placeholder="Saisir Email Support" type="text" value="">
+                    </div>
+                </div>
+                <div class="row col-lg-6 paddFields col-md-6 col-12">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-4 pad_field nopad-left">
+                        <label class="control-label textplain" for="CustomerCareEmail">E-mail Service Client:</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-8 pad_field nopad-left">
+                        <input class="form-control" data-val="true" data-val-email="Veuillez saisir une adresse e-mail valide" data-val-required="L'e-mail du Service Client ne peut pas être vide." id="CustomerCareEmail" name="CustomerCareEmail" placeholder="Saisir Email Service Client" type="text" value="">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="row col-lg-6 paddFields col-md-6 col-12 field-checkbox">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-4 pad_field nopad-left">
+                        <label class="control-label textplain" for="AllowClearingAgentMode">Mode administrateur :</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-8 pad_field nopad-left pad-check">
+<input data-val="true" data-val-required="'Allow Clearing Agent Mode' ne doit pas avoir la valeur null." id="AllowClearingAgentMode" name="AllowClearingAgentMode" type="checkbox" value="true"><input name="AllowClearingAgentMode" type="hidden" value="false">                    </div>
+                </div>
+                <div class="row col-lg-6 paddFields col-md-6 col-12 field-checkbox">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-4 pad_field nopad-left">
+                        <label class="control-label textplain" for="CashUsersCanValidate">Les utilisateurs comptants peuvent valider les proformas :</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-8 pad_field nopad-left pad-check">
+                        <input data-val="true" data-val-required="'Cash Users Can Validate' ne doit pas avoir la valeur null." id="CashUsersCanValidate" name="CashUsersCanValidate" type="checkbox" value="true"><input name="CashUsersCanValidate" type="hidden" value="false">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="row col-lg-6 paddFields col-md-6 col-12 field-checkbox">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-4 pad_field nopad-left">
+                        <label class="control-label textplain" for="FilterBLByClientCodeEnabled">Filtrer les BL par code client :</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-8 pad_field nopad-left pad-check">
+                        <input data-val="true" data-val-required="'Filter B L By Client Code Enabled' ne doit pas avoir la valeur null." id="FilterBLByClientCodeEnabled" name="FilterBLByClientCodeEnabled" type="checkbox" value="true"><input name="FilterBLByClientCodeEnabled" type="hidden" value="false">
+                    </div>
+                </div>
+                <div class="row col-lg-6 paddFields col-md-6 col-12 field-checkbox">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-4 pad_field nopad-left">
+                        <label class="control-label textplain" for="RestrictDeleteEventByClientCodeEnabled">Suppression des événements restreinte par le code tiers :</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-8 pad_field nopad-left pad-check">
+                        <input data-val="true" data-val-required="'Restrict Delete Event By Client Code Enabled' ne doit pas avoir la valeur null." id="RestrictDeleteEventByClientCodeEnabled" name="RestrictDeleteEventByClientCodeEnabled" type="checkbox" value="true"><input name="RestrictDeleteEventByClientCodeEnabled" type="hidden" value="false">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="row col-lg-6 paddFields col-md-6 col-12 field-checkbox">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-4 pad_field nopad-left">
+                        <label class="control-label textplain" for="InvoiceAllBlItemsAtOnce">Facturer tous les items d'un BL en même temps :</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-8 pad_field nopad-left pad-check">
+                        <input data-val="true" data-val-required="'Invoice All Bl Items At Once' ne doit pas avoir la valeur null." id="InvoiceAllBlItemsAtOnce" name="InvoiceAllBlItemsAtOnce" type="checkbox" value="true"><input name="InvoiceAllBlItemsAtOnce" type="hidden" value="false">
+                    </div>
+                </div>
+                <div class="row col-lg-6 paddFields col-md-6 col-12 field-checkbox">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-4 pad_field nopad-left">
+                        <label class="control-label textplain" for="InvoiceListSectionEnabled">Activer l'affichage de la liste des factures :</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-8 pad_field nopad-left pad-check">
+                        <input data-val="true" data-val-required="'Invoice List Section Enabled' ne doit pas avoir la valeur null." id="InvoiceListSectionEnabled" name="InvoiceListSectionEnabled" type="checkbox" value="true"><input name="InvoiceListSectionEnabled" type="hidden" value="false">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <h5 class="bottomLine2 padSubtit">Compatibilité IPAKI</h5>
+        </div>
+        <div class="modal-body nopad3 p-3">
+            <div class="row">
+                <div class="row col-lg-6 paddFields col-md-6 col-12 field-checkbox">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-4 pad_field nopad-left">
+                        <label class="control-label textplain" for="UseLegacyServiceToPrintDN">Veuillez utiliser le Webservice Legacy pour imprimer le BAD :</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-8 pad_field nopad-left pad-check">
+                        <input data-val="true" data-val-required="'Use Legacy Service To Print D N' ne doit pas avoir la valeur null." id="UseLegacyServiceToPrintDN" name="UseLegacyServiceToPrintDN" type="checkbox" value="true"><input name="UseLegacyServiceToPrintDN" type="hidden" value="false">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <h5 class="bottomLine2 padSubtit" id="myModalLabel">
+            Bannière du site
+        </h5>
+        <div class="modal-body nopad3 p-3">
+            <div class="row">
+                <div class="row col-lg-6 paddFields col-md-12 col-12">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-2 pad_field nopad-left">
+                        <label>
+                            Image Bannière :
+                        </label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-10 pad_field nopad-left chooseFile">
+                        <input maxlengthattribute="1024" accept="image/*" class="filestyle" data-buttontext="Choisir le fichier" data-iconname="bi bi-folder2-open" id="imageUpload" name="SiteBanner" type="file" value="" tabindex="-1" style="position: absolute; clip: rect(0px, 0px, 0px, 0px);"><div class="bootstrap-filestyle input-group"><input type="text" class="form-control " disabled=""> <span class="group-span-filestyle input-group-btn" tabindex="0"><label for="imageUpload" class="btn btn-default "><span class="bi bi bi-folder2-open"></span> Choisir le fichier</label></span></div>
+                    </div>
+                </div>
+                <div class="row col-lg-6 paddFields col-md-12 col-12">
+                    <div class="col-lg-4 labelRight col-md-4 col-sm-3 col-2 pad_field nopad-left">
+                        <label>
+                            Logo du terminal :
+                        </label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-sm-9 col-10 pad_field nopad-left chooseFile">
+                        <input maxlengthattribute="20" accept="image/*" class="filestyle" data-buttontext="Choisir le fichier" data-iconname="bi bi-folder2-open" id="imageUploadLogo" name="LogoBanner" type="file" value="" tabindex="-1" style="position: absolute; clip: rect(0px, 0px, 0px, 0px);"><div class="bootstrap-filestyle input-group"><input type="text" class="form-control " disabled=""> <span class="group-span-filestyle input-group-btn" tabindex="0"><label for="imageUploadLogo" class="btn btn-default "><span class="bi bi bi-folder2-open"></span> Choisir le fichier</label></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row px-4">
+                <div class="ImgPreview col-lg-9 col-md-9 col-9" id="divImgPreview" style="filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(sizingMethod=scale);">
+                    <span class="field-validation-valid" data-valmsg-for="SiteBanner" data-valmsg-replace="true"></span>
+                </div>
+                <div class="ImgPreviewLogo col-lg-3 col-md-3 col-3" id="divImgPreviewLogo" style="filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(sizingMethod=scale);">
+                    <span class="field-validation-valid" data-valmsg-for="LogoBanner" data-valmsg-replace="true"></span>
+                </div>
+            </div>
+
+
+        </div>
+        <br>
+        <h5 class="bottomLine2 padSubtit marAllowed" id="myModalLabel">
+            Opérations autorisées
+        </h5>
+        <div class="modal-body nopad3 p-3">
+            <div id="checkboxes" class="row col-lg-12 col-md-12 col-sm-12 col-12">
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Actions_0_">Créer Proforma</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Actions_0_" name="Actions[0]" type="checkbox" value="true"><input name="Actions[0]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Actions_1_">Valider Proforma</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Actions_1_" name="Actions[1]" type="checkbox" value="true"><input name="Actions[1]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Actions_2_">Payer facture</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Actions_2_" name="Actions[2]" type="checkbox" value="true"><input name="Actions[2]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Actions_3_">Remboursement</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Actions_3_" name="Actions[3]" type="checkbox" value="true"><input name="Actions[3]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Actions_4_">Information de suivi</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Actions_4_" name="Actions[4]" type="checkbox" value="true"><input name="Actions[4]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Actions_5_">Ajouter un événement</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Actions_5_" name="Actions[5]" type="checkbox" value="true"><input name="Actions[5]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Actions_6_">Imprimer DN</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Actions_6_" name="Actions[6]" type="checkbox" value="true"><input name="Actions[6]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Actions_7_">Générer un BAD depuis IES sans devoir le générer d'abord dans IPAKI</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Actions_7_" name="Actions[7]" type="checkbox" value="true"><input name="Actions[7]" type="hidden" value="false">
+                        </div>
+                    </div>
+            </div>
+        </div>
+        <h5 class="bottomLine2 padSubtit">
+            Pièces justificatives
+        </h5>
+        <div class="modal-body nopad3 p-3">
+            <div id="checkboxes" class="row col-lg-12 col-md-12 col-sm-12 col-12">
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_0_">Carte d'identité</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_0_" name="Documents[0]" type="checkbox" value="true"><input name="Documents[0]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_1_">Permis de conduire</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_1_" name="Documents[1]" type="checkbox" value="true"><input name="Documents[1]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_2_">Lettre du département légal</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_2_" name="Documents[2]" type="checkbox" value="true"><input name="Documents[2]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_3_">Passeport</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_3_" name="Documents[3]" type="checkbox" value="true"><input name="Documents[3]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_4_">RCCM</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_4_" name="Documents[4]" type="checkbox" value="true"><input name="Documents[4]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_5_">Etats financier du dernier exercice</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_5_" name="Documents[5]" type="checkbox" value="true"><input name="Documents[5]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_6_">Attestation de régularité fiscale</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_6_" name="Documents[6]" type="checkbox" value="true"><input name="Documents[6]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_7_">Attestation de la caisse nationale de prévoyance sociale (CNPS)</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_7_" name="Documents[7]" type="checkbox" value="true"><input name="Documents[7]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_8_">Relevé d'identité bancaire</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_8_" name="Documents[8]" type="checkbox" value="true"><input name="Documents[8]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_9_">Copie de la pièce d’identité du dirigeant</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_9_" name="Documents[9]" type="checkbox" value="true"><input name="Documents[9]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_10_">Attestation de déclarant en douane</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_10_" name="Documents[10]" type="checkbox" value="true"><input name="Documents[10]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_11_">Copie de la carte opérateur économique</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_11_" name="Documents[11]" type="checkbox" value="true"><input name="Documents[11]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_12_">Copie de l’agrément</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_12_" name="Documents[12]" type="checkbox" value="true"><input name="Documents[12]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_13_">NIF</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_13_" name="Documents[13]" type="checkbox" value="true"><input name="Documents[13]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_14_">Formulaire C30</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_14_" name="Documents[14]" type="checkbox" value="true"><input name="Documents[14]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_15_">Certificat de dédouanement</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_15_" name="Documents[15]" type="checkbox" value="true"><input name="Documents[15]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_16_">Lettre d'autorisation</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_16_" name="Documents[16]" type="checkbox" value="true"><input name="Documents[16]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_17_">Certificat de constitution</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_17_" name="Documents[17]" type="checkbox" value="true"><input name="Documents[17]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_18_">CAC 2 ou CAC 7</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_18_" name="Documents[18]" type="checkbox" value="true"><input name="Documents[18]" type="hidden" value="false">
+                        </div>
+                    </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_19_">NEPC</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_19_" name="Documents[19]" type="checkbox" value="true"><input name="Documents[19]" type="hidden" value="false">
+                        </div>
+                    </div>
+                        <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv accountRequestFormSpace">
+                        </div>
+                    <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields justificationDocumentDiv">
+                        <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                            <label for="Documents_20_">Formulaire de création de compte</label>
+                        </div>
+                        <div class="col-lg-3 pad_l col-md-3 col-4">
+                            <input id="Documents_20_" name="Documents[20]" type="checkbox" value="true"><input name="Documents[20]" type="hidden" value="false">
+                        </div>
+                    </div>
+                        <div id="accountRequestFormInputFile" class="col-lg-3 col-md-5 col-sm-10 col-10 paddFields justificationDocumentDiv justificationFile" style="display:none">
+                            <span class="field-validation-valid" data-valmsg-for="AccountRequestFormDocument" data-valmsg-replace="true"></span>
+                            <input maxlengthattribute="5120" accept="image/png,image/jpg,image/jpeg,application/pdf" class="filestyle" data-buttontext="Choisir le fichier" data-iconname="bi bi-folder2-open" id="accountRequestFormDocument" name="AccountRequestFormDocument" type="file" value="" tabindex="-1" style="position: absolute; clip: rect(0px, 0px, 0px, 0px);"><div class="bootstrap-filestyle input-group"><input type="text" class="form-control " disabled=""> <span class="group-span-filestyle input-group-btn" tabindex="0"><label for="accountRequestFormDocument" class="btn btn-default "><span class="bi bi bi-folder2-open"></span> Choisir le fichier</label></span></div>
+                        </div>
+
+            </div>
+        </div>
+        <h5 class="bottomLine2 padSubtit" id="DnDownloadLabel">
+            Téléchargement du BAD
+        </h5>
+        <div class="modal-body nopad3 p-3">
+            <div id="dndownloadcheck" class="row col-lg-12 col-md-12 col-sm-12 col-12">
+                <div class="row col-lg-3 col-md-4 col-sm-6 col-12 paddFields">
+                    <div class="col-lg-9 labelRight2 col-md-9 col-8">
+                        <label class="control-label textplain" for="Dn2FaEnabled">Permettre l'authentification 2 facteurs</label>
+                    </div>
+                    <div class="col-lg-3 pad_l col-md-3 col-4">
+                        <input data-val="true" data-val-required="'Dn2 Fa Enabled' ne doit pas avoir la valeur null." id="Dn2FaEnabled" name="Dn2FaEnabled" type="checkbox" value="true"><input name="Dn2FaEnabled" type="hidden" value="false"> <span class="bi bi-question-circle-fill question_dn" aria-hidden="true" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Pour activer la case, veuillez cocher l'option &quot;Imprimer DN&quot; dans la section des &quot;Actions autorisées&quot;."></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <h5 class="bottomLine2 padSubtit" id="myModalLabel">
+            Moyens de paiement
+        </h5>
+        <div class="modal-body nopad3 p-3">
+            <div id="checkboxesPayments">
+                    <div class="col-lg-6 bottomLine2 SitePayMethods col-md-12 col-12" data-paymentmethod="" data-role-clearingagents="" style="display: none;">
+                        <div class="col-lg-4 image_method col-md-4 col-4">
+                            <img class="paymentMethodLogo" src="../assets/images/Images_PaymentMethods_GTBank.jpg">
+                        </div>
+                        <div class="col-lg-7 labels_method col-md-7 col-7">
+<input class="csGTBank" id="chkPay_6" name="PaymentMethods[0].IsSelected" type="checkbox" value="true"><input name="PaymentMethods[0].IsSelected" type="hidden" value="false">
+                            <input data-val="true" data-val-number="The field Id must be a number." id="PaymentMethods_0__Id" name="PaymentMethods[0].Id" type="hidden" value="6">
+                            <input id="PaymentMethods_0__Type" name="PaymentMethods[0].Type" type="hidden" value="GTBank">
+                            <span>
+                                WebPayment ngn -&gt; NGN
+                                (NGN)
+                            </span>
+                            <div id="settledReasonSection" style="display:none">
+                                <div class="form-field">
+                                    <label class="control-label textplain" for="PaymentMethods_0__CustomSettledReasonCode">Code émetteur du statut (Settled) :</label>
+                                    <input class="form-control" id="PaymentMethods_0__CustomSettledReasonCode" maxlength="50" name="PaymentMethods[0].CustomSettledReasonCode" type="text" value="">
+                                </div>
+                                    <div class="form-field">
+                                        <label class="control-label textplain" for="PaymentMethods_0__ExtraChargesSubscription">Abonnement Frais de Transaction IES :</label>
+                                        <input class="form-control" id="PaymentMethods_0__ExtraChargesSubscription" maxlength="50" name="PaymentMethods[0].ExtraChargesSubscription" type="text" value="">
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 bottomLine2 SitePayMethods col-md-12 col-12" data-paymentmethod="" data-role-clearingagents="" style="display: none;">
+                        <div class="col-lg-4 image_method col-md-4 col-4">
+                            <img class="paymentMethodLogo" src="../assets/images/Images_PaymentMethods_GTBank.jpg">
+                        </div>
+                        <div class="col-lg-7 labels_method col-md-7 col-7">
+<input class="csGTBank" id="chkPay_7" name="PaymentMethods[1].IsSelected" type="checkbox" value="true"><input name="PaymentMethods[1].IsSelected" type="hidden" value="false">
+                            <input data-val="true" data-val-number="The field Id must be a number." id="PaymentMethods_1__Id" name="PaymentMethods[1].Id" type="hidden" value="7">
+                            <input id="PaymentMethods_1__Type" name="PaymentMethods[1].Type" type="hidden" value="GTBank">
+                            <span>
+                                WebPayment usd -&gt; USD
+                                ($)
+                            </span>
+                            <div id="settledReasonSection" style="display:none">
+                                <div class="form-field">
+                                    <label class="control-label textplain" for="PaymentMethods_1__CustomSettledReasonCode">Code émetteur du statut (Settled) :</label>
+                                    <input class="form-control" id="PaymentMethods_1__CustomSettledReasonCode" maxlength="50" name="PaymentMethods[1].CustomSettledReasonCode" type="text" value="">
+                                </div>
+                                    <div class="form-field">
+                                        <label class="control-label textplain" for="PaymentMethods_1__ExtraChargesSubscription">Abonnement Frais de Transaction IES :</label>
+                                        <input class="form-control" id="PaymentMethods_1__ExtraChargesSubscription" maxlength="50" name="PaymentMethods[1].ExtraChargesSubscription" type="text" value="">
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 bottomLine2 SitePayMethods col-md-12 col-12" data-paymentmethod="" data-role-default="">
+                        <div class="col-lg-4 image_method col-md-4 col-4">
+                            <img class="paymentMethodLogo" src="../assets/images/Images_PaymentMethods_InTouch.jpg">
+                        </div>
+                        <div class="col-lg-7 labels_method col-md-7 col-7">
+<input class="csInTouch" id="chkPay_inTouch_8" name="PaymentMethods[2].IsSelected" type="checkbox" value="true"><input name="PaymentMethods[2].IsSelected" type="hidden" value="false">
+                            <input data-val="true" data-val-number="The field Id must be a number." id="PaymentMethods_2__Id" name="PaymentMethods[2].Id" type="hidden" value="8">
+                            <input id="PaymentMethods_2__Type" name="PaymentMethods[2].Type" type="hidden" value="InTouch">
+                            <span>
+                                Touch Pay Central African CFA Franc -&gt; XOF
+                                (CFA)
+                            </span>
+                            <div id="settledReasonSection" style="display:none">
+                                <div class="form-field">
+                                    <label class="control-label textplain" for="PaymentMethods_2__CustomSettledReasonCode">Code émetteur du statut (Settled) :</label>
+                                    <input class="form-control" id="PaymentMethods_2__CustomSettledReasonCode" maxlength="50" name="PaymentMethods[2].CustomSettledReasonCode" type="text" value="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 bottomLine2 SitePayMethods col-md-12 col-12" data-paymentmethod="" data-role-clearingagents="" style="display: none;">
+                        <div class="col-lg-4 image_method col-md-4 col-4">
+                            <img class="paymentMethodLogo" src="../assets/images/Images_PaymentMethods_InTouch.jpg">
+                        </div>
+                        <div class="col-lg-7 labels_method col-md-7 col-7">
+<input class="csInTouch" id="chkPay_inTouch_9" name="PaymentMethods[3].IsSelected" type="checkbox" value="true"><input name="PaymentMethods[3].IsSelected" type="hidden" value="false">
+                            <input data-val="true" data-val-number="The field Id must be a number." id="PaymentMethods_3__Id" name="PaymentMethods[3].Id" type="hidden" value="9">
+                            <input id="PaymentMethods_3__Type" name="PaymentMethods[3].Type" type="hidden" value="InTouch">
+                            <span>
+                                Touch Pay Central African CFA Franc -&gt; XOF
+                                (CFA)
+                            </span>
+                            <div id="settledReasonSection" style="display:none">
+                                <div class="form-field">
+                                    <label class="control-label textplain" for="PaymentMethods_3__CustomSettledReasonCode">Code émetteur du statut (Settled) :</label>
+                                    <input class="form-control" id="PaymentMethods_3__CustomSettledReasonCode" maxlength="50" name="PaymentMethods[3].CustomSettledReasonCode" type="text" value="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 bottomLine2 SitePayMethods col-md-12 col-12" data-paymentmethod="" data-role-default="">
+                        <div class="col-lg-4 image_method col-md-4 col-4">
+                            <img class="paymentMethodLogo" src="../assets/images/Images_PaymentMethods_InTouch.jpg">
+                        </div>
+                        <div class="col-lg-7 labels_method col-md-7 col-7">
+<input class="csInTouch" id="chkPay_inTouch_11" name="PaymentMethods[4].IsSelected" type="checkbox" value="true"><input name="PaymentMethods[4].IsSelected" type="hidden" value="false">
+                            <input data-val="true" data-val-number="The field Id must be a number." id="PaymentMethods_4__Id" name="PaymentMethods[4].Id" type="hidden" value="11">
+                            <input id="PaymentMethods_4__Type" name="PaymentMethods[4].Type" type="hidden" value="InTouch">
+                            <span>
+                                Touch Pay GNF -&gt; GNF
+                                (GNF)
+                            </span>
+                            <div id="settledReasonSection" style="display:none">
+                                <div class="form-field">
+                                    <label class="control-label textplain" for="PaymentMethods_4__CustomSettledReasonCode">Code émetteur du statut (Settled) :</label>
+                                    <input class="form-control" id="PaymentMethods_4__CustomSettledReasonCode" maxlength="50" name="PaymentMethods[4].CustomSettledReasonCode" type="text" value="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 bottomLine2 SitePayMethods col-md-12 col-12" data-paymentmethod="" data-role-clearingagents="" style="display: none;">
+                        <div class="col-lg-4 image_method col-md-4 col-4">
+                            <img class="paymentMethodLogo" src="../assets/images/Images_PaymentMethods_InTouch.jpg">
+                        </div>
+                        <div class="col-lg-7 labels_method col-md-7 col-7">
+<input class="csInTouch" id="chkPay_inTouch_12" name="PaymentMethods[5].IsSelected" type="checkbox" value="true"><input name="PaymentMethods[5].IsSelected" type="hidden" value="false">
+                            <input data-val="true" data-val-number="The field Id must be a number." id="PaymentMethods_5__Id" name="PaymentMethods[5].Id" type="hidden" value="12">
+                            <input id="PaymentMethods_5__Type" name="PaymentMethods[5].Type" type="hidden" value="InTouch">
+                            <span>
+                                Touch Pay GNF -&gt; GNF
+                                (GNF)
+                            </span>
+                            <div id="settledReasonSection" style="display:none">
+                                <div class="form-field">
+                                    <label class="control-label textplain" for="PaymentMethods_5__CustomSettledReasonCode">Code émetteur du statut (Settled) :</label>
+                                    <input class="form-control" id="PaymentMethods_5__CustomSettledReasonCode" maxlength="50" name="PaymentMethods[5].CustomSettledReasonCode" type="text" value="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 bottomLine2 SitePayMethods col-md-12 col-12" data-paymentmethod="" data-role-default="">
+                        <div class="col-lg-4 image_method col-md-4 col-4">
+                            <img class="paymentMethodLogo" src="../assets/images/Images_PaymentMethods_CinetPay.jpg">
+                        </div>
+                        <div class="col-lg-7 labels_method col-md-7 col-7">
+<input class="csCinetPay" id="chkPay_cinetPay_13" name="PaymentMethods[6].IsSelected" type="checkbox" value="true"><input name="PaymentMethods[6].IsSelected" type="hidden" value="false">
+                            <input data-val="true" data-val-number="The field Id must be a number." id="PaymentMethods_6__Id" name="PaymentMethods[6].Id" type="hidden" value="13">
+                            <input id="PaymentMethods_6__Type" name="PaymentMethods[6].Type" type="hidden" value="CinetPay">
+                            <span>
+                                CinetPay xof -&gt; XOF
+                                (CFA)
+                            </span>
+                            <div id="settledReasonSection" style="display:none">
+                                <div class="form-field">
+                                    <label class="control-label textplain" for="PaymentMethods_6__CustomSettledReasonCode">Code émetteur du statut (Settled) :</label>
+                                    <input class="form-control" id="PaymentMethods_6__CustomSettledReasonCode" maxlength="50" name="PaymentMethods[6].CustomSettledReasonCode" type="text" value="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 bottomLine2 SitePayMethods col-md-12 col-12" data-paymentmethod="" data-role-clearingagents="" style="display: none;">
+                        <div class="col-lg-4 image_method col-md-4 col-4">
+                            <img class="paymentMethodLogo" src="../assets/images/Images_PaymentMethods_CinetPay.jpg">
+                        </div>
+                        <div class="col-lg-7 labels_method col-md-7 col-7">
+<input class="csCinetPay" id="chkPay_cinetPay_14" name="PaymentMethods[7].IsSelected" type="checkbox" value="true"><input name="PaymentMethods[7].IsSelected" type="hidden" value="false">
+                            <input data-val="true" data-val-number="The field Id must be a number." id="PaymentMethods_7__Id" name="PaymentMethods[7].Id" type="hidden" value="14">
+                            <input id="PaymentMethods_7__Type" name="PaymentMethods[7].Type" type="hidden" value="CinetPay">
+                            <span>
+                                CinetPay xof -&gt; XOF
+                                (CFA)
+                            </span>
+                            <div id="settledReasonSection" style="display:none">
+                                <div class="form-field">
+                                    <label class="control-label textplain" for="PaymentMethods_7__CustomSettledReasonCode">Code émetteur du statut (Settled) :</label>
+                                    <input class="form-control" id="PaymentMethods_7__CustomSettledReasonCode" maxlength="50" name="PaymentMethods[7].CustomSettledReasonCode" type="text" value="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 bottomLine2 SitePayMethods col-md-12 col-12" data-paymentmethod="" data-role-default="">
+                        <div class="col-lg-4 image_method col-md-4 col-4">
+                            <img class="paymentMethodLogo" src="../assets/images/Images_PaymentMethods_Squad.jpg">
+                        </div>
+                        <div class="col-lg-7 labels_method col-md-7 col-7">
+<input class="csSquad" id="chkPay_squad_15" name="PaymentMethods[8].IsSelected" type="checkbox" value="true"><input name="PaymentMethods[8].IsSelected" type="hidden" value="false">
+                            <input data-val="true" data-val-number="The field Id must be a number." id="PaymentMethods_8__Id" name="PaymentMethods[8].Id" type="hidden" value="15">
+                            <input id="PaymentMethods_8__Type" name="PaymentMethods[8].Type" type="hidden" value="Squad">
+                            <span>
+                                Squad ngn -&gt; NGN
+                                (NGN)
+                            </span>
+                            <div id="settledReasonSection" style="display:none">
+                                <div class="form-field">
+                                    <label class="control-label textplain" for="PaymentMethods_8__CustomSettledReasonCode">Code émetteur du statut (Settled) :</label>
+                                    <input class="form-control" id="PaymentMethods_8__CustomSettledReasonCode" maxlength="50" name="PaymentMethods[8].CustomSettledReasonCode" type="text" value="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 bottomLine2 SitePayMethods col-md-12 col-12" data-paymentmethod="" data-role-clearingagents="" style="display: none;">
+                        <div class="col-lg-4 image_method col-md-4 col-4">
+                            <img class="paymentMethodLogo" src="../assets/images/Images_PaymentMethods_Squad.jpg">
+                        </div>
+                        <div class="col-lg-7 labels_method col-md-7 col-7">
+<input class="csSquad" id="chkPay_squad_16" name="PaymentMethods[9].IsSelected" type="checkbox" value="true"><input name="PaymentMethods[9].IsSelected" type="hidden" value="false">
+                            <input data-val="true" data-val-number="The field Id must be a number." id="PaymentMethods_9__Id" name="PaymentMethods[9].Id" type="hidden" value="16">
+                            <input id="PaymentMethods_9__Type" name="PaymentMethods[9].Type" type="hidden" value="Squad">
+                            <span>
+                                Squad ngn -&gt; NGN
+                                (NGN)
+                            </span>
+                            <div id="settledReasonSection" style="display:none">
+                                <div class="form-field">
+                                    <label class="control-label textplain" for="PaymentMethods_9__CustomSettledReasonCode">Code émetteur du statut (Settled) :</label>
+                                    <input class="form-control" id="PaymentMethods_9__CustomSettledReasonCode" maxlength="50" name="PaymentMethods[9].CustomSettledReasonCode" type="text" value="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 bottomLine2 SitePayMethods col-md-12 col-12" data-paymentmethod="" data-role-default="">
+                        <div class="col-lg-4 image_method col-md-4 col-4">
+                            <img class="paymentMethodLogo" src="../assets/images/Images_PaymentMethods_Squad.jpg">
+                        </div>
+                        <div class="col-lg-7 labels_method col-md-7 col-7">
+<input class="csSquad" id="chkPay_squad_17" name="PaymentMethods[10].IsSelected" type="checkbox" value="true"><input name="PaymentMethods[10].IsSelected" type="hidden" value="false">
+                            <input data-val="true" data-val-number="The field Id must be a number." id="PaymentMethods_10__Id" name="PaymentMethods[10].Id" type="hidden" value="17">
+                            <input id="PaymentMethods_10__Type" name="PaymentMethods[10].Type" type="hidden" value="Squad">
+                            <span>
+                                Squad usd -&gt; USD
+                                ($)
+                            </span>
+                            <div id="settledReasonSection" style="display:none">
+                                <div class="form-field">
+                                    <label class="control-label textplain" for="PaymentMethods_10__CustomSettledReasonCode">Code émetteur du statut (Settled) :</label>
+                                    <input class="form-control" id="PaymentMethods_10__CustomSettledReasonCode" maxlength="50" name="PaymentMethods[10].CustomSettledReasonCode" type="text" value="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 bottomLine2 SitePayMethods col-md-12 col-12" data-paymentmethod="" data-role-clearingagents="" style="display: none;">
+                        <div class="col-lg-4 image_method col-md-4 col-4">
+                            <img class="paymentMethodLogo" src="../assets/images/Images_PaymentMethods_Squad.jpg">
+                        </div>
+                        <div class="col-lg-7 labels_method col-md-7 col-7">
+<input class="csSquad" id="chkPay_squad_18" name="PaymentMethods[11].IsSelected" type="checkbox" value="true"><input name="PaymentMethods[11].IsSelected" type="hidden" value="false">
+                            <input data-val="true" data-val-number="The field Id must be a number." id="PaymentMethods_11__Id" name="PaymentMethods[11].Id" type="hidden" value="18">
+                            <input id="PaymentMethods_11__Type" name="PaymentMethods[11].Type" type="hidden" value="Squad">
+                            <span>
+                                Squad usd -&gt; USD
+                                ($)
+                            </span>
+                            <div id="settledReasonSection" style="display:none">
+                                <div class="form-field">
+                                    <label class="control-label textplain" for="PaymentMethods_11__CustomSettledReasonCode">Code émetteur du statut (Settled) :</label>
+                                    <input class="form-control" id="PaymentMethods_11__CustomSettledReasonCode" maxlength="50" name="PaymentMethods[11].CustomSettledReasonCode" type="text" value="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+            <div id="inTouchAccountSection" style="display:none">
+
+                <div id="inTouchAccountConfigFormHeader">
+                    <h5 class="bottomLine2 padSubtit" id="myModalLabel">
+                        Informations de compte INTOUCH
+                    </h5>
+                </div>
+
+                <div id="inTouchAccountForm" class="row col-lg-12 col-md-12 col-sm-12 col-12 p-4" style="display: none">
+                    <div class="row col-lg-6 paddFields col-md-12 col-12">
+                        <div class="col-lg-5 labelRight col-md-5 col-sm-4 col-5 pad_field nopad-left">
+                            <label class="control-label textplain" for="InTouchAccount_AgenceCode">AgenceCode :</label>
+                        </div>
+                        <div class="col-lg-7 col-md-7 col-sm-8 col-7 pad_field nopad-left">
+                            <input class="form-control" id="InTouchAccount_AgenceCode" maxlength="255" name="InTouchAccount.AgenceCode" placeholder="Saisir AgenceCode" type="text" value="">
+                        </div>
+                    </div>
+                    <div class="row col-lg-6 paddFields col-md-12 col-12">
+                        <div class="col-lg-5 labelRight col-md-5 col-sm-4 col-5 pad_field nopad-left">
+                            <label class="control-label textplain" for="InTouchAccount_SecureCode">SecureCode :</label>
+                        </div>
+                        <div class="col-lg-7 col-md-7 col-sm-8 col-7 pad_field nopad-left">
+                            <input class="form-control" id="InTouchAccount_SecureCode" maxlength="255" name="InTouchAccount.SecureCode" placeholder="Saisir SecureCode" type="text" value="">
+                        </div>
+                    </div>
+                    <div class="row col-lg-6 paddFields col-md-12 col-12">
+                        <div class="col-lg-5 labelRight col-md-5 col-sm-4 col-5 pad_field nopad-left">
+                            <label class="control-label textplain" for="InTouchAccount_DomainName">DomainName :</label>
+                        </div>
+                        <div class="col-lg-7 col-md-7 col-sm-8 col-7 pad_field nopad-left">
+                            <input class="form-control" id="InTouchAccount_DomainName" maxlength="255" name="InTouchAccount.DomainName" placeholder="Saisir DomainName" type="text" value="">
+                        </div>
+                    </div>
+                    <div class="row col-lg-6 paddFields col-md-12 col-12">
+                        <div class="col-lg-5 labelRight col-md-5 col-sm-4 col-5 pad_field nopad-left">
+                            <label class="control-label textplain" for="InTouchAccount_CheckStatusAuthUser">CheckStatusAuthUser :</label>
+                        </div>
+                        <div class="col-lg-7 col-md-7 col-sm-8 col-7 pad_field nopad-left">
+                            <input class="form-control" id="InTouchAccount_CheckStatusAuthUser" maxlength="255" name="InTouchAccount.CheckStatusAuthUser" placeholder="Saisir CheckStatusAuthUser" type="text" value="">
+                        </div>
+                    </div>
+                    <div class="row col-lg-6 paddFields col-md-12 col-12">
+                        <div class="col-lg-5 labelRight col-md-5 col-sm-4 col-5 pad_field nopad-left">
+                            <label class="control-label textplain" for="InTouchAccount_CheckStatusAuthPass">CheckStatusAuthPass :</label>
+                        </div>
+                        <div class="col-lg-7 col-md-7 col-sm-8 col-7 pad_field nopad-left">
+                            <input class="form-control" id="InTouchAccount_CheckStatusAuthPass" maxlength="255" name="InTouchAccount.CheckStatusAuthPass" placeholder="Saisir CheckStatusAuthPass" type="text" value="">
+                        </div>
+                    </div>
+                    <div class="row col-lg-6 paddFields col-md-12 col-12">
+                        <div class="col-lg-5 labelRight col-md-5 col-sm-4 col-5 pad_field nopad-left">
+                            <label class="control-label textplain" for="InTouchAccount_CheckStatusLoginAgent">CheckStatusLoginAgent :</label>
+                        </div>
+                        <div class="col-lg-7 col-md-7 col-sm-8 col-7 pad_field nopad-left">
+                            <input class="form-control" id="InTouchAccount_CheckStatusLoginAgent" maxlength="255" name="InTouchAccount.CheckStatusLoginAgent" placeholder="Saisir CheckStatusLoginAgent" type="text" value="">
+                        </div>
+                    </div>
+                    <div class="row col-lg-6 paddFields col-md-12 col-12">
+                        <div class="col-lg-5 labelRight col-md-5 col-sm-4 col-5 pad_field nopad-left">
+                            <label class="control-label textplain" for="InTouchAccount_CheckStatusPasswordAgent">CheckStatusPasswordAgent :</label>
+                        </div>
+                        <div class="col-lg-7 col-md-7 col-sm-8 col-7 pad_field nopad-left">
+                            <input class="form-control" id="InTouchAccount_CheckStatusPasswordAgent" maxlength="255" name="InTouchAccount.CheckStatusPasswordAgent" placeholder="Saisir CheckStatusPasswordAgent" type="text" value="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="cinetPayAccountSection" style="display:none">
+                <div id="cinetPayAccountConfigFormHeader">
+                    <h5 class="bottomLine2 padSubtit" id="cinetPayModalLabel">
+                        Informations de compte CINETPAY
+                    </h5>
+                </div>
+                <div id="cinetPayAccountForm" class="row col-lg-12 col-md-12 col-sm-12 col-12 p-4" style="display: none">
+                    <div class="row col-lg-6 paddFields col-md-12 col-12">
+                        <div class="col-lg-5 labelRight col-md-5 col-sm-4 col-5 pad_field nopad-left">
+                            <label class="control-label textplain" for="CinetPayAccount_CinetPaySiteId">SiteId :</label>
+                        </div>
+                        <div class="col-lg-7 col-md-7 col-sm-8 col-7 pad_field nopad-left">
+                            <input class="form-control" data-val="true" data-val-length="Le champ SiteId ne doit pas dépasser 50 caractères" data-val-length-max="50" id="CinetPayAccount_CinetPaySiteId" maxlength="255" name="CinetPayAccount.CinetPaySiteId" placeholder="Saisir SiteId" type="text" value="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="squadAccountSection" style="display:none">
+                <div id="squadAccountConfigFormHeader">
+                    <h5 class="bottomLine2 padSubtit" id="squadModalLabel">
+                        Informations de compte SQUAD
+                    </h5>
+                </div>
+                <div id="squadAccountForm" class="row col-lg-12 col-md-12 col-sm-12 col-12 p-4" style="display: none">
+                    <div class="row col-lg-6 paddFields col-md-12 col-12">
+                        <div class="col-lg-5 labelRight col-md-5 col-sm-4 col-5 pad_field nopad-left">
+                            <label class="control-label textplain" for="SquadAccount_SecretKey">SecretKey:</label>
+                        </div>
+                        <div class="col-lg-7 col-md-7 col-sm-8 col-7 pad_field nopad-left">
+                            <input class="form-control" id="SquadAccount_SecretKey" maxlength="255" name="SquadAccount.SecretKey" placeholder="Saisir SecretKey" type="text" value="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="dialogDiv" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div id="dialogContent" class="modal-dialog"></div>
+            </div>
+            <h5 class="bottomLine2 padSubtit" id="myModalLabel">
+                <br>
+                Conditions générales de vente
+            </h5>
+<textarea class="width_tarea" cols="80" id="SalesConditions" name="SalesConditions" rows="4"></textarea>        <div>
+            <button type="button" onclick="window.location.href = '/Backoffice/SitesAdmin'" class="btn btn-default">Fermer</button>
+            <input type="submit" class="btn btn-primary" id="btnSave" value="Sauvegarder">
+        </div>
+        <div class="modal fade" id="modalDeleteLogo" tabindex="-1" role="dialog" aria-labelledby="mymodalDeleteLogo" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header alert-dismissible-right">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"><span aria-hidden="true"></span></button>
+                        <h4 class="modal-title" id="modalTitle">Supprimer le logo du terminal</h4>
+                    </div>
+                    <div id="divError" class="alert alert-danger alrt_pad" role="alert" style="display: none;">
+                        <span class="bi bi-exclamation-circle-fill" aria-hidden="true"></span> <strong>Rappeler.</strong> <p id="message"></p>
+                        <button type="button" class="close" onclick="$('#divError').hide();"><span aria-hidden="true">×</span><span class="sr-only">Fermer</span></button>
+
+                    </div>
+                    <div class="modal-body nopad3 padMessage" id="confirmation">
+                        Etes-vous sûr de vouloir supprimer le logo du terminal?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-bs-dismiss="modal">Fermer</button>
+                        <input type="hidden" id="idClose" name="id" value="">
+                        <div style="display:none">
+                            <input data-val="true" data-val-required="'Delete Logo' ne doit pas avoir la valeur null." id="DeleteLogo" name="DeleteLogo" type="checkbox" value="true"><input name="DeleteLogo" type="hidden" value="false">
+                        </div>
+                        <label class="btn btn-primary" for="DeleteLogo" id="deleteLogo">Supprimer</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="modalDeleteBanner" tabindex="-1" role="dialog" aria-labelledby="mymodalDeleteBanner" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header alert-dismissible-right">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"><span aria-hidden="true"></span></button>
+                        <h4 class="modal-title" id="modalTitle">Supprimer la bannière</h4>
+                    </div>
+                    <div id="divError" class="alert alert-danger alrt_pad" role="alert" style="display: none;">
+                        <span class="bi bi-exclamation-circle-fill" aria-hidden="true"></span> <strong>Rappeler.</strong> <p id="message"></p>
+                        <button type="button" class="close" onclick="$('#divError').hide();"><span aria-hidden="true">×</span><span class="sr-only">Fermer</span></button>
+
+                    </div>
+                    <div class="modal-body nopad3 padMessage" id="confirmation">
+                        Etes-vous sûr de vouloir supprimer la bannière?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-bs-dismiss="modal">Fermer</button>
+                        <input type="hidden" id="id" name="id" value="">
+                        <div style="display:none">
+                            <input data-val="true" data-val-required="'Delete Banner' ne doit pas avoir la valeur null." id="DeleteBanner" name="DeleteBanner" type="checkbox" value="true"><input name="DeleteBanner" type="hidden" value="false">
+                        </div>
+                        <label class="btn btn-primary" for="DeleteBanner" id="deleteBanner">Supprimer</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+<input type="hidden" name="as_sfid" value="AAAAAAU-r8nDsrBwOKNWsX5WEfObiEt-aJjMBGnqftH4ZoMuiMWT-TsdYgpG_nOIKicA3YnD1UT8W3rNgXtx0Wm7tFnWhQIWwfINzB_dB8g8lqUcLN1fJOpSdljaEuJDrER7aY0hW6qSqC-B-Yybdo7_Pbx-e_ExYCHStkwqFixWlO89Tw=="><input type="hidden" name="as_fid" value="0799e95a4bb2ae8e9c0eccaca524e1a4f7863e09"></form></div>
+
+
+<script src="../assets/js/Scripts_Site__Form.js"></script>
+<script type="text/javascript" src="../assets/js/Scripts_bootstrap-filestyle_min.js"></script>
+
+<style>
+    #inTouchAccountSection {
+        transition: 1s;
+    }
+</style>
+
+<script>
+
+
+
+    $(document).ready(function () {
+        var config = {
+            action: 'Create',
+            disabled: 'False',
+            imageSource: '',
+            imageLogoSource: '',
+        };
+
+        _formModule.init(config);
+
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+</script>
+    </div>
+    <footer class="container FondBlanc pt-3">
+        <hr>
+        <p class="logo">© 2025 AGL Group</p>
+    </footer>
+    
+
+
+</body></html>

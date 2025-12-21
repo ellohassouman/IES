@@ -1,0 +1,645 @@
+<!DOCTYPE html><html class="js no-flexbox flexbox-legacy canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers no-applicationcache svg inlinesvg smil svgclippaths wf-nunitosans-n4-active wf-nunitosans-n7-active wf-active"><head>
+    <meta charset="utf-8">
+    <title>Backoffice</title>
+    <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon">
+
+    <meta name="viewport" content="width=device-width">
+
+    <link href="../assets/css/Content_datatables_dataTables.css" rel="stylesheet">
+
+    <link href="../assets/css/Content_bootstrap.css" rel="stylesheet">
+<link href="../assets/css/Content_bootstrap_rtl.css" rel="stylesheet">
+
+    <link href="../assets/css/Content_bootstrap-icons_font_bootstrap-icons_min.css" rel="stylesheet">
+
+    <link href="../assets/css/Content_fontawesome-all.css" rel="stylesheet">
+<link href="../assets/css/Content_sassStyle.css" rel="stylesheet">
+<link href="../assets/css/Content_perfect-scrollbar.css" rel="stylesheet">
+
+    
+    <link href="../assets/css/Content_smalot-datetimepicker_bootstrap-datetimepicker.css" rel="stylesheet">
+
+    <link href="../assets/css/Content_botdetect-captcha_captcha-stylesheet.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js" type="text/javascript" async=""></script><script src="../assets/js/Scripts_modernizr-2_5_3.js"></script>
+
+    <script src="../assets/js/Scripts_jquery-3_7_1.js"></script>
+
+    <script src="../assets/js/Scripts_bootstrap_bundle_min.js"></script>
+<script src="../assets/js/Scripts_bootstrap-datetimepicker.js"></script>
+<script src="../assets/js/Scripts_bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/Scripts_resources_en-US.js"></script>
+
+    <script src="../assets/js/Scripts_respond.js"></script>
+
+    <script src="../assets/js/Scripts_bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/Scripts_spin.js"></script><style type="text/css"></style>
+<script src="../assets/js/Scripts_jquery_spin.js"></script>
+
+    <script src="../assets/js/Scripts_IES_Scripts_generalFunctions.js"></script>
+<script src="../assets/js/Scripts_IES_Scripts_Validations.js"></script>
+<script src="../assets/js/Scripts_js-cookie.js"></script>
+<script src="../assets/js/Scripts_perfect-scrollbar_jquery.js"></script>
+<script src="../assets/js/Scripts_perfect-scrollbar.js"></script>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,700&amp;subset=latin" media="all"><script src="../assets/js/Scripts_dataTables_min.js"></script>
+
+    <script src="../assets/js/Scripts_IES_Scripts_jquery_dataTables_columnFilter.js"></script>
+
+    <script src="../assets/js/Scripts_IES_Scripts_jquery_dataTables_Resources.js"></script>
+
+
+    <script>
+        if (window.top !== window.self) {
+			window.location.href = '/Error/FrameError';
+		}
+    </script>
+
+<script>NS_CSM_td=274334244;NS_CSM_pd=275116671;NS_CSM_u="/clm10";NS_CSM_col="AAAAAAV/6wRSTjw818VHK1xSOw6ysrhvVOlCX5WB79rPyxqbaEN2o2W+D/GGsNqSWj9uUDBWlU0IN5PO8avfGQM+kU7o";</script><script type="text/javascript">function sendTimingInfoInit(){setTimeout(sendTimingInfo,0)}function sendTimingInfo(){var wp=window.performance;if(wp){var c1,c2,t;c1=wp.timing;if(c1){var cm={};cm.ns=c1.navigationStart;if((t=c1.unloadEventStart)>0)cm.us=t;if((t=c1.unloadEventEnd)>0)cm.ue=t;if((t=c1.redirectStart)>0)cm.rs=t;if((t=c1.redirectEnd)>0)cm.re=t;cm.fs=c1.fetchStart;cm.dls=c1.domainLookupStart;cm.dle=c1.domainLookupEnd;cm.cs=c1.connectStart;cm.ce=c1.connectEnd;if((t=c1.secureConnectionStart)>0)cm.scs=t;cm.rqs=c1.requestStart;cm.rss=c1.responseStart;cm.rse=c1.responseEnd;cm.dl=c1.domLoading;cm.di=c1.domInteractive;cm.dcls=c1.domContentLoadedEventStart;cm.dcle=c1.domContentLoadedEventEnd;cm.dc=c1.domComplete;if((t=c1.loadEventStart)>0)cm.ls=t;if((t=c1.loadEventEnd)>0)cm.le=t;cm.tid=NS_CSM_td;cm.pid=NS_CSM_pd;cm.ac=NS_CSM_col;var xhttp=new XMLHttpRequest();if(xhttp){var JSON=JSON||{};JSON.stringify=JSON.stringify||function(ob){var t=typeof(ob);if(t!="object"||ob===null){if(t=="string")ob='"'+ob+'"';return String(ob);}else{var n,v,json=[],arr=(ob&&ob.constructor==Array);for(n in ob){v=ob[n];t=typeof(v);if(t=="string")v='"'+v+'"';else if(t=="object"&&v!==null)v=JSON.stringify(v);json.push((arr?"":'"'+n+'":')+String(v));}return(arr?"[":"{")+String(json)+(arr?"]":"}");}};xhttp.open("POST",NS_CSM_u,true);xhttp.send(JSON.stringify(cm));}}}}if(window.addEventListener)window.addEventListener("load",sendTimingInfoInit,false);else if(window.attachEvent)window.attachEvent("onload",sendTimingInfoInit);else window.onload=sendTimingInfoInit;</script><style type="text/css"></style></head>
+
+<body>
+<script>
+ function string_to_array(str) {var len = str.length;var res = new Array(len);for(var i = 0; i < len; i++)res[i] = str.charCodeAt(i);return res;}function array_to_hex_string(ary) {var res = "";for(var i = 0; i < ary.length; i++)res += SHA256_hexchars[ary[i] >> 4] + SHA256_hexchars[ary[i] & 0x0f];return res;}function SHA256_init() {SHA256_H = new Array(0x6a09e667, 0xbb67ae85,0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19);SHA256_buf = new Array();SHA256_len = 0;}function SHA256_write(msg) {if (typeof(msg) == "string") SHA256_buf = SHA256_buf.concat(string_to_array(msg));else SHA256_buf = SHA256_buf.concat(msg); for(var i = 0; i + 64 <= SHA256_buf.length; i += 64) SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf.slice(i, i +64)); SHA256_buf = SHA256_buf.slice(i); SHA256_len += msg.length;}function SHA256_finalize() { SHA256_buf[SHA256_buf.length] = 0x80;  if (SHA256_buf.length > 64 - 8) {for(var i = SHA256_buf.length; i < 64; i++)SHA256_buf[i] = 0;SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf);SHA256_buf.length = 0;} for(var i = SHA256_buf.length; i < 64 - 5; i++)SHA256_buf[i] = 0;  SHA256_buf[59] =(SHA256_len >>> 29) & 0xff;  SHA256_buf[60] = (SHA256_len >>> 21) & 0xff;  SHA256_buf[61] = (SHA256_len >>> 13) & 0xff;  SHA256_buf[62] = (SHA256_len >>> 5) & 0xff;  SHA256_buf[63] = (SHA256_len << 3) & 0xff;  SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf);  var res = new Array(32);  for(var i = 0; i < 8; i++) {res[4 * i + 0] = SHA256_H[i] >>> 24; res[4 * i + 1] = (SHA256_H[i] >> 16) & 0xff; res[4 * i + 2] = (SHA256_H[i] >> 8) & 0xff; res[4 * i + 3] = SHA256_H[i] & 0xff; } delete SHA256_H; delete SHA256_buf; delete SHA256_len; return res;}function HMAC_SHA256_init(key) {  if (typeof(key) == "string") HMAC_SHA256_key = string_to_array(key);  else  HMAC_SHA256_key = new Array().concat(key);  if (HMAC_SHA256_key.length > 64) { SHA256_init(); SHA256_write(HMAC_SHA256_key); HMAC_SHA256_key = SHA256_finalize(); }  for(var i = HMAC_SHA256_key.length; i < 64; i++)  HMAC_SHA256_key[i] = 0; for(var i = 0; i < 64; i++) HMAC_SHA256_key[i] ^=  0x36;  SHA256_init(); SHA256_write(HMAC_SHA256_key);} function HMAC_SHA256_write(msg) {  SHA256_write(msg);} function HMAC_SHA256_finalize() {  var md = SHA256_finalize();  for(var i = 0; i < 64; i++) HMAC_SHA256_key[i] ^= 0x36 ^ 0x5c; SHA256_init(); SHA256_write(HMAC_SHA256_key); SHA256_write(md);  for(var i = 0; i < 64; i++)    HMAC_SHA256_key[i] = 0;  delete HMAC_SHA256_key;  return SHA256_finalize();}function HMAC_SHA256_MAC(key, msg) { var res;  HMAC_SHA256_init(key);  HMAC_SHA256_write(msg);  res = HMAC_SHA256_finalize();  return array_to_hex_string(res);} SHA256_hexchars = new Array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f');SHA256_K = new Array( 0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1,0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f,0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2); function SHA256_sigma0(x) { return ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);} function SHA256_sigma1(x) { return ((x >>> 17) | (x << 15)) ^ ((x >>> 19) | (x << 13)) ^ (x >>> 10);}function SHA256_Sigma0(x) { return ((x >>> 2) | (x << 30)) ^ ((x >>> 13) | (x << 19)) ^ ((x >>> 22) | (x << 10));}function SHA256_Sigma1(x) { return ((x >>> 6) | (x << 26)) ^ ((x >>> 11) | (x << 21)) ^ ((x >>> 25) | (x << 7));} function SHA256_Ch(x, y, z) { return z ^ (x & (y ^ z));} function SHA256_Maj(x, y, z) {return (x & y) ^ (z & (x ^ y));}function SHA256_Hash_Word_Block(H, W) { for(var i = 16; i < 64; i++)  W[i] = (SHA256_sigma1(W[i - 2]) +  W[i - 7] + SHA256_sigma0(W[i - 15]) + W[i - 16]) & 0xffffffff; var state = new Array().concat(H); for(var i = 0; i < 64; i++) {    var T1 = state[7] + SHA256_Sigma1(state[4]) + SHA256_Ch(state[4], state[5], state[6]) + SHA256_K[i] + W[i]; var T2 = SHA256_Sigma0(state[0]) + SHA256_Maj(state[0], state[1], state[2]); state.pop(); state.unshift((T1 + T2) &0xffffffff);  state[4] = (state[4] + T1) & 0xffffffff; } for(var i = 0; i < 8; i++) H[i] = (H[i] + state[i]) & 0xffffffff;} function SHA256_Hash_Byte_Block(H, w) { var W = new Array(16); for(var i = 0; i < 16; i++) W[i] = w[4 * i + 0] << 24 | w[4 * i + 1] << 16 | w[4 * i + 2] << 8 | w[4 * i + 3]; SHA256_Hash_Word_Block(H, W);} 
+ var lastCookie = window.name;
+ function getCookie(name) {
+       let cookie = {}; 
+            document.cookie.split(';').forEach(function(el) {
+                let cookiekv = el.split('=');
+           cookie[cookiekv[0].trim()] = cookiekv[1];
+            })
+           if (cookie.hasOwnProperty(name)) {
+               return cookie[name];
+                     }
+            return "";
+ };
+ var checkCookie = function() {
+       var token ="17905226099625079964";
+			    var seed = getCookie('citrix_ns_seed');
+      var currentCookie = document.cookie;
+         if (currentCookie != lastCookie || (lastCookie.length == 0)) {
+           console.log('cookie has changed');
+           var hash = HMAC_SHA256_MAC(seed, token);
+         document.cookie = 'MC=' + hash +'; Domain= .aglgroup.com';
+               lastCookie = currentCookie;
+          window.name = currentCookie;
+     }
+                    return true;
+ };
+ window.setInterval(checkCookie, 100);
+        </script>
+
+    <nav class="navbar navbar-expand-md navbar-inverse fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarFlagsMenu" aria-controls="navbarFlagsMenu" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <div class="logo-version">
+                    <a class="navbar-brand fontBalnc" href="/Backoffice/SitesAdmin"> </a>
+                    <p class="version-number">2.4.0.0</p>
+                </div>
+            </div>
+            <div class="justify-content-end" id="iesDropdownMenu">
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a href="#" class="dropdown-toggle fontBalnc" data-bs-toggle="dropdown" role="button" aria-expanded="false">Menu<span class="caret"></span></a>
+                        <ul class="dropdown-menu dropdown-menu-ies">
+                            <li><a class="dropdown-item" href="/Backoffice/SiteAdminUsers">Compte administrateur du site</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/SitesAdmin">Liste des sites</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/BankUser/Index">Utilisateurs bancaires</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/Backoffice/AppAdminAccounts">Compte IES manager</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/Backoffice/FieldSettings/FieldSettings">Paramètres du champ</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/SiteAdmin">Comptes utilisateur client</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/TemplateConfigurator">Mail Type</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/BillOfLadingSearch">Rechercher BL</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/EpaymentErrorCode/Index">Codes erreur du WS E-Payment</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarFlagsMenu">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+
+
+<form action="/Backoffice/LogOff?LoginActionName=AdminLogin" id="logoutForm" method="post">            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle fontBalnc menuUser" data-bs-toggle="dropdown"><span class="glyphicon glyphicon-user paddIcon"></span>elloh.assouman@ascens-services.com<b class="caret"></b></a>
+                    <ul class="dropdown-menu menuUser">
+                        <li>
+                            <input name="__RequestVerificationToken" type="hidden" value="PzcRliCRIyfii-myPo83H3t6oDYj7SOKsyl8NlKSJx4TUIqFJGjD4WTEu5xuCUl71D3esoE1s5BnupNiYiHSj61vpHmSGNF65Y2i5fWJmFfbQlqmB-gkGkl728IGUjyIGaQUBxLbxtZJi_mLEcx55A2">
+                            <a href="javascript:document.getElementById('logoutForm').submit()" class="dropdown-item"><span class="bi bi-box-arrow-right" aria-hidden="true"></span> Déconnecter</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+<input type="hidden" name="as_sfid" value="AAAAAAVFQATMSZgMRGC4-h0jVg2vHBUPUFMyjHW7UjG3IfS9JT3ZKTTW79Hw4lop-0fJU30YJifLzsiBJHhQkTs6rQUSJtxJdCpwwTz-mW183sOlHQcS3ScWKUnsuZcXTlMIeVzcuoO-QKgnJaqFbAMf5aUy62iRBQKzSjZVf4py7aH8nA=="><input type="hidden" name="as_fid" value="3dc73e4cd6a07634434fb05a2b5f5ab2d7086086"></form><script>
+    $('#supportButton').click(function () {
+        $('#supportDialogContent').load(this.href, function () {
+            $('#supportDialog').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    $('#linkMyProfile').click(function () {
+        $('#ProfileModalContent').load(this.href, function () {
+            $('#ProfileModal').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    
+
+</script>
+
+
+<form action="/Default/SetCulture" id="SetCultureForm" method="post"><span class="posFlags">
+                                <span class="btn-group btn-group-xs">
+                                    <button type="submit" name="culture" id="en-us" value="en-us" class="btn btn-primary btn-sm">Anglais</button>
+                                    <button type="submit" name="culture" id="fr" value="fr" class="btn btn-primary btn-sm">Français</button>
+                                </span>
+                            </span>
+<input type="hidden" name="as_sfid" value="AAAAAAUs-YolHhlTIwE9-NspYWX_WXL6t0GkyW-IDead-amx4aovRDpxl-zvM4yjbiEN4lL7e2vxlqWNBRoe_P9SoknsFVqTVEtgHdI3JnO0yXFv50YORKtHAIo0eF7CGfWCpUAInC8Kz95FmopEJeF0MfoBu0cLsu3OSx9haLlCkibukg=="><input type="hidden" name="as_fid" value="37837e3222e5f06d7cadb505ae20dc3f09bd4818"></form>                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+        <div class="jumbotronSuperAdmin">
+            <div class="container transpSuperadmin">
+                <h1>IES Manager</h1>
+            </div>
+        </div>
+    
+    <div class="container FondBlanc">
+        
+
+
+
+<div>
+    
+
+    <h4 class="bottomLine2 padFilds pt-4">Comptes utilisateur client</h4>
+    <div id="grdUserList_wrapper" class="dt-container"><div class="dt-layout-row dt-layout-table"><div class="dt-layout-cell  dt-layout-full"><table class="display table table-striped dataTable" id="grdUserList" cellspacing="0" aria-describedby="grdUserList_info" style="width: 100%;"><colgroup><col data-dt-column="0" style="width: 267.266px;"><col data-dt-column="1" style="width: 106.703px;"><col data-dt-column="2" style="width: 115.031px;"><col data-dt-column="3" style="width: 115.609px;"><col data-dt-column="4" style="width: 122.578px;"><col data-dt-column="5" style="width: 142.859px;"><col data-dt-column="6" style="width: 129.641px;"><col data-dt-column="7" style="width: 115.406px;"><col data-dt-column="8" style="width: 84.6406px;"><col data-dt-column="9" style="width: 95.7656px;"></colgroup>
+        <thead>
+            <tr class="header_Filters"><th class="text-search" data-dt-column="0" rowspan="1" colspan="1"><input type="text" class="filter-input" placeholder="E-mail"></th><th class="text-search" data-dt-column="1" rowspan="1" colspan="1"><input type="text" class="filter-input" placeholder="Site"></th><th class="text-search" data-dt-column="2" rowspan="1" colspan="1"><input type="text" class="filter-input" placeholder="Type de compte"></th><th class="text-search" data-dt-column="3" rowspan="1" colspan="1"><input type="text" class="filter-input" placeholder="Prénom"></th><th class="text-search" data-dt-column="4" rowspan="1" colspan="1"><input type="text" class="filter-input" placeholder="Nom"></th><th class="text-search" data-dt-column="5" rowspan="1" colspan="1"><input type="text" class="filter-input" placeholder="Nom de la société"></th><th class="text-search" id="th_status" data-dt-column="6" rowspan="1" colspan="1"><select><option value="">Statut</option><option value="En attente Utilisateur">En attente Utilisateur</option><option value="En attente Admin">En attente Admin</option><option value="Activé">Activé</option><option value="Désactivé">Désactivé</option></select></th><th data-dt-column="7" rowspan="1" colspan="1"><span class="dt-column-title"></span><span class="dt-column-order"></span></th><th data-dt-column="8" rowspan="1" colspan="1"><span class="dt-column-title"></span><span class="dt-column-order"></span></th><th data-dt-column="9" rowspan="1" colspan="1"><span class="dt-column-title"></span><span class="dt-column-order"></span></th></tr>
+            <tr class="header_tabla"><th data-dt-column="0" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc dt-ordering-asc" aria-sort="ascending" aria-label="E-mail: Activate to invert sorting" tabindex="0"><span class="dt-column-title" role="button">E-mail</span><span class="dt-column-order"></span></th><th data-dt-column="1" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc" aria-label="Site: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Site</span><span class="dt-column-order"></span></th><th data-dt-column="2" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc" aria-label="Type de compte: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Type de compte</span><span class="dt-column-order"></span></th><th data-dt-column="3" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc" aria-label="Prénom: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Prénom</span><span class="dt-column-order"></span></th><th data-dt-column="4" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc" aria-label="Nom: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Nom</span><span class="dt-column-order"></span></th><th data-dt-column="5" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc" aria-label="Nom de la société: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Nom de la société</span><span class="dt-column-order"></span></th><th data-dt-column="6" rowspan="1" colspan="1" class="dt-orderable-asc dt-orderable-desc" aria-label="Statut: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">Statut</span><span class="dt-column-order"></span></th><th class="action_icons dt-orderable-none" data-dt-column="7" rowspan="1" colspan="1" aria-label="Autoriser l'accès"><span class="dt-column-title">Autoriser l'accès</span><span class="dt-column-order"></span></th><th class="action_icons dt-orderable-none" data-dt-column="8" rowspan="1" colspan="1" aria-label="Modifier"><span class="dt-column-title">Modifier</span><span class="dt-column-order"></span></th><th class="action_icons dt-orderable-none" data-dt-column="9" rowspan="1" colspan="1" aria-label="Supprimer"><span class="dt-column-title">Supprimer</span><span class="dt-column-order"></span></th></tr>
+        </thead>
+        <tfoot class="footer_tabla">
+            <tr><th data-dt-column="0" rowspan="1" colspan="1"><span class="dt-column-title">E-mail</span></th><th data-dt-column="1" rowspan="1" colspan="1"><span class="dt-column-title">Site</span></th><th data-dt-column="2" rowspan="1" colspan="1"><span class="dt-column-title">Type de compte</span></th><th data-dt-column="3" rowspan="1" colspan="1"><span class="dt-column-title">Prénom</span></th><th data-dt-column="4" rowspan="1" colspan="1"><span class="dt-column-title">Nom</span></th><th data-dt-column="5" rowspan="1" colspan="1"><span class="dt-column-title">Nom de la société</span></th><th data-dt-column="6" rowspan="1" colspan="1"><span class="dt-column-title">Statut</span></th><th data-dt-column="7" rowspan="1" colspan="1"><span class="dt-column-title">Autoriser l'accès</span></th><th data-dt-column="8" rowspan="1" colspan="1"><span class="dt-column-title">Modifier</span></th><th data-dt-column="9" rowspan="1" colspan="1"><span class="dt-column-title">Supprimer</span></th></tr>
+        </tfoot>
+
+        <tbody><tr>
+                    <td class="sorting_1">2kmtranssociete@gmail.com</td>
+                    <th>TOGO</th>
+                    <th>Client</th>
+                    <td>Keloutsoia</td>
+                    <td>KOMBATE</td>
+                    <td>SOCIETE INTERNATIONALE 2KM TRANS</td>
+                            <td><span class="badge bg-success">Activé</span></td>
+                    <td class="action_icons">
+                            <a class="btnOpenGrantAccessModal" data-bs-toggle="modal" data-bs-target="#dialogDiv" href="/Backoffice/Admin/OpenGrantAccessModal/936">
+                                <img src="../images/ico_key.png" width="20" height="20">
+                            </a>
+                    </td>
+                    <td class="action_icons">
+                        <a class="btnEdit" data-bs-toggle="modal" data-bs-target="#dialogDiv" href="/Admin/EditUser?id=936">
+                            <img src="../images/ico_edit.png" width="20" height="20">
+                        </a>
+                    </td>
+                    <td class="action_icons">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalCustomerDelete" class="deleteCustomerButton" data-customerid="936" data-confirmation="Êtes-vous sûr de vouloir supprimer le compte 2kmtranssociete@gmail.com?">
+                            <img class="del" src="../images/ico_del.png" width="20" height="20">
+                        </a>
+                    </td>
+                </tr><tr>
+                    <td class="sorting_1">716test@mailinator.com</td>
+                    <th>BENFOR</th>
+                    <th>Client</th>
+                    <td>716</td>
+                    <td>716</td>
+                    <td>hx</td>
+                            <td><span class="badge bg-warning">En attente Utilisateur</span></td>
+                    <td class="action_icons">
+                            <a class="btnOpenGrantAccessModal" data-bs-toggle="modal" data-bs-target="#dialogDiv" style="pointer-events: none;" href="javascript:void(0)">
+                                <img src="../images/ico_key_disabled.png" width="20" height="20">
+                            </a>
+                    </td>
+                    <td class="action_icons">
+                        <a class="btnEdit" data-bs-toggle="modal" data-bs-target="#dialogDiv" href="/Admin/EditUser?id=1273">
+                            <img src="../images/ico_edit.png" width="20" height="20">
+                        </a>
+                    </td>
+                    <td class="action_icons">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalCustomerDelete" class="deleteCustomerButton" data-customerid="1273" data-confirmation="Êtes-vous sûr de vouloir supprimer le compte 716test@mailinator.com?">
+                            <img class="del" src="../images/ico_del.png" width="20" height="20">
+                        </a>
+                    </td>
+                </tr><tr>
+                    <td class="sorting_1">aaaaaaaa@vvvv.com</td>
+                    <th>REDTEAMTEST</th>
+                    <th>Client</th>
+                    <td>asdasdadas</td>
+                    <td>ssss</td>
+                    <td>ssfdsf</td>
+                            <td><span class="badge bg-warning">En attente Utilisateur</span></td>
+                    <td class="action_icons">
+                            <a class="btnOpenGrantAccessModal" data-bs-toggle="modal" data-bs-target="#dialogDiv" style="pointer-events: none;" href="javascript:void(0)">
+                                <img src="../images/ico_key_disabled.png" width="20" height="20">
+                            </a>
+                    </td>
+                    <td class="action_icons">
+                        <a class="btnEdit" data-bs-toggle="modal" data-bs-target="#dialogDiv" href="/Admin/EditUser?id=2571">
+                            <img src="../images/ico_edit.png" width="20" height="20">
+                        </a>
+                    </td>
+                    <td class="action_icons">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalCustomerDelete" class="deleteCustomerButton" data-customerid="2571" data-confirmation="Êtes-vous sûr de vouloir supprimer le compte aaaaaaaa@vvvv.com?">
+                            <img class="del" src="../images/ico_del.png" width="20" height="20">
+                        </a>
+                    </td>
+                </tr><tr>
+                    <td class="sorting_1">aaaaaaa@bbb.com</td>
+                    <th>REDTEAMTEST</th>
+                    <th>Client</th>
+                    <td>aa</td>
+                    <td>bb</td>
+                    <td>sss</td>
+                            <td><span class="badge bg-warning">En attente Utilisateur</span></td>
+                    <td class="action_icons">
+                            <a class="btnOpenGrantAccessModal" data-bs-toggle="modal" data-bs-target="#dialogDiv" style="pointer-events: none;" href="javascript:void(0)">
+                                <img src="../images/ico_key_disabled.png" width="20" height="20">
+                            </a>
+                    </td>
+                    <td class="action_icons">
+                        <a class="btnEdit" data-bs-toggle="modal" data-bs-target="#dialogDiv" href="/Admin/EditUser?id=2570">
+                            <img src="../images/ico_edit.png" width="20" height="20">
+                        </a>
+                    </td>
+                    <td class="action_icons">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalCustomerDelete" class="deleteCustomerButton" data-customerid="2570" data-confirmation="Êtes-vous sûr de vouloir supprimer le compte aaaaaaa@bbb.com?">
+                            <img class="del" src="../images/ico_del.png" width="20" height="20">
+                        </a>
+                    </td>
+                </tr><tr>
+                    <td class="sorting_1">aarceo1954@mailinator.com</td>
+                    <th>Benin</th>
+                    <th>Client</th>
+                    <td>Alberto</td>
+                    <td>arceo</td>
+                    <td>Bolloré</td>
+                            <td><span class="badge bg-success">Activé</span></td>
+                    <td class="action_icons">
+                            <a class="btnOpenGrantAccessModal" data-bs-toggle="modal" data-bs-target="#dialogDiv" href="/Backoffice/Admin/OpenGrantAccessModal/141">
+                                <img src="../images/ico_key.png" width="20" height="20">
+                            </a>
+                    </td>
+                    <td class="action_icons">
+                        <a class="btnEdit" data-bs-toggle="modal" data-bs-target="#dialogDiv" href="/Admin/EditUser?id=141">
+                            <img src="../images/ico_edit.png" width="20" height="20">
+                        </a>
+                    </td>
+                    <td class="action_icons">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalCustomerDelete" class="deleteCustomerButton" data-customerid="141" data-confirmation="Êtes-vous sûr de vouloir supprimer le compte aarceo1954@mailinator.com?">
+                            <img class="del" src="../images/ico_del.png" width="20" height="20">
+                        </a>
+                    </td>
+                </tr><tr>
+                    <td class="sorting_1">ababab@cdcd.com</td>
+                    <th>REDTEAMTEST</th>
+                    <th>Client TMS</th>
+                    <td>REDTEAM</td>
+                    <td>TEST</td>
+                    <td>CompanyName</td>
+                            <td><span class="badge bg-warning">En attente Utilisateur</span></td>
+                    <td class="action_icons">
+                            <a class="btnOpenGrantAccessModal" data-bs-toggle="modal" data-bs-target="#dialogDiv" style="pointer-events: none;" href="javascript:void(0)">
+                                <img src="../images/ico_key_disabled.png" width="20" height="20">
+                            </a>
+                    </td>
+                    <td class="action_icons">
+                        <a class="btnEdit" data-bs-toggle="modal" data-bs-target="#dialogDiv" href="/Admin/EditUser?id=2569">
+                            <img src="../images/ico_edit.png" width="20" height="20">
+                        </a>
+                    </td>
+                    <td class="action_icons">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalCustomerDelete" class="deleteCustomerButton" data-customerid="2569" data-confirmation="Êtes-vous sûr de vouloir supprimer le compte ababab@cdcd.com?">
+                            <img class="del" src="../images/ico_del.png" width="20" height="20">
+                        </a>
+                    </td>
+                </tr><tr>
+                    <td class="sorting_1">ababacar.fall@dakar-terminal.com</td>
+                    <th>DKRP</th>
+                    <th>Client</th>
+                    <td>baye </td>
+                    <td>mbaye</td>
+                    <td>DAKAR TERMINAL </td>
+                            <td><span class="badge bg-success">Activé</span></td>
+                    <td class="action_icons">
+                            <a class="btnOpenGrantAccessModal" data-bs-toggle="modal" data-bs-target="#dialogDiv" href="/Backoffice/Admin/OpenGrantAccessModal/497">
+                                <img src="../images/ico_key.png" width="20" height="20">
+                            </a>
+                    </td>
+                    <td class="action_icons">
+                        <a class="btnEdit" data-bs-toggle="modal" data-bs-target="#dialogDiv" href="/Admin/EditUser?id=497">
+                            <img src="../images/ico_edit.png" width="20" height="20">
+                        </a>
+                    </td>
+                    <td class="action_icons">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalCustomerDelete" class="deleteCustomerButton" data-customerid="497" data-confirmation="Êtes-vous sûr de vouloir supprimer le compte ababacar.fall@dakar-terminal.com?">
+                            <img class="del" src="../images/ico_del.png" width="20" height="20">
+                        </a>
+                    </td>
+                </tr><tr>
+                    <td class="sorting_1">a.bah@logafriq.com</td>
+                    <th>CKY</th>
+                    <th>Client</th>
+                    <td>AMADOU</td>
+                    <td>BAH</td>
+                    <td>logafriq guinee sarl</td>
+                            <td><span class="badge bg-success">Activé</span></td>
+                    <td class="action_icons">
+                            <a class="btnOpenGrantAccessModal" data-bs-toggle="modal" data-bs-target="#dialogDiv" href="/Backoffice/Admin/OpenGrantAccessModal/421">
+                                <img src="../images/ico_key.png" width="20" height="20">
+                            </a>
+                    </td>
+                    <td class="action_icons">
+                        <a class="btnEdit" data-bs-toggle="modal" data-bs-target="#dialogDiv" href="/Admin/EditUser?id=421">
+                            <img src="../images/ico_edit.png" width="20" height="20">
+                        </a>
+                    </td>
+                    <td class="action_icons">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalCustomerDelete" class="deleteCustomerButton" data-customerid="421" data-confirmation="Êtes-vous sûr de vouloir supprimer le compte a.bah@logafriq.com?">
+                            <img class="del" src="../images/ico_del.png" width="20" height="20">
+                        </a>
+                    </td>
+                </tr><tr>
+                    <td class="sorting_1">abdoulayedaouda@yahoo.fr</td>
+                    <th>TOGO</th>
+                    <th>Client</th>
+                    <td>Abdoulaye</td>
+                    <td>DAOUDA</td>
+                    <td>UNIVERSAL TRADE</td>
+                            <td><span class="badge bg-success">Activé</span></td>
+                    <td class="action_icons">
+                            <a class="btnOpenGrantAccessModal" data-bs-toggle="modal" data-bs-target="#dialogDiv" href="/Backoffice/Admin/OpenGrantAccessModal/645">
+                                <img src="../images/ico_key.png" width="20" height="20">
+                            </a>
+                    </td>
+                    <td class="action_icons">
+                        <a class="btnEdit" data-bs-toggle="modal" data-bs-target="#dialogDiv" href="/Admin/EditUser?id=645">
+                            <img src="../images/ico_edit.png" width="20" height="20">
+                        </a>
+                    </td>
+                    <td class="action_icons">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalCustomerDelete" class="deleteCustomerButton" data-customerid="645" data-confirmation="Êtes-vous sûr de vouloir supprimer le compte abdoulayedaouda@yahoo.fr?">
+                            <img class="del" src="../images/ico_del.png" width="20" height="20">
+                        </a>
+                    </td>
+                </tr><tr>
+                    <td class="sorting_1">Abdoulayeniang30@gmail.com</td>
+                    <th>DKRP</th>
+                    <th>Client</th>
+                    <td>Abdoulaye</td>
+                    <td>Niang</td>
+                    <td>Particulier</td>
+                            <td><span class="badge bg-success">Activé</span></td>
+                    <td class="action_icons">
+                            <a class="btnOpenGrantAccessModal" data-bs-toggle="modal" data-bs-target="#dialogDiv" href="/Backoffice/Admin/OpenGrantAccessModal/590">
+                                <img src="../images/ico_key.png" width="20" height="20">
+                            </a>
+                    </td>
+                    <td class="action_icons">
+                        <a class="btnEdit" data-bs-toggle="modal" data-bs-target="#dialogDiv" href="/Admin/EditUser?id=590">
+                            <img src="../images/ico_edit.png" width="20" height="20">
+                        </a>
+                    </td>
+                    <td class="action_icons">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalCustomerDelete" class="deleteCustomerButton" data-customerid="590" data-confirmation="Êtes-vous sûr de vouloir supprimer le compte Abdoulayeniang30@gmail.com?">
+                            <img class="del" src="../images/ico_del.png" width="20" height="20">
+                        </a>
+                    </td>
+                </tr></tbody>
+    </table></div></div><div class="dt-layout-row"><div class="dt-layout-cell dt-layout-start"><div class="dt-info" aria-live="polite" id="grdUserList_info" role="status">Showing 1 to 10 of 2,242 entries</div></div><div class="dt-layout-cell dt-layout-end"><div class="dt-paging"><nav aria-label="pagination"><button class="dt-paging-button disabled first" role="link" type="button" aria-controls="grdUserList" aria-disabled="true" aria-label="First" data-dt-idx="first" tabindex="-1">&lt;&lt;</button><button class="dt-paging-button disabled previous" role="link" type="button" aria-controls="grdUserList" aria-disabled="true" aria-label="Previous" data-dt-idx="previous" tabindex="-1">Previous</button><button class="dt-paging-button current" role="link" type="button" aria-controls="grdUserList" aria-current="page" data-dt-idx="0">1</button><button class="dt-paging-button" role="link" type="button" aria-controls="grdUserList" data-dt-idx="1">2</button><button class="dt-paging-button" role="link" type="button" aria-controls="grdUserList" data-dt-idx="2">3</button><button class="dt-paging-button" role="link" type="button" aria-controls="grdUserList" data-dt-idx="3">4</button><button class="dt-paging-button" role="link" type="button" aria-controls="grdUserList" data-dt-idx="4">5</button><span class="ellipsis" aria-controls="grdUserList" aria-disabled="true" data-dt-idx="ellipsis" tabindex="-1">…</span><button class="dt-paging-button" role="link" type="button" aria-controls="grdUserList" data-dt-idx="224">225</button><button class="dt-paging-button next" role="link" type="button" aria-controls="grdUserList" aria-label="Next" data-dt-idx="next">Next</button><button class="dt-paging-button last" role="link" type="button" aria-controls="grdUserList" aria-label="Last" data-dt-idx="last">&gt;&gt;</button></nav></div></div></div></div>
+</div>
+
+<!-- Modal -->
+<div id="dialogDiv" class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div id="dialogContent" class="modal-dialog"></div>
+</div>
+
+<div class="modal fade" id="modalCustomerDelete" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header d-flex justify-content-between">
+                <h4 class="modal-title" id="modalTitle">Supprimer utilisateur</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="divError" class="alert alert-danger alrt_pad" role="alert" style="display: none;">
+                <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> <p id="message"></p>
+                <button type="button" class="close" onclick="$('#divError').hide();"><span aria-hidden="true">×</span><span class="sr-only">Fermer</span></button>
+
+            </div>
+            <div class="modal-body nopad3 cntr_pop" id="confirmation">
+                Êtes-vous sûr de vouloir supprimer le compte {0}?
+            </div>
+            <div class="modal-footer">
+<form action="/Backoffice/DeleteCustomer" method="post"><input name="__RequestVerificationToken" type="hidden" value="kXNe8AL6_bzJzBXB4swx8fiTdkTG7ne8-BIfNXWs5tc2X4ot0VA8u8H5EdgONzx0sDRUXbKpIZ0lVSseiUSe1HlIiD8QK8xSlUMSzM3vAzk0ytsAaqGGWwtvMEnQVGg4qGd5yefy7Z_QgayUevTwlg2">                    <button type="button" class="btn btn-default" data-bs-dismiss="modal" aria-label="Close">Fermer</button>
+                    <input type="hidden" id="id" name="id" value="">
+                    <button type="submit" class="btn btn-primary" id="btnDelete">Supprimer</button>
+<input type="hidden" name="as_sfid" value="AAAAAAU8QXF4jk7KZHDgQ13mujW-_VEAxYI0SH9mRqeTsKChHIN4HV75ut8G41XSREBEQFmalEPcMFciRCr_ivszQcApG9_wQqeqBV2xlIF6tNkjITixSaHPztsoogza7lIH8ACcwV22BXLLt0tTAK69tIaELfDAKUJvw5wR7kp2n6XsHw=="><input type="hidden" name="as_fid" value="2bd8ad12596f4db5652b49d81af1273556fbd351"></form>            </div>
+        </div>
+    </div>
+</div>
+
+
+    </div>
+    <footer class="container FondBlanc pt-3">
+        <hr>
+        <p class="logo">© 2025 AGL Group</p>
+    </footer>
+    
+    <script src="../assets/js/Scripts_jquery_unobtrusive-ajax_min.js"></script>
+
+    <script src="../assets/js/Scripts_spin.js"></script>
+<script src="../assets/js/Scripts_jquery_spin.js"></script>
+
+    <script src="../assets/js/Scripts_IES_Scripts_jquery_dataTables_Resources.js"></script>
+
+    <script src="../assets/js/Scripts_bootstrap-tagsinput.js"></script>
+
+<script>
+		var bindAccessCodeButtons = function () {
+			$('.btnOpenGrantAccessModal').click(function () {
+				$('#dialogContent').load(this.href, function () {
+					$('#dialogDiv').modal({
+						backdrop: 'static',
+						keyboard: true
+					}, 'show');
+
+					bindForm(this);
+				});
+				return false;
+			});
+		};
+
+        var bindEditButtons = function () {
+            $('.btnEdit').click(function () {
+                $('#dialogContent').load(this.href, function () {
+                    $('#dialogDiv').modal({
+                        backdrop: 'static',
+                        keyboard: true
+                    }, 'show');
+
+                    bindForm(this);
+                });
+                return false;
+            });
+        };
+
+        var bindDeleteButtons = function () {
+            $('.deleteCustomerButton').click(function () {
+                $("#modalCustomerDelete #confirmation").text($(this).data("confirmation"));
+                $("#modalCustomerDelete #id").val($(this).data("customerid"));
+                $('#modalCustomerDelete').modal({
+                    backdrop: 'static',
+                    keyboard: true
+                }, 'show');
+            });
+        };
+
+        var bindForm = function (dialog) {
+            $('form.modal-form', dialog).submit(function () {
+                $.ajax({
+                    url: this.action,
+                    type: this.method,
+                    data: $(this).serialize(),
+                    success: function (result) {
+                        if (result.success) {
+                            $('#dialogDiv').modal('hide');
+                            location.reload();
+                        }
+                        else {
+                            $('#dialogContent').html(result);
+                            bindForm(dialog);
+                        }
+					},
+					error: function (xhr, ajaxOptions, thrownError) {
+						if (xhr.status === 403) {
+							var response = JSON.parse(xhr.responseText);
+							if (response.isRedirect) {
+								window.location.href = response.redirectUrl;
+							}
+						}
+					}
+                });
+                return false;
+            });
+        }
+
+        $(document).ready(function () {
+
+            var grdUserList = null;
+            var statusesList = null;
+            var status = 'Statut'
+            var statuses = JSON.parse('["En attente Utilisateur","En attente Admin","Activé","Désactivé"]')
+
+            function createSelectorForStatusColumn() {
+                statusesList = document.createElement("select");
+                var option = document.createElement("option");
+                option.value = "";
+                option.text = status;
+                statusesList.appendChild(option);
+
+                for (var i = 0; i < statuses.length; i++) {
+                    var option = document.createElement("option");
+                    option.value = statuses[i];
+                    option.text = statuses[i];
+                    statusesList.appendChild(option);
+                }
+            }
+
+            function datatablesConfiguration() {
+                grdUserList = $('#grdUserList').DataTable({
+                    "oLanguage": currentLang,
+                    "aoColumnDefs": [{ "bSortable": false, "aTargets": [7, 8, 9] },
+                    { "sWidth": "10%", "aTargets": [2, 3, 4, 7] },
+                    { "sWidth": "13%", "aTargets": [5] },
+                    { "sWidth": "4%", "aTargets": [8, 9] }],
+                    layout: {
+                        topStart: null,
+                        topEnd: null
+                    },
+                    "fnDrawCallback": function (settings) {
+                        bindAccessCodeButtons();
+                        bindEditButtons();
+                        bindDeleteButtons();
+                    },
+                    orderCellsTop: false,
+                    fixedHeader: false
+                });
+            }
+
+            function createTableHeaderFilters() {
+                $('#grdUserList thead tr:eq(0) .text-search').each(function (i) {
+                    var title = $(this).text();
+                    if (title == status) {
+                        $(this).html(statusesList);
+                    }
+                    else {
+                        $(this).html('<input type="text" class="filter-input" placeholder="' + title + '" />');
+                    }
+
+                    $('input, select', this).on('keyup change', function () {
+                        if (grdUserList.column(i).search() !== this.value) {
+                            grdUserList
+                                .column(i)
+                                .search(this.value)
+                                .draw();
+                        }
+                    });
+                });
+            }
+
+            //afecta al combo que esta dentro del th con  el id = th_status que es la columna 6
+            // si la columna del combo cambia de lugar se debe modificar el numero 6 al numero de columna correspondiente.
+            $('#th_status > span > select', this).change(function () {
+                if ($(this).val() != '') {
+                    grdUserList.fnFilter("(^|\s)" + $(this).val() + "(\s|$)", 6, true, false, false, false); //filter exact word
+                } else {
+                    grdUserList.fnFilter($(this).val(), 6);
+                }
+            });
+
+            $("th > span > select").each(function (index, select) {
+                $.each(select, function (indexSelect, options) {
+                    if (indexSelect > 0) {
+                        options.value = options.text;
+                    }
+                });
+            });
+
+            createSelectorForStatusColumn();
+            datatablesConfiguration();
+            createTableHeaderFilters();
+
+            bindEditButtons();
+			bindDeleteButtons();
+		});
+</script>
+
+
+
+</body></html>

@@ -1,0 +1,125 @@
+<html><head></head><body><div class="modal-content">
+<form action="/Backoffice/EditTemplate" class="modal-form" method="post"><input name="__RequestVerificationToken" type="hidden" value="p3n3taiT-Ri21cB15gF_6zDrTr6t8_kQtooISFzKMwAfRUnoX7w4LkoMzp-IlyUQxFD6b-yjMKY_B15kudVwnCdfGpHF7LwDnT1Iv9G9Ra2OyUnRGmZnxlajd83Q_5OfupK2JLLICA4OSlcKXwW4bw2"><input data-val="true" data-val-number="The field Id must be a number." id="Id" name="Id" type="hidden" value="2"><input data-val="true" data-val-number="The field SiteId must be a number." id="SiteId" name="SiteId" type="hidden" value="1"><input data-val="true" data-val-number="The field CreatedBy must be a number." id="CreatedBy" name="CreatedBy" type="hidden" value="1"><input data-val="true" data-val-date="The field CreatedDate must be a date." id="CreatedDate" name="CreatedDate" type="hidden" value="30/03/2015 22:23:46"><input data-val="true" data-val-number="The field TemplateType must be a number." id="TemplateType" name="TemplateType" type="hidden" value="2">        <div id="mainForm">
+            <div class="modal-header d-flex justify-content-between">
+                <h4 class="modal-title" id="modalLabel">Editer CreateAccount Modèle</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <h5 class="modal-title">Contenu du courrier</h5>
+                <div class="form-horizontal">
+                    <div class="row pad_label">
+                        <div class="col-lg-3 txt_modal">
+                            <label for="Subject">Objet</label>
+                        </div>
+                        <div class="col-lg-8">
+                            <input class="form-control" id="Subject" name="Subject" type="text" value="New Account: Confirm your registration">
+                        </div>
+                    </div>
+                    <div class="row pad_label">
+                        <div class="col-lg-3 txt_modal">
+                            <label for="Title">Titre</label>
+                        </div>
+                        <div class="col-lg-8">
+                            <input class="form-control" id="Title" name="Title" type="text" value="Account Information">
+                        </div>
+                    </div>
+                    <div class="row pad_label">
+                        <div class="col-lg-3 txt_modal">
+                            <label for="Header">En-tête</label>
+                        </div>
+                        <div class="col-lg-8">
+                            <input class="form-control" id="Header" name="Header" type="text" value="Hello {FirstName} ">
+                        </div>
+                    </div>
+                    <div class="row pad_label">
+                        <div class="col-lg-3 txt_modal">
+                            <label for="Body">Corps</label>
+                        </div>
+                        <div class="col-lg-8">
+                            <textarea class="form-control" cols="20" id="Body" name="Body" rows="10">
+Thank you for registering on TICT Online Platform - IES. Kindly click on this {ActiveLink} to validate your account.
+
+This Online Platform gives you access to the following services: 
+
+- Invoice generation 
+- Payment 
+- Refund Request
+
+If your account type is “consignee/importer” please reply this email with the following additional documents: 
+- Copy of Means of Identification : for Individuals - [National ID, Driver's License or International Passport], for Corporate organization - [Cert of Incorporation]
+
+If your account type is “Clearing agent” Please reply with the following additional documents:
+- Copy of Form C30
+- Agency Authority letter for personnel (on corporate letter-headed paper)
+- Copy of Means of Identification of authorized personnel [National ID, Driver's License, OR International Passport]
+
+We also recommend you check out our online resources below for more information on how to use this service and other relevant details.
+
+Website: http://www.tict-ng.com/
+Online Portal: https://ies.tict-ng.com/
+
+Our customer service representatives are always willing to provide all necessary support. Kindly contact them using details below:
+
+customercare@tict-ng.com  |  (+234) 0700-106-0000 
+</textarea>
+                        </div>
+                    </div>
+                    <div class="row pad_label">
+                        <div class="col-lg-3 txt_modal">
+                            <label for="Footer">Pied de page</label>
+                        </div>
+                        <div class="col-lg-8">
+                            <textarea class="form-control" cols="20" id="Footer" name="Footer" rows="10">Regards,
+
+Tincan Island Container Terminal Ltd (TICT)</textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="body-content field-legend-size">
+                    Les champs suivants sont disponibles à utiliser dans la rédaction de l'e-mail. Le contenu sera remplacé par la valeur que vous pouvez voir dans la description.
+                    <br>
+                    <div class="row pad_label">
+                            <div class="col-lg-6">
+                                {Email}
+                                <span class="bi bi-question-circle-fill" aria-hidden="true" data-bs-toggle="tooltip" data-placement="right" title="E-Mail"></span>
+                            </div>
+                            <div class="col-lg-6">
+                                {FirstName}
+                                <span class="bi bi-question-circle-fill" aria-hidden="true" data-bs-toggle="tooltip" data-placement="right" title="Prénom"></span>
+                            </div>
+                            <div class="col-lg-6">
+                                {LastName}
+                                <span class="bi bi-question-circle-fill" aria-hidden="true" data-bs-toggle="tooltip" data-placement="right" title="Nom"></span>
+                            </div>
+                            <div class="col-lg-6">
+                                {CompanyName}
+                                <span class="bi bi-question-circle-fill" aria-hidden="true" data-bs-toggle="tooltip" data-placement="right" title="Nom de la société"></span>
+                            </div>
+                            <div class="col-lg-6">
+                                {CompanyAddress}
+                                <span class="bi bi-question-circle-fill" aria-hidden="true" data-bs-toggle="tooltip" data-placement="right" title="Adresse de la société"></span>
+                            </div>
+                            <div class="col-lg-6">
+                                {ActiveLink}
+                                <span class="bi bi-question-circle-fill" aria-hidden="true" data-bs-toggle="tooltip" data-placement="right" title="Activer le lien"></span>
+                            </div>
+                            <div class="col-lg-6">
+                                {SupportMail}
+                                <span class="bi bi-question-circle-fill" aria-hidden="true" data-bs-toggle="tooltip" data-placement="right" title="Mail du service Support"></span>
+                            </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bs-toggle="modal">Annuler</button>
+                    <div class="btn-group" role="group" aria-label="...">
+                        <button type="submit" class="btn btn-primary" data-changestate="false">Sauvegarder</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+<input type="hidden" name="as_sfid" value="AAAAAAXeLDIxz4qWFPwKdQ0ginoM-KSggOElgShKaHXe0xKu-aK3CxeHJxtPrfn0fdAmbYHM3rT_gCDcyaoDGLSti92rEuNHVX112d058bJtH_TBtNO6gAQIic_2av8sNMi6SDkLErz3aP43ayQ9ofCcwz2Pu-Pyx1eL0tCtIqWBLxBLlQ=="><input type="hidden" name="as_fid" value="79f934046c46c3d7d8faec6d14dec41219d53bc7"></form></div>
+<script>
+    $(function () {
+        $('[data-bs-toggle="tooltip"]').tooltip();
+    });
+</script></body></html>

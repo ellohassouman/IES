@@ -1,0 +1,318 @@
+<!DOCTYPE html><html class="js no-flexbox flexbox-legacy canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers no-applicationcache svg inlinesvg smil svgclippaths wf-nunitosans-n4-active wf-nunitosans-n7-active wf-active"><head>
+    <meta charset="utf-8">
+    <title>Backoffice</title>
+    <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon">
+
+    <meta name="viewport" content="width=device-width">
+
+    <link href="../assets/css/Content_datatables_dataTables.css" rel="stylesheet">
+
+    <link href="../assets/css/Content_bootstrap.css" rel="stylesheet">
+<link href="../assets/css/Content_bootstrap_rtl.css" rel="stylesheet">
+
+    <link href="../assets/css/Content_bootstrap-icons_font_bootstrap-icons_min.css" rel="stylesheet">
+
+    <link href="../assets/css/Content_fontawesome-all.css" rel="stylesheet">
+<link href="../assets/css/Content_sassStyle.css" rel="stylesheet">
+<link href="../assets/css/Content_perfect-scrollbar.css" rel="stylesheet">
+
+    
+    <link href="../assets/css/Content_smalot-datetimepicker_bootstrap-datetimepicker.css" rel="stylesheet">
+
+    <link href="../assets/css/Content_botdetect-captcha_captcha-stylesheet.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js" type="text/javascript" async=""></script><script src="../assets/js/Scripts_modernizr-2_5_3.js"></script>
+
+    <script src="../assets/js/Scripts_jquery-3_7_1.js"></script>
+
+    <script src="../assets/js/Scripts_bootstrap_bundle_min.js"></script>
+<script src="../assets/js/Scripts_bootstrap-datetimepicker.js"></script>
+<script src="../assets/js/Scripts_bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/Scripts_resources_en-US.js"></script>
+
+    <script src="../assets/js/Scripts_respond.js"></script>
+
+    <script src="../assets/js/Scripts_bootstrap-filestyle.js"></script>
+
+    <script src="../assets/js/Scripts_spin.js"></script><style type="text/css"></style>
+<script src="../assets/js/Scripts_jquery_spin.js"></script>
+
+    <script src="../assets/js/Scripts_IES_Scripts_generalFunctions.js"></script>
+<script src="../assets/js/Scripts_IES_Scripts_Validations.js"></script>
+<script src="../assets/js/Scripts_js-cookie.js"></script>
+<script src="../assets/js/Scripts_perfect-scrollbar_jquery.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,700&amp;subset=latin" media="all"><script src="../assets/js/Scripts_perfect-scrollbar.js"></script>
+
+    <script src="../assets/js/Scripts_dataTables_min.js"></script>
+
+    <script src="../assets/js/Scripts_IES_Scripts_jquery_dataTables_columnFilter.js"></script>
+
+    <script src="../assets/js/Scripts_IES_Scripts_jquery_dataTables_Resources.js"></script>
+
+
+    <script>
+        if (window.top !== window.self) {
+			window.location.href = '/Error/FrameError';
+		}
+    </script>
+
+<script>NS_CSM_td=274615315;NS_CSM_pd=275116659;NS_CSM_u="/clm10";NS_CSM_col="AAAAAAW+w9jcsFpyitqfMeZP7Ip6EtkYOrFKDHzIrIjO7W6/GrylbFhC8GyvS4TZtraP51U++Y5hJ61sAWNuVVJxx/Qx";</script><script type="text/javascript">function sendTimingInfoInit(){setTimeout(sendTimingInfo,0)}function sendTimingInfo(){var wp=window.performance;if(wp){var c1,c2,t;c1=wp.timing;if(c1){var cm={};cm.ns=c1.navigationStart;if((t=c1.unloadEventStart)>0)cm.us=t;if((t=c1.unloadEventEnd)>0)cm.ue=t;if((t=c1.redirectStart)>0)cm.rs=t;if((t=c1.redirectEnd)>0)cm.re=t;cm.fs=c1.fetchStart;cm.dls=c1.domainLookupStart;cm.dle=c1.domainLookupEnd;cm.cs=c1.connectStart;cm.ce=c1.connectEnd;if((t=c1.secureConnectionStart)>0)cm.scs=t;cm.rqs=c1.requestStart;cm.rss=c1.responseStart;cm.rse=c1.responseEnd;cm.dl=c1.domLoading;cm.di=c1.domInteractive;cm.dcls=c1.domContentLoadedEventStart;cm.dcle=c1.domContentLoadedEventEnd;cm.dc=c1.domComplete;if((t=c1.loadEventStart)>0)cm.ls=t;if((t=c1.loadEventEnd)>0)cm.le=t;cm.tid=NS_CSM_td;cm.pid=NS_CSM_pd;cm.ac=NS_CSM_col;var xhttp=new XMLHttpRequest();if(xhttp){var JSON=JSON||{};JSON.stringify=JSON.stringify||function(ob){var t=typeof(ob);if(t!="object"||ob===null){if(t=="string")ob='"'+ob+'"';return String(ob);}else{var n,v,json=[],arr=(ob&&ob.constructor==Array);for(n in ob){v=ob[n];t=typeof(v);if(t=="string")v='"'+v+'"';else if(t=="object"&&v!==null)v=JSON.stringify(v);json.push((arr?"":'"'+n+'":')+String(v));}return(arr?"[":"{")+String(json)+(arr?"]":"}");}};xhttp.open("POST",NS_CSM_u,true);xhttp.send(JSON.stringify(cm));}}}}if(window.addEventListener)window.addEventListener("load",sendTimingInfoInit,false);else if(window.attachEvent)window.attachEvent("onload",sendTimingInfoInit);else window.onload=sendTimingInfoInit;</script></head>
+
+<body>
+<script>
+ function string_to_array(str) {var len = str.length;var res = new Array(len);for(var i = 0; i < len; i++)res[i] = str.charCodeAt(i);return res;}function array_to_hex_string(ary) {var res = "";for(var i = 0; i < ary.length; i++)res += SHA256_hexchars[ary[i] >> 4] + SHA256_hexchars[ary[i] & 0x0f];return res;}function SHA256_init() {SHA256_H = new Array(0x6a09e667, 0xbb67ae85,0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19);SHA256_buf = new Array();SHA256_len = 0;}function SHA256_write(msg) {if (typeof(msg) == "string") SHA256_buf = SHA256_buf.concat(string_to_array(msg));else SHA256_buf = SHA256_buf.concat(msg); for(var i = 0; i + 64 <= SHA256_buf.length; i += 64) SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf.slice(i, i +64)); SHA256_buf = SHA256_buf.slice(i); SHA256_len += msg.length;}function SHA256_finalize() { SHA256_buf[SHA256_buf.length] = 0x80;  if (SHA256_buf.length > 64 - 8) {for(var i = SHA256_buf.length; i < 64; i++)SHA256_buf[i] = 0;SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf);SHA256_buf.length = 0;} for(var i = SHA256_buf.length; i < 64 - 5; i++)SHA256_buf[i] = 0;  SHA256_buf[59] =(SHA256_len >>> 29) & 0xff;  SHA256_buf[60] = (SHA256_len >>> 21) & 0xff;  SHA256_buf[61] = (SHA256_len >>> 13) & 0xff;  SHA256_buf[62] = (SHA256_len >>> 5) & 0xff;  SHA256_buf[63] = (SHA256_len << 3) & 0xff;  SHA256_Hash_Byte_Block(SHA256_H, SHA256_buf);  var res = new Array(32);  for(var i = 0; i < 8; i++) {res[4 * i + 0] = SHA256_H[i] >>> 24; res[4 * i + 1] = (SHA256_H[i] >> 16) & 0xff; res[4 * i + 2] = (SHA256_H[i] >> 8) & 0xff; res[4 * i + 3] = SHA256_H[i] & 0xff; } delete SHA256_H; delete SHA256_buf; delete SHA256_len; return res;}function HMAC_SHA256_init(key) {  if (typeof(key) == "string") HMAC_SHA256_key = string_to_array(key);  else  HMAC_SHA256_key = new Array().concat(key);  if (HMAC_SHA256_key.length > 64) { SHA256_init(); SHA256_write(HMAC_SHA256_key); HMAC_SHA256_key = SHA256_finalize(); }  for(var i = HMAC_SHA256_key.length; i < 64; i++)  HMAC_SHA256_key[i] = 0; for(var i = 0; i < 64; i++) HMAC_SHA256_key[i] ^=  0x36;  SHA256_init(); SHA256_write(HMAC_SHA256_key);} function HMAC_SHA256_write(msg) {  SHA256_write(msg);} function HMAC_SHA256_finalize() {  var md = SHA256_finalize();  for(var i = 0; i < 64; i++) HMAC_SHA256_key[i] ^= 0x36 ^ 0x5c; SHA256_init(); SHA256_write(HMAC_SHA256_key); SHA256_write(md);  for(var i = 0; i < 64; i++)    HMAC_SHA256_key[i] = 0;  delete HMAC_SHA256_key;  return SHA256_finalize();}function HMAC_SHA256_MAC(key, msg) { var res;  HMAC_SHA256_init(key);  HMAC_SHA256_write(msg);  res = HMAC_SHA256_finalize();  return array_to_hex_string(res);} SHA256_hexchars = new Array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f');SHA256_K = new Array( 0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1,0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f,0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2); function SHA256_sigma0(x) { return ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);} function SHA256_sigma1(x) { return ((x >>> 17) | (x << 15)) ^ ((x >>> 19) | (x << 13)) ^ (x >>> 10);}function SHA256_Sigma0(x) { return ((x >>> 2) | (x << 30)) ^ ((x >>> 13) | (x << 19)) ^ ((x >>> 22) | (x << 10));}function SHA256_Sigma1(x) { return ((x >>> 6) | (x << 26)) ^ ((x >>> 11) | (x << 21)) ^ ((x >>> 25) | (x << 7));} function SHA256_Ch(x, y, z) { return z ^ (x & (y ^ z));} function SHA256_Maj(x, y, z) {return (x & y) ^ (z & (x ^ y));}function SHA256_Hash_Word_Block(H, W) { for(var i = 16; i < 64; i++)  W[i] = (SHA256_sigma1(W[i - 2]) +  W[i - 7] + SHA256_sigma0(W[i - 15]) + W[i - 16]) & 0xffffffff; var state = new Array().concat(H); for(var i = 0; i < 64; i++) {    var T1 = state[7] + SHA256_Sigma1(state[4]) + SHA256_Ch(state[4], state[5], state[6]) + SHA256_K[i] + W[i]; var T2 = SHA256_Sigma0(state[0]) + SHA256_Maj(state[0], state[1], state[2]); state.pop(); state.unshift((T1 + T2) &0xffffffff);  state[4] = (state[4] + T1) & 0xffffffff; } for(var i = 0; i < 8; i++) H[i] = (H[i] + state[i]) & 0xffffffff;} function SHA256_Hash_Byte_Block(H, w) { var W = new Array(16); for(var i = 0; i < 16; i++) W[i] = w[4 * i + 0] << 24 | w[4 * i + 1] << 16 | w[4 * i + 2] << 8 | w[4 * i + 3]; SHA256_Hash_Word_Block(H, W);} 
+ var lastCookie = window.name;
+ function getCookie(name) {
+       let cookie = {}; 
+            document.cookie.split(';').forEach(function(el) {
+                let cookiekv = el.split('=');
+           cookie[cookiekv[0].trim()] = cookiekv[1];
+            })
+           if (cookie.hasOwnProperty(name)) {
+               return cookie[name];
+                     }
+            return "";
+ };
+ var checkCookie = function() {
+       var token ="17905226099625079964";
+			    var seed = getCookie('citrix_ns_seed');
+      var currentCookie = document.cookie;
+         if (currentCookie != lastCookie || (lastCookie.length == 0)) {
+           console.log('cookie has changed');
+           var hash = HMAC_SHA256_MAC(seed, token);
+         document.cookie = 'MC=' + hash +'; Domain= .aglgroup.com';
+               lastCookie = currentCookie;
+          window.name = currentCookie;
+     }
+                    return true;
+ };
+ window.setInterval(checkCookie, 100);
+        </script>
+
+    <nav class="navbar navbar-expand-md navbar-inverse fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarFlagsMenu" aria-controls="navbarFlagsMenu" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <div class="logo-version">
+                    <a class="navbar-brand fontBalnc" href="/Backoffice/SitesAdmin"> </a>
+                    <p class="version-number">2.4.0.0</p>
+                </div>
+            </div>
+            <div class="justify-content-end" id="iesDropdownMenu">
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a href="#" class="dropdown-toggle fontBalnc" data-bs-toggle="dropdown" role="button" aria-expanded="false">Menu<span class="caret"></span></a>
+                        <ul class="dropdown-menu dropdown-menu-ies">
+                            <li><a class="dropdown-item" href="/Backoffice/SiteAdminUsers">Compte administrateur du site</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/SitesAdmin">Liste des sites</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/BankUser/Index">Utilisateurs bancaires</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/Backoffice/AppAdminAccounts">Compte IES manager</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/Backoffice/FieldSettings/FieldSettings">Paramètres du champ</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/SiteAdmin">Comptes utilisateur client</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/TemplateConfigurator">Mail Type</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/BillOfLadingSearch">Rechercher BL</a></li>
+                            <li><a class="dropdown-item" href="/Backoffice/EpaymentErrorCode/Index">Codes erreur du WS E-Payment</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarFlagsMenu">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+
+
+<form action="/Backoffice/LogOff?LoginActionName=AdminLogin" id="logoutForm" method="post">            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle fontBalnc menuUser" data-bs-toggle="dropdown"><span class="glyphicon glyphicon-user paddIcon"></span>elloh.assouman@ascens-services.com<b class="caret"></b></a>
+                    <ul class="dropdown-menu menuUser">
+                        <li>
+                            <input name="__RequestVerificationToken" type="hidden" value="iM6tzYJqJN6rbDz37gV-vCBqcpOOQlns_chG68sR0sMYl6W1veBIeK2v-c2LZqU-BwollPh4yd3RL2urDRdziEoweQWWMBWItPOHMH6cpUM8fo0uXMiVz865p1DfxQufNvfk-Ece3zahMZ-62-JfvQ2">
+                            <a href="javascript:document.getElementById('logoutForm').submit()" class="dropdown-item"><span class="bi bi-box-arrow-right" aria-hidden="true"></span> Déconnecter</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+<input type="hidden" name="as_sfid" value="AAAAAAXyu6DvvAbS5wsUkr4ziLlq5rc1vNjeRFpET_rmG0abOrR0Pg3cIPdamdenmcM0rIc4hNBI5MT9F27aufi9Op_dFPRX8jZ_IBkFpxIycXPRy3nN7WitzrNF86Fx3fTkvP-uaTHjguSy2shZC7iGEUU5D7YxnVG_avm2qwBWoJwgvg=="><input type="hidden" name="as_fid" value="916dba88d7c86bfcf1d6bb6ccbf77dff32138a06"></form><script>
+    $('#supportButton').click(function () {
+        $('#supportDialogContent').load(this.href, function () {
+            $('#supportDialog').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    $('#linkMyProfile').click(function () {
+        $('#ProfileModalContent').load(this.href, function () {
+            $('#ProfileModal').modal({
+                backdrop: 'static',
+                keyboard: true
+            }, 'show');
+        });
+        return false;
+    });
+
+    
+
+</script>
+
+
+<form action="/Default/SetCulture" id="SetCultureForm" method="post"><span class="posFlags">
+                                <span class="btn-group btn-group-xs">
+                                    <button type="submit" name="culture" id="en-us" value="en-us" class="btn btn-primary btn-sm">Anglais</button>
+                                    <button type="submit" name="culture" id="fr" value="fr" class="btn btn-primary btn-sm">Français</button>
+                                </span>
+                            </span>
+<input type="hidden" name="as_sfid" value="AAAAAAVXPTLU2Lo-9FW1hfIIcaZn8Pyri2yCqFMci3Xhywcy3dUP27XKyujhHubayWypJsUUKYwDKPzwxi6_2o6BhTH-W2WWlFkUC28WvL_pluzanX_vfx-QQslwXbemDTpm8_nImvmJPyCBxmknnur__OVfJgqOcZ-PuR2zMWs7p9d_0w=="><input type="hidden" name="as_fid" value="d80b5dba605a9fe75b1a30bc341a9d51cc597933"></form>                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="jumbotronSuperAdmin">
+        <div class="container transpSuperadmin">
+            <h1>IES Manager</h1>
+        </div>
+    </div>
+
+    <div class="container FondBlanc">
+        
+
+<script src="../assets/js/Scripts_FieldSettings_fieldSettings.js"></script>
+
+
+<input name="__RequestVerificationToken" type="hidden" value="78abVH-8e98X_TXaTDn_N4GzWKHOKH4Yn_MPxW6o_KSPF9_D5hyNaNbzar327TO5ZRyUXAT9-0edPNoNHzygD6qy4ne4YsIJdQ9NTvcXfuHVxNxrdUp0mXPkQm4yqI6uMaghovFlHQJHWOZ1WdWQ1g2">
+
+<div id="alertFieldSettingsContent">
+
+</div>
+
+<h4 class="header_bl col-lg-12 pad_amount pt-4">Paramètres du champ</h4>
+<div class="row">
+    <div id="sitesListContainer" class="col-lg-6">
+    <div>
+        <div class="row">
+            <div class="col-8 col-sm-8 col-md-8 col-lg-8 col-xl-8 col-xxl-8">
+                <input class="form-control" list="sitesDatalistOptions" id="sitesDataList" maxlength="150" placeholder="Nom du site" onmouseover="focus()" ;="">
+            </div>
+            <div class="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4 col-xxl-4">
+                <input id="searchSiteButton" type="button" class="btn btn-primary" value="Rechercher site">
+            </div>
+        </div>
+    </div>
+    <datalist id="sitesDatalistOptions">
+            <option data-site-id="47" value="AGL Cote d'Ivoire (Training)">AGL Cote d'Ivoire (Training) </option>
+            <option data-site-id="55" value="ALMOND&quot;&gt;&lt;">ALMOND"&gt;&lt; </option>
+            <option data-site-id="56" value="Almond2">Almond2 </option>
+            <option data-site-id="41" value="AMI Tanzania (Training)">AMI Tanzania (Training) </option>
+            <option data-site-id="59" value="archive_ipk_TICT">archive_ipk_TICT </option>
+            <option data-site-id="60" value="archiveTICT">archiveTICT </option>
+            <option data-site-id="40" value="ATL (Training)">ATL (Training) </option>
+            <option data-site-id="33" value="Base1 (Training)">Base1 (Training) </option>
+            <option data-site-id="11" value="Benin Terminal">Benin Terminal </option>
+            <option data-site-id="15" value="Bénin Terminal (Formation) test">Bénin Terminal (Formation) test </option>
+            <option data-site-id="37" value="Bénin Terminal NVM (Formation)">Bénin Terminal NVM (Formation) </option>
+            <option data-site-id="36" value="Burkina Faso Training">Burkina Faso Training </option>
+            <option data-site-id="42" value="Cabinda Terminal (Training)">Cabinda Terminal (Training) </option>
+            <option data-site-id="43" value="Camrail SMN (Formation)">Camrail SMN (Formation) </option>
+            <option data-site-id="58" value="CIT Formation">CIT Formation </option>
+            <option data-site-id="62" value="CIT_DEV_Cloud">CIT_DEV_Cloud </option>
+            <option data-site-id="34" value="Comores (Formation)">Comores (Formation) </option>
+            <option data-site-id="13" value="Conakry">Conakry </option>
+            <option data-site-id="24" value="Conakry Terminal (Formation)">Conakry Terminal (Formation) </option>
+            <option data-site-id="32" value="Congo Terminal">Congo Terminal </option>
+            <option data-site-id="22" value="Congo Terminal PNR (Formation)">Congo Terminal PNR (Formation) </option>
+            <option data-site-id="23" value="Dakar Terminal (Formation)">Dakar Terminal (Formation) </option>
+            <option data-site-id="29" value="Dakar Terminal Production">Dakar Terminal Production </option>
+            <option data-site-id="51" value="DBGT (Training)">DBGT (Training) </option>
+            <option data-site-id="19" value="DIT Formation">DIT Formation </option>
+            <option data-site-id="21" value="DIT Training">DIT Training </option>
+            <option data-site-id="7" value="Douala International Terminal">Douala International Terminal </option>
+            <option data-site-id="14" value="EBK">EBK </option>
+            <option data-site-id="38" value="Freetown Terminal (Training)">Freetown Terminal (Training) </option>
+            <option data-site-id="46" value="Kigali (Training)">Kigali (Training) </option>
+            <option data-site-id="18" value="Kribi">Kribi </option>
+            <option data-site-id="49" value="Kribi Conteneurs Terminal (Formation)">Kribi Conteneurs Terminal (Formation) </option>
+            <option data-site-id="50" value="Lomé Terminal (Formation)">Lomé Terminal (Formation) </option>
+            <option data-site-id="16" value="Mombassa Container Terminal (Training)">Mombassa Container Terminal (Training) </option>
+            <option data-site-id="25" value="Moroni Terminal (Formation)">Moroni Terminal (Formation) </option>
+            <option data-site-id="44" value="Niamey Terminal (Formation)">Niamey Terminal (Formation) </option>
+            <option data-site-id="27" value="OCT PROD">OCT PROD </option>
+            <option data-site-id="28" value="Owendo Container Terminal (Formation)">Owendo Container Terminal (Formation) </option>
+            <option data-site-id="53" value="Port Gentil (Formation)">Port Gentil (Formation) </option>
+            <option data-site-id="52" value="RCA (Formation)">RCA (Formation) </option>
+            <option data-site-id="9" value="Recette">Recette </option>
+            <option data-site-id="57" value="Recette Puteaux">Recette Puteaux </option>
+            <option data-site-id="64" value="REdTEAMTEST">REdTEAMTEST </option>
+            <option data-site-id="48" value="San Pedro &amp; Pacoci (Formation)">San Pedro &amp; Pacoci (Formation) </option>
+            <option data-site-id="31" value="SEPBC">SEPBC </option>
+            <option data-site-id="35" value="SEPBC (Formation)">SEPBC (Formation) </option>
+            <option data-site-id="66" value="sitedemo 35">sitedemo 35 </option>
+            <option data-site-id="45" value="SOGECO Mauritanie (Formation)">SOGECO Mauritanie (Formation) </option>
+            <option data-site-id="26" value="TCL">TCL </option>
+            <option data-site-id="17" value="Tema Container Terminal (Training)">Tema Container Terminal (Training) </option>
+            <option data-site-id="8" value="TEST">TEST </option>
+            <option data-site-id="63" value="TEST red team">TEST red team </option>
+            <option data-site-id="10" value="TICT Clearing (Training)">TICT Clearing (Training) </option>
+            <option data-site-id="6" value="TICT DEV">TICT DEV </option>
+            <option data-site-id="30" value="TICT PROD">TICT PROD </option>
+            <option data-site-id="1" value="Tincan Island Container Terminal">Tincan Island Container Terminal </option>
+            <option data-site-id="69" value="Togo LMT">Togo LMT </option>
+            <option data-site-id="12" value="Togo Terminal TEST 15/02">Togo Terminal TEST 15/02 </option>
+            <option data-site-id="20" value="TogoDev">TogoDev </option>
+            <option data-site-id="54" value="TPSA (Training)">TPSA (Training) </option>
+            <option data-site-id="39" value="TVB Port au Prince Terminal (Formation)">TVB Port au Prince Terminal (Formation) </option>
+            <option data-site-id="67" value="ZMT Formation">ZMT Formation </option>
+    </datalist>
+
+<script>
+    $(document).ready(function () {
+        $('#searchSiteButton').on('click', function () {
+            var siteName = $('#sitesDataList').val();
+            var siteId = $('#sitesDatalistOptions [value="' + siteName + '"]').data('site-id');
+            siteId = siteId == undefined ? 0 : siteId;
+            console.log(siteId)
+            fieldSettingsConfig.getFieldSettings(siteId, siteName);
+        });
+    });
+</script>
+
+
+    </div>
+</div>
+<div id="fieldSettingBL">
+    <div id="fieldSettingGrid" class="row">
+        <div id="fieldSettingsContainer" class="col-lg-12">
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        var settings = {
+            urlGetFieldSettings: '/Backoffice/FieldSettings/_FieldSettingsGrid',
+            urlSaveFieldSettings: '/Backoffice/FieldSettings/SaveFieldSettings'
+        };
+
+        fieldSettingsConfig.init(settings)
+    });
+</script>
+
+
+    </div>
+    <footer class="container FondBlanc pt-3">
+        <hr>
+        <p class="logo">© 2025 AGL Group</p>
+    </footer>
+    
+
+
+</body></html>

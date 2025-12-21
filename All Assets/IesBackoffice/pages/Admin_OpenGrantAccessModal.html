@@ -1,0 +1,73 @@
+<html><head></head><body><input name="__RequestVerificationToken" type="hidden" value="1s5KaCys6_NXiZ21MkyuKnWQHp5Q2PKDpNr9_Zsf2st4EX3EwVS3Fcx77APo5Sa8ZgUT7q9KsZUxIrGKzUyIMGE7Qns46j7ycm9wMlkzBXC0YSb5-KTAECCpBjMc9qWCur6G-MiRpPVvFtotOPsYYw2">
+
+<div class="modal-content">
+    <div id="mainForm">
+        <div class="modal-header d-flex justify-content-between">
+            <h4 class="modal-title" id="modalLabel">Autoriser l'accès</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-horizontal">
+                <div class="row pad_label">
+                    <div class="col-lg-3 txt_modal col-md-3 col-xs-3">
+                        <label for="Email">Email utilisateur</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-xs-8">
+                        <input class="form-control" id="userEmail" name="Email" readonly="readonly" type="text" value="2kmtranssociete@gmail.com">
+                    </div>
+                </div>
+                <div class="row pad_label">
+                    <div class="col-lg-3 txt_modal col-md-3 col-xs-3">
+                        <label for="Code">Code</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-xs-8">
+                        <input class="form-control" id="code" name="Code" readonly="readonly" type="text" value="Y3DEBQG7CSF7">
+                    </div>
+                </div>
+                <div class="row pad_label">
+                    <div class="col-lg-3 txt_modal col-md-3 col-xs-3">
+                        <label for="ExpirationDate">Date d'expiration</label>
+                    </div>
+                    <div class="col-lg-8 col-md-8 col-xs-8">
+                        <input class="form-control" id="expirationDate" name="ExpirationDate" readonly="readonly" type="text" value="09/05/2025 14:54 (UTC)">
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal" aria-label="Close">Fermer</button>
+                <div class="btn-group" role="group" aria-label="...">
+                    <button id="btnGenerateAccessCode" type="button" class="btn btn-primary">Générer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+	$(document).ready(function () {
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+		$('#btnGenerateAccessCode').click(function () {
+			$.ajax({
+				url: '/Backoffice/Admin/GenerateAccessCode',
+                data: { __RequestVerificationToken: token, id: "936" },
+				type: 'POST',
+				async: false,
+				cache: true,
+                success: function (result) {
+					console.log(result);
+					if (result.success) {
+						$("#userEmail")[0].value = result.data.Email;
+						$("#code")[0].value = result.data.Code;
+						$("#expirationDate")[0].value = result.data.ExpirationDate;
+					} else {
+						console.log(result);
+					}
+                }
+            });
+		});
+
+    });
+</script>
+</body></html>

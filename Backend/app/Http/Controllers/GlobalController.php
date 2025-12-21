@@ -541,6 +541,49 @@ class GlobalController extends Controller
         }
     }
 
+    public function UpdateMultipleInvoiceStatus(Request $request)
+    {
+        try
+        {
+            $invoices = $request->input('invoices');
+
+            foreach ($invoices as $invoice) {
+                DB::statement(
+                    "CALL UpdateInvoiceStatus(?, ?)",
+                    array($invoice['invoiceId'], $invoice['statusId'])
+                );
+            }
+
+            return response()->json([
+                'success' => true
+            ]);
+        }
+        catch(Exception $exp)
+        {
+            throw $exp;
+        }
+    }
+
+    public function ValidatePayment(Request $request)
+    {
+        try
+        {
+            $result = DB::select(
+                "CALL UpdateInvoiceStatus(?, ?)",
+                array(
+                    $request->input('invoiceId'),
+                    4  // Statut 4 = Paiement validé
+                )
+            );
+
+            return response()->json($result);
+        }
+        catch(Exception $exp)
+        {
+            throw $exp;
+        }
+    }
+
     public function DeleteInvoice(Request $request)
     {
         try
@@ -730,4 +773,129 @@ class GlobalController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get all custom users (for admin/backoffice)
+     * Calls stored procedure GetAllCustomUsers
+     */
+    public function GetAllCustomUsers(Request $request)
+    {
+        try {
+            $result = DB::select(
+                "CALL GetAllCustomUsers()"
+            );
+
+            return response()->json($result);
+        }
+        catch(Exception $exp) {
+            throw $exp;
+        }
+    }
+
+    /**
+     * Get all consignees (customers) having BLs
+     * Excludes deleted users (status ID: 5)
+     * Returns consignee data for multi-select
+     */
+    public function GetAllConsigneesWithBLs(Request $request)
+    {
+        try {
+            $result = DB::select(
+                "CALL GetAllConsigneesWithBLs()"
+            );
+
+            return response()->json($result);
+        }
+        catch(Exception $exp) {
+            throw $exp;
+        }
+    }
+
+    /**
+     * Update customer user status (activate/deactivate)
+     * Updates the CustomerUsersStatusId field
+     */
+    public function UpdateCustomUserStatus(Request $request)
+    {
+        try {
+            $userId = $request->input('UserId');
+            $statusId = $request->input('StatusId');
+
+            if (!$userId || !$statusId) {
+                return response()->json(['error' => 'UserId and StatusId are required'], 400);
+            }
+
+            $result = DB::select(
+                "CALL UpdateCustomUserStatus(?, ?)",
+                [$userId, $statusId]
+            );
+
+            return response()->json(['success' => true, 'result' => $result]);
+        }
+        catch(Exception $exp) {
+            return response()->json(['error' => $exp->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Update customer user third-party codes
+     * Manages the customerusers_thirdparty relationship
+     */
+    public function UpdateCustomUserThirdPartyCodes(Request $request)
+    {
+        try {
+            $userId = $request->input('UserId');
+            $thirdPartyCodes = $request->input('ThirdPartyCodes', []);
+
+            if (!$userId) {
+                return response()->json(['error' => 'UserId is required'], 400);
+            }
+
+            // Convert array to JSON for the stored procedure
+            $codesJson = json_encode(array_values($thirdPartyCodes));
+
+            $result = DB::select(
+                "CALL UpdateCustomUserThirdPartyCodes(?, ?)",
+                [$userId, $codesJson]
+            );
+
+            return response()->json(['success' => true, 'result' => $result]);
+        }
+        catch(Exception $exp) {
+            return response()->json(['error' => $exp->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Update customer user information
+     * Updates personal and company information
+     */
+    public function UpdateCustomUserInfo(Request $request)
+    {
+        try {
+            $userId = $request->input('UserId');
+            $firstName = $request->input('FirstName');
+            $lastName = $request->input('LastName');
+            $phoneNumber = $request->input('PhoneNumber');
+            $cellPhone = $request->input('CellPhone');
+            $companyName = $request->input('CompanyName');
+            $companyAddress = $request->input('CompanyAddress');
+            $accountType = $request->input('AccountType', 1);
+
+            if (!$userId) {
+                return response()->json(['error' => 'UserId is required'], 400);
+            }
+
+            $result = DB::select(
+                "CALL UpdateCustomUserInfo(?, ?, ?, ?, ?, ?, ?, ?)",
+                [$userId, $firstName, $lastName, $phoneNumber, $cellPhone, $companyName, $companyAddress, $accountType]
+            );
+
+            return response()->json(['success' => true, 'result' => $result]);
+        }
+        catch(Exception $exp) {
+            return response()->json(['error' => $exp->getMessage()], 500);
+        }
+    }
+
 }

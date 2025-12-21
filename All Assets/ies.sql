@@ -3462,7 +3462,8 @@ INSERT INTO `customerusersstatus` (`Id`, `Label`) VALUES
 (1, 'Actif'),
 (2, 'Inactif'),
 (3, 'Suspendu'),
-(4, 'En attente');
+(4, 'En attente'),
+(5, 'Supprimé');
 
 -- --------------------------------------------------------
 

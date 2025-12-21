@@ -1,0 +1,530 @@
+<html><head></head><body><div class="modal-content">
+<form action="/Backoffice/CreateSiteAdminUser" class="modal-form" method="post">        <div id="confirmationMessage" style="display:none">
+            <div class="modal-header d-flex justify-content-between">
+                <h4 class="modal-title" id="modalLabel">Modifier utilisateur</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body nopad3 cntr_pop">
+                Vous allez désactiver l’utilisateur  . Etes-vous sûr de vouloir continuer?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Non</button>
+                <button type="submit" class="btn btn-primary" data-changestate="true">Oui</button>
+            </div>
+        </div>
+<input name="__RequestVerificationToken" type="hidden" value="iljBvRl2iSa83MZvCMV-YFTCMpJvf5CRAD3Uao93kQLWiUrfodVxtVxS9n4bXwXrdYgNMswXjDcTIAkqnSuFiN0MKPmV_QTGVs2wA0jAWbFu-9nWDOwi_58r8nl4a-G7FJZSnDMRT65MEFqdqejf3g2"><input data-val="true" data-val-number="The field Id must be a number." data-val-required="'Id' ne doit pas avoir la valeur null." id="Id" name="Id" type="hidden" value="0"><input data-val="true" data-val-required="'Must Change Password' ne doit pas avoir la valeur null." id="MustChangePassword" name="MustChangePassword" type="hidden" value="False"><input id="changeState" name="changeState" type="hidden" value="False">        <div id="mainForm">
+            <div class="modal-header justify-content-between">
+                <h4 class="modal-title" id="modalLabel">Créer un compte</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-horizontal">
+                    <div class="row pad_label">
+                        <div class="col-lg-3 txt_modal col-md-3 col-xs-3">
+                            <label for="UserName">E-Mail</label>
+                        </div>
+                        <div class="col-lg-8 col-md-8 col-xs-8">
+<input class="form-control" data-val="true" data-val-email="Le &quot;E-mail&quot; est invalide" data-val-required="Le &quot;E-mail&quot; est obligatoire" id="UserName" name="UserName" type="text" value="">                        </div>
+                    </div>
+                    <div class="row pad_label">
+                        <div class="col-lg-3 txt_modal col-md-3 col-xs-3">
+                            <label for="Password">Mot de passe</label>
+                        </div>
+                        <div class="col-lg-8 col-md-8 col-xs-8">
+                            <input autocomplete="off" class="form-control" id="Password" name="Password" type="password" value="">
+                        </div>
+                    </div>
+                    <div class="row pad_label passwordMessageFont">
+                        <div class="col-lg-3 txt_modal col-md-3 col-xs-3">
+                        </div>
+                        <div class="col-lg-8 col-md-8 col-xs-8">
+                            <label>Le mot de passe doit:</label>
+                            <ul>
+                                <li>
+                                    Doit contenir au moins 12 caractères.
+                                </li>
+                                <li>
+                                    Contenir au moins 3 types de caractères (minuscule, majuscule, caractère spécial, chiffres).
+                                </li>
+                                <li>
+                                    Etre differents des 10 derniers mots de passe.
+                                </li>
+                                <li>
+                                    Ne pas contenir des caractères similaires à l'identifiant.
+                                </li>
+                                <li>
+                                    Expire après 120 jours.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row pad_label">
+                        <div class="col-lg-3 txt_modal col-md-3 col-xs-3">
+                            <label for="ConfirmPassword">Confirmer Mot de passe</label>
+                        </div>
+                        <div class="col-lg-8 col-md-8 col-xs-8">
+                            <input autocomplete="off" class="form-control" data-val="true" data-val-equalto="Les mots de passe ne correspondent pas" data-val-equalto-other="*.Password" id="ConfirmPassword" name="ConfirmPassword" type="password" value="">
+                        </div>
+                    </div>
+                    <div class="row pad_label">
+                        <div class="col-lg-3 txt_modal col-md-3 col-xs-3">
+                            <label for="FirstName">Prénom</label>
+                        </div>
+                        <div class="col-lg-8 col-md-8 col-xs-8">
+                            <input class="form-control" data-val="true" data-val-required="Le “Prénom” est obligatoire" id="FirstName" name="FirstName" type="text" value="">
+                        </div>
+                    </div>
+                    <div class="row pad_label">
+                        <div class="col-lg-3 txt_modal col-md-3 col-xs-3">
+                            <label for="LastName">Nom de Famille</label>
+                        </div>
+                        <div class="col-lg-8 col-md-8 col-xs-8">
+                            <input class="form-control" data-val="true" data-val-required="Le “Nom” est obligatoire" id="LastName" name="LastName" type="text" value="">
+                        </div>
+                    </div>
+                    <div class="row pad_label">
+                        <div class="col-lg-3 txt_modal col-md-3 col-xs-3">
+                            <label for="Status">Statut</label>
+                        </div>
+                        <div class="col-lg-8 col-md-8 col-xs-8">
+                            <input data-val="true" data-val-required="'Status' ne doit pas avoir la valeur null." id="Status" name="Status" type="hidden" value="Enabled">
+                            <input value="Activé" class="form-control" id="statusAccount" name="statusAccount" readonly="readonly" type="text">
+                        </div>
+                    </div>
+                    <div class="row pad_label">
+                        <div class="col-lg-3 txt_modal col-md-3 col-xs-3">
+                            <label for="Sites">Sites</label>
+                        </div>
+                        <div class="col-lg-8 col-md-8 col-xs-8 sites-selector">
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_0" name="Sites[0].Selected" text="AGL Cote d'Ivoire (Training)" type="checkbox" value="true"><input name="Sites[0].Selected" type="hidden" value="false">
+                                        AGL Cote d'Ivoire (Training)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_0__Id" name="Sites[0].Id" type="hidden" value="47">
+                                        <input id="Sites_0__Name" name="Sites[0].Name" type="hidden" value="AGL Cote d'Ivoire (Training)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_1" name="Sites[1].Selected" text="ALMOND&quot;&gt;&lt;" type="checkbox" value="true"><input name="Sites[1].Selected" type="hidden" value="false">
+                                        ALMOND"&gt;&lt;
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_1__Id" name="Sites[1].Id" type="hidden" value="55">
+                                        <input id="Sites_1__Name" name="Sites[1].Name" type="hidden" value="ALMOND&quot;&gt;&lt;">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_2" name="Sites[2].Selected" text="Almond2" type="checkbox" value="true"><input name="Sites[2].Selected" type="hidden" value="false">
+                                        Almond2
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_2__Id" name="Sites[2].Id" type="hidden" value="56">
+                                        <input id="Sites_2__Name" name="Sites[2].Name" type="hidden" value="Almond2">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_3" name="Sites[3].Selected" text="AMI Tanzania (Training)" type="checkbox" value="true"><input name="Sites[3].Selected" type="hidden" value="false">
+                                        AMI Tanzania (Training)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_3__Id" name="Sites[3].Id" type="hidden" value="41">
+                                        <input id="Sites_3__Name" name="Sites[3].Name" type="hidden" value="AMI Tanzania (Training)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_4" name="Sites[4].Selected" text="archive_ipk_TICT" type="checkbox" value="true"><input name="Sites[4].Selected" type="hidden" value="false">
+                                        archive_ipk_TICT
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_4__Id" name="Sites[4].Id" type="hidden" value="59">
+                                        <input id="Sites_4__Name" name="Sites[4].Name" type="hidden" value="archive_ipk_TICT">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_5" name="Sites[5].Selected" text="archiveTICT" type="checkbox" value="true"><input name="Sites[5].Selected" type="hidden" value="false">
+                                        archiveTICT
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_5__Id" name="Sites[5].Id" type="hidden" value="60">
+                                        <input id="Sites_5__Name" name="Sites[5].Name" type="hidden" value="archiveTICT">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_6" name="Sites[6].Selected" text="ATL (Training)" type="checkbox" value="true"><input name="Sites[6].Selected" type="hidden" value="false">
+                                        ATL (Training)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_6__Id" name="Sites[6].Id" type="hidden" value="40">
+                                        <input id="Sites_6__Name" name="Sites[6].Name" type="hidden" value="ATL (Training)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_7" name="Sites[7].Selected" text="Base1 (Training)" type="checkbox" value="true"><input name="Sites[7].Selected" type="hidden" value="false">
+                                        Base1 (Training)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_7__Id" name="Sites[7].Id" type="hidden" value="33">
+                                        <input id="Sites_7__Name" name="Sites[7].Name" type="hidden" value="Base1 (Training)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_8" name="Sites[8].Selected" text="Benin Terminal" type="checkbox" value="true"><input name="Sites[8].Selected" type="hidden" value="false">
+                                        Benin Terminal
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_8__Id" name="Sites[8].Id" type="hidden" value="11">
+                                        <input id="Sites_8__Name" name="Sites[8].Name" type="hidden" value="Benin Terminal">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_9" name="Sites[9].Selected" text="Bénin Terminal (Formation) test" type="checkbox" value="true"><input name="Sites[9].Selected" type="hidden" value="false">
+                                        Bénin Terminal (Formation) test
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_9__Id" name="Sites[9].Id" type="hidden" value="15">
+                                        <input id="Sites_9__Name" name="Sites[9].Name" type="hidden" value="Bénin Terminal (Formation) test">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_10" name="Sites[10].Selected" text="Bénin Terminal NVM (Formation)" type="checkbox" value="true"><input name="Sites[10].Selected" type="hidden" value="false">
+                                        Bénin Terminal NVM (Formation)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_10__Id" name="Sites[10].Id" type="hidden" value="37">
+                                        <input id="Sites_10__Name" name="Sites[10].Name" type="hidden" value="Bénin Terminal NVM (Formation)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_11" name="Sites[11].Selected" text="Burkina Faso Training" type="checkbox" value="true"><input name="Sites[11].Selected" type="hidden" value="false">
+                                        Burkina Faso Training
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_11__Id" name="Sites[11].Id" type="hidden" value="36">
+                                        <input id="Sites_11__Name" name="Sites[11].Name" type="hidden" value="Burkina Faso Training">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_12" name="Sites[12].Selected" text="Cabinda Terminal (Training)" type="checkbox" value="true"><input name="Sites[12].Selected" type="hidden" value="false">
+                                        Cabinda Terminal (Training)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_12__Id" name="Sites[12].Id" type="hidden" value="42">
+                                        <input id="Sites_12__Name" name="Sites[12].Name" type="hidden" value="Cabinda Terminal (Training)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_13" name="Sites[13].Selected" text="Camrail SMN (Formation)" type="checkbox" value="true"><input name="Sites[13].Selected" type="hidden" value="false">
+                                        Camrail SMN (Formation)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_13__Id" name="Sites[13].Id" type="hidden" value="43">
+                                        <input id="Sites_13__Name" name="Sites[13].Name" type="hidden" value="Camrail SMN (Formation)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_14" name="Sites[14].Selected" text="CIT Formation" type="checkbox" value="true"><input name="Sites[14].Selected" type="hidden" value="false">
+                                        CIT Formation
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_14__Id" name="Sites[14].Id" type="hidden" value="58">
+                                        <input id="Sites_14__Name" name="Sites[14].Name" type="hidden" value="CIT Formation">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_15" name="Sites[15].Selected" text="CIT_DEV_Cloud" type="checkbox" value="true"><input name="Sites[15].Selected" type="hidden" value="false">
+                                        CIT_DEV_Cloud
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_15__Id" name="Sites[15].Id" type="hidden" value="62">
+                                        <input id="Sites_15__Name" name="Sites[15].Name" type="hidden" value="CIT_DEV_Cloud">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_16" name="Sites[16].Selected" text="Comores (Formation)" type="checkbox" value="true"><input name="Sites[16].Selected" type="hidden" value="false">
+                                        Comores (Formation)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_16__Id" name="Sites[16].Id" type="hidden" value="34">
+                                        <input id="Sites_16__Name" name="Sites[16].Name" type="hidden" value="Comores (Formation)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_17" name="Sites[17].Selected" text="Conakry" type="checkbox" value="true"><input name="Sites[17].Selected" type="hidden" value="false">
+                                        Conakry
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_17__Id" name="Sites[17].Id" type="hidden" value="13">
+                                        <input id="Sites_17__Name" name="Sites[17].Name" type="hidden" value="Conakry">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_18" name="Sites[18].Selected" text="Conakry Terminal (Formation)" type="checkbox" value="true"><input name="Sites[18].Selected" type="hidden" value="false">
+                                        Conakry Terminal (Formation)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_18__Id" name="Sites[18].Id" type="hidden" value="24">
+                                        <input id="Sites_18__Name" name="Sites[18].Name" type="hidden" value="Conakry Terminal (Formation)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_19" name="Sites[19].Selected" text="Congo Terminal" type="checkbox" value="true"><input name="Sites[19].Selected" type="hidden" value="false">
+                                        Congo Terminal
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_19__Id" name="Sites[19].Id" type="hidden" value="32">
+                                        <input id="Sites_19__Name" name="Sites[19].Name" type="hidden" value="Congo Terminal">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_20" name="Sites[20].Selected" text="Congo Terminal PNR (Formation)" type="checkbox" value="true"><input name="Sites[20].Selected" type="hidden" value="false">
+                                        Congo Terminal PNR (Formation)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_20__Id" name="Sites[20].Id" type="hidden" value="22">
+                                        <input id="Sites_20__Name" name="Sites[20].Name" type="hidden" value="Congo Terminal PNR (Formation)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_21" name="Sites[21].Selected" text="Dakar Terminal (Formation)" type="checkbox" value="true"><input name="Sites[21].Selected" type="hidden" value="false">
+                                        Dakar Terminal (Formation)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_21__Id" name="Sites[21].Id" type="hidden" value="23">
+                                        <input id="Sites_21__Name" name="Sites[21].Name" type="hidden" value="Dakar Terminal (Formation)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_22" name="Sites[22].Selected" text="Dakar Terminal Production" type="checkbox" value="true"><input name="Sites[22].Selected" type="hidden" value="false">
+                                        Dakar Terminal Production
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_22__Id" name="Sites[22].Id" type="hidden" value="29">
+                                        <input id="Sites_22__Name" name="Sites[22].Name" type="hidden" value="Dakar Terminal Production">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_23" name="Sites[23].Selected" text="DBGT (Training)" type="checkbox" value="true"><input name="Sites[23].Selected" type="hidden" value="false">
+                                        DBGT (Training)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_23__Id" name="Sites[23].Id" type="hidden" value="51">
+                                        <input id="Sites_23__Name" name="Sites[23].Name" type="hidden" value="DBGT (Training)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_24" name="Sites[24].Selected" text="DIT Formation" type="checkbox" value="true"><input name="Sites[24].Selected" type="hidden" value="false">
+                                        DIT Formation
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_24__Id" name="Sites[24].Id" type="hidden" value="19">
+                                        <input id="Sites_24__Name" name="Sites[24].Name" type="hidden" value="DIT Formation">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_25" name="Sites[25].Selected" text="DIT Training" type="checkbox" value="true"><input name="Sites[25].Selected" type="hidden" value="false">
+                                        DIT Training
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_25__Id" name="Sites[25].Id" type="hidden" value="21">
+                                        <input id="Sites_25__Name" name="Sites[25].Name" type="hidden" value="DIT Training">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_26" name="Sites[26].Selected" text="Douala International Terminal" type="checkbox" value="true"><input name="Sites[26].Selected" type="hidden" value="false">
+                                        Douala International Terminal
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_26__Id" name="Sites[26].Id" type="hidden" value="7">
+                                        <input id="Sites_26__Name" name="Sites[26].Name" type="hidden" value="Douala International Terminal">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_27" name="Sites[27].Selected" text="EBK" type="checkbox" value="true"><input name="Sites[27].Selected" type="hidden" value="false">
+                                        EBK
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_27__Id" name="Sites[27].Id" type="hidden" value="14">
+                                        <input id="Sites_27__Name" name="Sites[27].Name" type="hidden" value="EBK">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_28" name="Sites[28].Selected" text="Freetown Terminal (Training)" type="checkbox" value="true"><input name="Sites[28].Selected" type="hidden" value="false">
+                                        Freetown Terminal (Training)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_28__Id" name="Sites[28].Id" type="hidden" value="38">
+                                        <input id="Sites_28__Name" name="Sites[28].Name" type="hidden" value="Freetown Terminal (Training)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_29" name="Sites[29].Selected" text="Kigali (Training)" type="checkbox" value="true"><input name="Sites[29].Selected" type="hidden" value="false">
+                                        Kigali (Training)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_29__Id" name="Sites[29].Id" type="hidden" value="46">
+                                        <input id="Sites_29__Name" name="Sites[29].Name" type="hidden" value="Kigali (Training)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_30" name="Sites[30].Selected" text="Kribi" type="checkbox" value="true"><input name="Sites[30].Selected" type="hidden" value="false">
+                                        Kribi
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_30__Id" name="Sites[30].Id" type="hidden" value="18">
+                                        <input id="Sites_30__Name" name="Sites[30].Name" type="hidden" value="Kribi">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_31" name="Sites[31].Selected" text="Kribi Conteneurs Terminal (Formation)" type="checkbox" value="true"><input name="Sites[31].Selected" type="hidden" value="false">
+                                        Kribi Conteneurs Terminal (Formation)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_31__Id" name="Sites[31].Id" type="hidden" value="49">
+                                        <input id="Sites_31__Name" name="Sites[31].Name" type="hidden" value="Kribi Conteneurs Terminal (Formation)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_32" name="Sites[32].Selected" text="Lomé Terminal (Formation)" type="checkbox" value="true"><input name="Sites[32].Selected" type="hidden" value="false">
+                                        Lomé Terminal (Formation)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_32__Id" name="Sites[32].Id" type="hidden" value="50">
+                                        <input id="Sites_32__Name" name="Sites[32].Name" type="hidden" value="Lomé Terminal (Formation)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_33" name="Sites[33].Selected" text="Mombassa Container Terminal (Training)" type="checkbox" value="true"><input name="Sites[33].Selected" type="hidden" value="false">
+                                        Mombassa Container Terminal (Training)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_33__Id" name="Sites[33].Id" type="hidden" value="16">
+                                        <input id="Sites_33__Name" name="Sites[33].Name" type="hidden" value="Mombassa Container Terminal (Training)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_34" name="Sites[34].Selected" text="Moroni Terminal (Formation)" type="checkbox" value="true"><input name="Sites[34].Selected" type="hidden" value="false">
+                                        Moroni Terminal (Formation)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_34__Id" name="Sites[34].Id" type="hidden" value="25">
+                                        <input id="Sites_34__Name" name="Sites[34].Name" type="hidden" value="Moroni Terminal (Formation)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_35" name="Sites[35].Selected" text="Niamey Terminal (Formation)" type="checkbox" value="true"><input name="Sites[35].Selected" type="hidden" value="false">
+                                        Niamey Terminal (Formation)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_35__Id" name="Sites[35].Id" type="hidden" value="44">
+                                        <input id="Sites_35__Name" name="Sites[35].Name" type="hidden" value="Niamey Terminal (Formation)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_36" name="Sites[36].Selected" text="OCT PROD" type="checkbox" value="true"><input name="Sites[36].Selected" type="hidden" value="false">
+                                        OCT PROD
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_36__Id" name="Sites[36].Id" type="hidden" value="27">
+                                        <input id="Sites_36__Name" name="Sites[36].Name" type="hidden" value="OCT PROD">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_37" name="Sites[37].Selected" text="Owendo Container Terminal (Formation)" type="checkbox" value="true"><input name="Sites[37].Selected" type="hidden" value="false">
+                                        Owendo Container Terminal (Formation)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_37__Id" name="Sites[37].Id" type="hidden" value="28">
+                                        <input id="Sites_37__Name" name="Sites[37].Name" type="hidden" value="Owendo Container Terminal (Formation)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_38" name="Sites[38].Selected" text="Port Gentil (Formation)" type="checkbox" value="true"><input name="Sites[38].Selected" type="hidden" value="false">
+                                        Port Gentil (Formation)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_38__Id" name="Sites[38].Id" type="hidden" value="53">
+                                        <input id="Sites_38__Name" name="Sites[38].Name" type="hidden" value="Port Gentil (Formation)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_39" name="Sites[39].Selected" text="RCA (Formation)" type="checkbox" value="true"><input name="Sites[39].Selected" type="hidden" value="false">
+                                        RCA (Formation)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_39__Id" name="Sites[39].Id" type="hidden" value="52">
+                                        <input id="Sites_39__Name" name="Sites[39].Name" type="hidden" value="RCA (Formation)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_40" name="Sites[40].Selected" text="Recette" type="checkbox" value="true"><input name="Sites[40].Selected" type="hidden" value="false">
+                                        Recette
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_40__Id" name="Sites[40].Id" type="hidden" value="9">
+                                        <input id="Sites_40__Name" name="Sites[40].Name" type="hidden" value="Recette">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_41" name="Sites[41].Selected" text="Recette Puteaux" type="checkbox" value="true"><input name="Sites[41].Selected" type="hidden" value="false">
+                                        Recette Puteaux
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_41__Id" name="Sites[41].Id" type="hidden" value="57">
+                                        <input id="Sites_41__Name" name="Sites[41].Name" type="hidden" value="Recette Puteaux">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_42" name="Sites[42].Selected" text="REdTEAMTEST" type="checkbox" value="true"><input name="Sites[42].Selected" type="hidden" value="false">
+                                        REdTEAMTEST
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_42__Id" name="Sites[42].Id" type="hidden" value="64">
+                                        <input id="Sites_42__Name" name="Sites[42].Name" type="hidden" value="REdTEAMTEST">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_43" name="Sites[43].Selected" text="San Pedro &amp; Pacoci (Formation)" type="checkbox" value="true"><input name="Sites[43].Selected" type="hidden" value="false">
+                                        San Pedro &amp; Pacoci (Formation)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_43__Id" name="Sites[43].Id" type="hidden" value="48">
+                                        <input id="Sites_43__Name" name="Sites[43].Name" type="hidden" value="San Pedro &amp; Pacoci (Formation)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_44" name="Sites[44].Selected" text="SEPBC" type="checkbox" value="true"><input name="Sites[44].Selected" type="hidden" value="false">
+                                        SEPBC
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_44__Id" name="Sites[44].Id" type="hidden" value="31">
+                                        <input id="Sites_44__Name" name="Sites[44].Name" type="hidden" value="SEPBC">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_45" name="Sites[45].Selected" text="SEPBC (Formation)" type="checkbox" value="true"><input name="Sites[45].Selected" type="hidden" value="false">
+                                        SEPBC (Formation)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_45__Id" name="Sites[45].Id" type="hidden" value="35">
+                                        <input id="Sites_45__Name" name="Sites[45].Name" type="hidden" value="SEPBC (Formation)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_46" name="Sites[46].Selected" text="sitedemo 35" type="checkbox" value="true"><input name="Sites[46].Selected" type="hidden" value="false">
+                                        sitedemo 35
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_46__Id" name="Sites[46].Id" type="hidden" value="66">
+                                        <input id="Sites_46__Name" name="Sites[46].Name" type="hidden" value="sitedemo 35">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_47" name="Sites[47].Selected" text="SOGECO Mauritanie (Formation)" type="checkbox" value="true"><input name="Sites[47].Selected" type="hidden" value="false">
+                                        SOGECO Mauritanie (Formation)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_47__Id" name="Sites[47].Id" type="hidden" value="45">
+                                        <input id="Sites_47__Name" name="Sites[47].Name" type="hidden" value="SOGECO Mauritanie (Formation)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_48" name="Sites[48].Selected" text="TCL" type="checkbox" value="true"><input name="Sites[48].Selected" type="hidden" value="false">
+                                        TCL
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_48__Id" name="Sites[48].Id" type="hidden" value="26">
+                                        <input id="Sites_48__Name" name="Sites[48].Name" type="hidden" value="TCL">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_49" name="Sites[49].Selected" text="Tema Container Terminal (Training)" type="checkbox" value="true"><input name="Sites[49].Selected" type="hidden" value="false">
+                                        Tema Container Terminal (Training)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_49__Id" name="Sites[49].Id" type="hidden" value="17">
+                                        <input id="Sites_49__Name" name="Sites[49].Name" type="hidden" value="Tema Container Terminal (Training)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_50" name="Sites[50].Selected" text="TEST" type="checkbox" value="true"><input name="Sites[50].Selected" type="hidden" value="false">
+                                        TEST
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_50__Id" name="Sites[50].Id" type="hidden" value="8">
+                                        <input id="Sites_50__Name" name="Sites[50].Name" type="hidden" value="TEST">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_51" name="Sites[51].Selected" text="TEST red team" type="checkbox" value="true"><input name="Sites[51].Selected" type="hidden" value="false">
+                                        TEST red team
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_51__Id" name="Sites[51].Id" type="hidden" value="63">
+                                        <input id="Sites_51__Name" name="Sites[51].Name" type="hidden" value="TEST red team">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_52" name="Sites[52].Selected" text="TICT Clearing (Training)" type="checkbox" value="true"><input name="Sites[52].Selected" type="hidden" value="false">
+                                        TICT Clearing (Training)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_52__Id" name="Sites[52].Id" type="hidden" value="10">
+                                        <input id="Sites_52__Name" name="Sites[52].Name" type="hidden" value="TICT Clearing (Training)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_53" name="Sites[53].Selected" text="TICT DEV" type="checkbox" value="true"><input name="Sites[53].Selected" type="hidden" value="false">
+                                        TICT DEV
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_53__Id" name="Sites[53].Id" type="hidden" value="6">
+                                        <input id="Sites_53__Name" name="Sites[53].Name" type="hidden" value="TICT DEV">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_54" name="Sites[54].Selected" text="TICT PROD" type="checkbox" value="true"><input name="Sites[54].Selected" type="hidden" value="false">
+                                        TICT PROD
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_54__Id" name="Sites[54].Id" type="hidden" value="30">
+                                        <input id="Sites_54__Name" name="Sites[54].Name" type="hidden" value="TICT PROD">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_55" name="Sites[55].Selected" text="Tincan Island Container Terminal" type="checkbox" value="true"><input name="Sites[55].Selected" type="hidden" value="false">
+                                        Tincan Island Container Terminal
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_55__Id" name="Sites[55].Id" type="hidden" value="1">
+                                        <input id="Sites_55__Name" name="Sites[55].Name" type="hidden" value="Tincan Island Container Terminal">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_56" name="Sites[56].Selected" text="Togo LMT" type="checkbox" value="true"><input name="Sites[56].Selected" type="hidden" value="false">
+                                        Togo LMT
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_56__Id" name="Sites[56].Id" type="hidden" value="69">
+                                        <input id="Sites_56__Name" name="Sites[56].Name" type="hidden" value="Togo LMT">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_57" name="Sites[57].Selected" text="Togo Terminal TEST 15/02" type="checkbox" value="true"><input name="Sites[57].Selected" type="hidden" value="false">
+                                        Togo Terminal TEST 15/02
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_57__Id" name="Sites[57].Id" type="hidden" value="12">
+                                        <input id="Sites_57__Name" name="Sites[57].Name" type="hidden" value="Togo Terminal TEST 15/02">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_58" name="Sites[58].Selected" text="TogoDev" type="checkbox" value="true"><input name="Sites[58].Selected" type="hidden" value="false">
+                                        TogoDev
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_58__Id" name="Sites[58].Id" type="hidden" value="20">
+                                        <input id="Sites_58__Name" name="Sites[58].Name" type="hidden" value="TogoDev">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_59" name="Sites[59].Selected" text="TPSA (Training)" type="checkbox" value="true"><input name="Sites[59].Selected" type="hidden" value="false">
+                                        TPSA (Training)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_59__Id" name="Sites[59].Id" type="hidden" value="54">
+                                        <input id="Sites_59__Name" name="Sites[59].Name" type="hidden" value="TPSA (Training)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_60" name="Sites[60].Selected" text="TVB Port au Prince Terminal (Formation)" type="checkbox" value="true"><input name="Sites[60].Selected" type="hidden" value="false">
+                                        TVB Port au Prince Terminal (Formation)
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_60__Id" name="Sites[60].Id" type="hidden" value="39">
+                                        <input id="Sites_60__Name" name="Sites[60].Name" type="hidden" value="TVB Port au Prince Terminal (Formation)">
+                                    </div>
+                                    <div>
+                                        <input style="vertical-align:3px}" id="chkLstItem_61" name="Sites[61].Selected" text="ZMT Formation" type="checkbox" value="true"><input name="Sites[61].Selected" type="hidden" value="false">
+                                        ZMT Formation
+                                        <input data-val="true" data-val-number="The field Id must be a number." id="Sites_61__Id" name="Sites[61].Id" type="hidden" value="67">
+                                        <input id="Sites_61__Name" name="Sites[61].Name" type="hidden" value="ZMT Formation">
+                                    </div>
+
+                        </div>
+                    </div>
+                    <div class="row pad_label">
+                        <div class="col-lg-3 txt_modal col-md-3 col-xs-3">
+                        </div>
+                        <div class="col-lg-8 col-md-8 col-xs-8 selected-sites">
+                            <label><strong>Sites sélectionnés:</strong></label>
+                            <label id="lblSelectedItems"></label>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-bs-dismiss="modal" aria-label="Close">Annuler</button>
+                            <button type="submit" class="btn btn-primary" data-changestate="false">Créer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+<input type="hidden" name="as_sfid" value="AAAAAAUfXsnFarG1WdFTxFln3etR6ukzx7WLAznEnoI2Iq7C1PBgSrxBs_EDqNcVbql19UN69eVEC15xkG9LzGP0meKXkcMDrpLJydfeP9Vr8LFCTnGh0cTU5owiDE5somUhP7gXONCsuRNMk8KF2br6aIxYTGW3guxKOFd-l7s81FflCg=="><input type="hidden" name="as_fid" value="93022676f3977057766a6f8e7725b678dee99757"></form></div>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        function onSiteCheckboxListItemChange() {
+            var checkedSites = $('[id*="chkLstItem_"]').filter(":checked");
+            var sitesArray = [];
+
+            for (let i = 0; i < checkedSites.length; ++i) {
+                sitesArray.push(checkedSites[i].getAttribute('text'));
+            }
+
+            $('#lblSelectedItems').html(sitesArray.join(', '));
+        }
+
+        function setSiteCheckboxListItemChangeEvent() {
+            var siteCheckboxes = $('[id*="chkLstItem_"]');
+
+            for (let i = 0; i < siteCheckboxes.length; ++i) {
+                $(siteCheckboxes[i]).on('change', function () {
+                    onSiteCheckboxListItemChange();
+                })
+            }
+        }
+
+        $(":submit").click(function () {
+            var changeState = this.getAttribute("data-changeState");
+            $("#changeState").val(changeState);
+        })
+
+        $("#confirmationButton").click(function () {
+            $("#mainForm").hide();
+            $("#confirmationMessage").show();
+        })
+
+        setSiteCheckboxListItemChangeEvent();
+        onSiteCheckboxListItemChange();
+    });
+</script>
+</body></html>
