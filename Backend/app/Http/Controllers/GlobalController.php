@@ -449,12 +449,9 @@ class GlobalController extends Controller
         {
             $customerUserId = $request->input('customerUserId', 1);
 
-            // Query to count items in user's cart
+            // Call stored procedure to count items in user's cart
             $result = DB::select(
-                "SELECT COUNT(ci.`Id`) as ItemCount
-                 FROM `Cart` c
-                 LEFT JOIN `CartItem` ci ON c.`Id` = ci.`CartId`
-                 WHERE c.`CustomerUserId` = ? AND c.`Deleted` = 0",
+                "CALL GetCurrentUserCartCount(?)",
                 array($customerUserId)
             );
 
@@ -600,6 +597,34 @@ class GlobalController extends Controller
         catch(Exception $exp)
         {
             throw $exp;
+        }
+    }
+
+    public function DeleteProforma(Request $request)
+    {
+        try
+        {
+            $invoiceId = $request->input('invoiceId');
+
+            // Mettre à jour la facture pour marquer comme supprimée (deleted = 1)
+            $result = DB::table('invoice')
+                ->where('Id', $invoiceId)
+                ->update(['Deleted' => 1]);
+
+            // Retourner le résultat
+            return response()->json([
+                'success' => $result > 0,
+                'message' => $result > 0 ? 'Proforma supprimée avec succès' : 'Erreur lors de la suppression',
+                'invoiceId' => $invoiceId
+            ]);
+        }
+        catch(Exception $exp)
+        {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur: ' . $exp->getMessage(),
+                'invoiceId' => $request->input('invoiceId')
+            ], 500);
         }
     }
 
@@ -897,5 +922,66 @@ class GlobalController extends Controller
             return response()->json(['error' => $exp->getMessage()], 500);
         }
     }
+
+    /**
+     * Generate complete proforma invoice (calculation + creation)
+     * Creates draft invoice with all line items and calculated tax
+     * Parameters are automatically retrieved from JobFile relationships
+     */
+    public function GenerateProforma(Request $request)
+    {
+        try {
+            $result = DB::select(
+                "CALL GenerateProforma(?, ?)",
+                [
+                    $request->input('JobFileId'),
+                    $request->input('BillingDate')
+                ]
+            );
+
+            return response()->json($result);
+        }
+        catch(Exception $exp) {
+            throw $exp;
+        }
+    }
+
+    /**
+     * Get all event families
+     * Calls stored procedure GetAllEventFamilies
+     */
+    public function GetEventFamilies(Request $request)
+    {
+        try {
+            $result = DB::select(
+                "CALL GetAllEventFamilies()"
+            );
+
+            return response()->json($result);
+        }
+        catch(Exception $exp) {
+            throw $exp;
+        }
+    }
+
+    /**
+     * Get all event types
+     * Calls stored procedure GetAllEventTypes
+     */
+    public function GetEventTypes(Request $request)
+    {
+        try {
+            $result = DB::select(
+                "CALL GetAllEventTypes()"
+            );
+
+            return response()->json($result);
+        }
+        catch(Exception $exp) {
+            throw $exp;
+        }
+    }
+
+
 
 }

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3306
--- Généré le : sam. 13 déc. 2025 à 22:17
+-- Généré le : sam. 27 déc. 2025 à 13:49
 -- Version du serveur : 8.0.27
 -- Version de PHP : 7.4.26
 
@@ -30,43 +30,59 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `AddInvoiceToCart` (IN `p_CustomerUs
     DECLARE v_CartId INT;
     DECLARE v_ExistingItem INT;
 
-    -- Récupérer ou créer le panier
-    SELECT `Id` INTO v_CartId 
-    FROM `Cart`
-    WHERE `CustomerUserId` = p_CustomerUserId AND `Deleted` = 0
+    SELECT Id INTO v_CartId 
+    FROM Cart
+    WHERE CustomerUserId = p_CustomerUserId AND Deleted = 0 AND IsSent = 0
     LIMIT 1;
 
-    -- Si pas de panier, en créer un
     IF v_CartId IS NULL THEN
-        INSERT INTO `Cart` (`CustomerUserId`, `CreatedDate`, `Deleted`)
-        VALUES (p_CustomerUserId, NOW(), 0);
+        INSERT INTO Cart (CustomerUserId, CreatedDate, Deleted, IsSent)
+        VALUES (p_CustomerUserId, NOW(), 0, 0);
         SET v_CartId = LAST_INSERT_ID();
     END IF;
 
-    -- Vérifier si la facture existe déjà dans le panier
     SELECT COUNT(*) INTO v_ExistingItem
-    FROM `CartItem`
-    WHERE `CartId` = v_CartId AND `InvoiceId` = p_InvoiceId;
+    FROM CartItem
+    WHERE CartId = v_CartId AND InvoiceId = p_InvoiceId;
 
-    -- Si la facture n'existe pas, l'ajouter
     IF v_ExistingItem = 0 THEN
-        INSERT INTO `CartItem` (
-            `CartId`, `InvoiceId`, `InvoicePaidAmount`, `InvoiceNumber`, `BillingDate`
+        INSERT INTO CartItem (
+            CartId, InvoiceId, InvoicePaidAmount, InvoiceNumber, BillingDate
         ) VALUES (
             v_CartId, p_InvoiceId, p_InvoicePaidAmount, p_InvoiceNumber, NOW()
         );
     END IF;
 
-    -- Retourner l'ID du panier et le nombre d'articles
     SELECT 
-        v_CartId AS `cartId`,
-        (SELECT COUNT(*) FROM `CartItem` WHERE `CartId` = v_CartId) AS `itemCount`;
+        v_CartId AS cartId,
+        (SELECT COUNT(*) FROM CartItem WHERE CartId = v_CartId) AS itemCount;
+    END$$
+
+DROP PROCEDURE IF EXISTS `AuthenticateUser`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AuthenticateUser` (IN `p_Email` VARCHAR(255))  BEGIN
+        SELECT Id AS UserId, CONCAT(FirstName, ' ', LastName) AS FullName, UserName AS Email, PasswordHash
+        FROM customerusers
+        WHERE UserName = p_Email
+        LIMIT 1;
+    END$$
+
+DROP PROCEDURE IF EXISTS `DeleteCustomUser`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `DeleteCustomUser` (IN `p_UserId` INT)  BEGIN
+    UPDATE `customerusers`
+    SET `CustomerUsersStatusId` = 5
+    WHERE `Id` = p_UserId;
+    
+    SELECT ROW_COUNT() AS `AffectedRows`;
 END$$
 
 DROP PROCEDURE IF EXISTS `DeleteInvoice`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `DeleteInvoice` (IN `p_InvoiceId` INT)  BEGIN
-     UPDATE invoice set DELETEd=0 WHERE id=p_InvoiceId;
-END$$
+                UPDATE invoice
+                SET Deleted = 1
+                WHERE Id = p_InvoiceId AND Deleted = 0;
+                
+                SELECT 1 AS Success, 'Facture supprimée avec succès' AS Message;
+            END$$
 
 DROP PROCEDURE IF EXISTS `DeleteYardItemEvent`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `DeleteYardItemEvent` (IN `p_EventTypeCode` VARCHAR(50), IN `p_YardItemNumber` VARCHAR(100), IN `p_EventDateString` DATETIME, IN `p_BillOfLadingNumber` VARCHAR(100))  BEGIN
@@ -101,6 +117,48 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `DeleteYardItemEvent` (IN `p_EventTy
     END IF;
 END$$
 
+DROP PROCEDURE IF EXISTS `GetAllConsigneesWithBLs`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllConsigneesWithBLs` ()  BEGIN
+    SELECT DISTINCT
+        tp.`Id`,
+        tp.`code`,
+        tp.`Label`,
+        COUNT(bl.`Id`) AS `BlCount`
+    FROM `thirdparty` tp
+    INNER JOIN `bl` ON tp.`Id` = bl.`ConsigneeId`
+    GROUP BY tp.`Id`, tp.`code`, tp.`Label`
+    ORDER BY tp.`Label` ASC;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetAllCustomUsers`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllCustomUsers` ()  BEGIN
+        SELECT 
+            cu.`Id`,
+            cu.`UserName`,
+            cu.`FirstName`,
+            cu.`LastName`,
+            'ATL' AS `Site`,
+            cu.`CompanyName`,
+            cu.`CompanyAddress`,
+            cu.`PhoneNumber`,
+            NULL AS `CellPhone`,
+            cus_type.`Label` AS `AccountType`,
+            cus_status.`Label` AS `Status`,
+            cu.`CustomerUsersStatusId`,
+            cu.`CustomerUsersTypeId`,
+            JSON_ARRAYAGG(tp.`code`) AS `ThirdPartyCodes`
+        FROM `customerusers` cu
+        LEFT JOIN `customeruserstype` cus_type ON cu.`CustomerUsersTypeId` = cus_type.`Id`
+        LEFT JOIN `customerusersstatus` cus_status ON cu.`CustomerUsersStatusId` = cus_status.`Id`
+        LEFT JOIN `customerusers_thirdparty` cut_tp ON cu.`Id` = cut_tp.`CustomerUsers_Id`
+        LEFT JOIN `thirdparty` tp ON cut_tp.`ThirdParty_Id` = tp.`Id`
+        WHERE cu.`UserName` IS NOT NULL 
+        AND cu.`UserName` != ''
+        AND cu.`CustomerUsersStatusId` != 5
+        GROUP BY cu.`Id`, cu.`UserName`, cu.`FirstName`, cu.`LastName`, cu.`CompanyName`, cu.`CompanyAddress`, cu.`PhoneNumber`, cus_type.`Label`, cus_status.`Label`, cu.`CustomerUsersStatusId`, cu.`CustomerUsersTypeId`
+        ORDER BY cu.`UserName` ASC;
+    END$$
+
 DROP PROCEDURE IF EXISTS `GetBLByNumber`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `GetBLByNumber` (IN `p_BlNumber` VARCHAR(100), IN `p_UserId` INT)  BEGIN
     DECLARE v_BlId INT;
@@ -117,6 +175,8 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetBLByNumber` (IN `p_BlNumber` VAR
         COUNT(bli.`Id`) AS `ItemCount`
     INTO v_BlId, v_ShipName, v_ArrivalDate, v_ItemCount
     FROM `BL` bl
+    JOIN thirdparty tp on tp.Id=bl.ConsigneeId
+    JOIN customerusers_thirdparty cut on cut.ThirdParty_Id=tp.Id and cut.CustomerUsers_Id=p_UserId
     LEFT JOIN `Call` c ON bl.`CallId` = c.`Id`
     LEFT JOIN `ThirdParty` tp_Shipper ON c.ThirdPartyId = tp_Shipper.`Id`
     LEFT JOIN `BLItem` bli ON bl.`Id` = bli.`BlId`
@@ -150,29 +210,38 @@ END$$
 
 DROP PROCEDURE IF EXISTS `GetCartByUserId`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `GetCartByUserId` (IN `p_CustomerUserId` INT)  BEGIN
-    -- Récupérer le panier et tous les articles avec les détails du BL
     SELECT 
-        c.`Id` AS cartId,
-        c.`CustomerUserId`,
-        c.`CreatedDate`,
-        ci.`Id` AS itemId,
-        ci.`InvoiceId`,
-        ci.`InvoicePaidAmount`,
-        ci.`InvoiceNumber`,
-        ci.`BillingDate`,
-        COALESCE(bl.`BlNumber`, '') AS `BlNumber`
-    FROM `Cart` c
-    LEFT JOIN `CartItem` ci ON c.`Id` = ci.`CartId`
-    LEFT JOIN `invoice` inv ON ci.`InvoiceId` = inv.`Id`
-    LEFT JOIN `invoiceitem` ii ON inv.`Id` = ii.`InvoiceId`
-    LEFT JOIN `jobfile` jf ON ii.`JobFileId` = jf.`Id`
-    LEFT JOIN `blitem_jobfile` bij ON jf.`Id` = bij.`JobFile_Id`
-    LEFT JOIN `blitem` bli ON bij.`BLItem_Id` = bli.`Id`
-    LEFT JOIN `bl` bl ON bli.`BlId` = bl.`Id`
-    WHERE c.`CustomerUserId` = p_CustomerUserId
-      AND c.`Deleted` = 0
-    ORDER BY c.`CreatedDate` DESC, ci.`Id` ASC;
-END$$
+        c.Id AS cartId,
+        c.CustomerUserId,
+        c.CreatedDate,
+        c.IsSent,
+        ci.Id AS itemId,
+        ci.InvoiceId,
+        ci.InvoicePaidAmount,
+        ci.InvoiceNumber,
+        ci.BillingDate,
+        COALESCE(bl.BlNumber, '') AS BlNumber
+    FROM Cart c
+    JOIN CartItem ci ON c.Id = ci.CartId
+    JOIN invoice inv ON ci.InvoiceId = inv.Id
+    LEFT JOIN (
+        SELECT DISTINCT 
+            ii.InvoiceId,
+            bl.BlNumber
+        FROM invoiceitem ii
+        JOIN jobfile jf ON ii.JobFileId = jf.Id
+        JOIN blitem_jobfile bij ON jf.Id = bij.JobFile_Id
+        JOIN blitem bli ON bij.BLItem_Id = bli.Id
+        JOIN bl ON bli.BlId = bl.Id
+        LIMIT 1
+    ) bl ON inv.Id = bl.InvoiceId
+    WHERE c.CustomerUserId = p_CustomerUserId
+      AND c.Deleted = 0
+      AND c.IsSent = 0
+      AND inv.StatusId!=4
+    ORDER BY c.CreatedDate DESC, ci.Id ASC
+    ;
+    END$$
 
 DROP PROCEDURE IF EXISTS `GetDetailsPerBLNumber`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `GetDetailsPerBLNumber` (IN `p_BlNumber` VARCHAR(100))  BEGIN
@@ -233,59 +302,59 @@ END$$
 
 DROP PROCEDURE IF EXISTS `GetInvoicesPerBLNumber`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `GetInvoicesPerBLNumber` (IN `p_BlNumber` VARCHAR(100), IN `p_CustomerUserId` INT)  BEGIN
-    SELECT 
-        inv.`Id` AS `id`,
-        inv.`InvoiceNumber` AS `invoiceNumber`,
-        'Invoice' AS `invoiceType`,
-        COALESCE(tp.`Label`, '') AS `client`,
-        DATE_FORMAT(inv.`ValIdationDate`, '%d/%m/%Y') AS `billingDate`,
-        DATE_FORMAT(inv.`ValIdationDate`, '%d/%m/%Y') AS `withdrawalDate`,
-        CONCAT(FORMAT(inv.`TotalAmount`, 2), ' XOF') AS `total`,
-        'XOF' AS `currencyCode`,
-        inv.`Id` AS `filterId`,
-        'STI' AS `journalType`,
-        bl.`BlNumber` AS `blNumber`,
-        bl.`Id` AS `blId`,
-        inv.`StatusId` AS `statusId`,
-        COALESCE(invs.`Label`, '') AS `statusLabel`,
-        CASE 
-            WHEN p_CustomerUserId IS NOT NULL 
-                 AND EXISTS (
-                    SELECT 1 FROM `Cart` c
-                    LEFT JOIN `CartItem` ci ON c.`Id` = ci.`CartId`
-                    WHERE c.`CustomerUserId` = p_CustomerUserId 
-                      AND c.`Deleted` = 0
-                      AND ci.`InvoiceId` = inv.`Id`
-                 ) THEN 1
-            ELSE 0
-        END AS `isInCart`,
-        COALESCE(
-            JSON_ARRAYAGG(
-                JSON_OBJECT(
-                    'id', CAST(bli.`Id` AS CHAR),
-                    'number', COALESCE(bli.`Number`, ''),
-                    'type', CONCAT('[', COALESCE(bit.`Label`, ''), ']'),
-                    'description', COALESCE(ci.`NumberOfPackages`, ''),
-                    'isDraft', FALSE,
-                    'dnPrintable', FALSE
-                )
-            ),
-            JSON_ARRAY()
-        ) AS `yardItems`
-    FROM `invoice` inv
-    LEFT JOIN `invoicestatus` invs ON inv.`StatusId` = invs.`Id`
-    LEFT JOIN `thirdparty` tp ON inv.`BilledThirdPartyId` = tp.`Id`
-    LEFT JOIN `invoiceitem` ii ON inv.`Id` = ii.`InvoiceId`
-    LEFT JOIN `jobfile` jf ON ii.`JobFileId` = jf.`Id`
-    LEFT JOIN `blitem_jobfile` bij ON jf.`Id` = bij.`JobFile_Id`
-    LEFT JOIN `blitem` bli ON bij.`BLItem_Id` = bli.`Id`
-    LEFT JOIN `yarditemtype` bit ON bli.`ItemTypeId` = bit.`Id`
-    LEFT JOIN `commodityitem` ci ON bli.`Id` = ci.`BlItemId`
-    LEFT JOIN `bl` bl ON bli.`BlId` = bl.`Id`
-    WHERE bl.`BlNumber` = p_BlNumber
-    GROUP BY inv.`Id`, inv.`InvoiceNumber`, tp.`Label`, inv.`ValIdationDate`, inv.`TotalAmount`, bl.`BlNumber`, bl.`Id`, inv.`StatusId`, invs.`Label`
-    ORDER BY inv.`ValIdationDate` DESC;
-END$$
+                SELECT 
+                    inv.Id AS id,
+                    inv.InvoiceNumber AS invoiceNumber,
+                    'Invoice' AS invoiceType,
+                    COALESCE(tp.Label, '') AS client,
+                    DATE_FORMAT(inv.ValIdationDate, '%d/%m/%Y') AS billingDate,
+                    DATE_FORMAT(inv.ValIdationDate, '%d/%m/%Y') AS withdrawalDate,
+                    CONCAT(FORMAT(inv.TotalAmount, 2), ' XOF') AS total,
+                    'XOF' AS currencyCode,
+                    inv.Id AS filterId,
+                    'STI' AS journalType,
+                    bl.BlNumber AS blNumber,
+                    bl.Id AS blId,
+                    inv.StatusId AS statusId,
+                    COALESCE(invs.Label, '') AS statusLabel,
+                    CASE 
+                        WHEN p_CustomerUserId IS NOT NULL 
+                             AND EXISTS (
+                                SELECT 1 FROM Cart c
+                                LEFT JOIN CartItem ci ON c.Id = ci.CartId
+                                WHERE c.CustomerUserId = p_CustomerUserId 
+                                  AND c.Deleted = 0
+                                  AND ci.InvoiceId = inv.Id
+                             ) THEN 1
+                        ELSE 0
+                    END AS isInCart,
+                    COALESCE(
+                        JSON_ARRAYAGG(
+                            JSON_OBJECT(
+                                'id', CAST(bli.Id AS CHAR),
+                                'number', COALESCE(bli.Number, ''),
+                                'type', CONCAT('[', COALESCE(bit.Label, ''), ']'),
+                                'description', COALESCE(ci.NumberOfPackages, ''),
+                                'isDraft', FALSE,
+                                'dnPrintable', FALSE
+                            )
+                        ),
+                        JSON_ARRAY()
+                    ) AS yardItems
+                FROM invoice inv
+                LEFT JOIN invoicestatus invs ON inv.StatusId = invs.Id
+                LEFT JOIN thirdparty tp ON inv.BilledThirdPartyId = tp.Id
+                LEFT JOIN invoiceitem ii ON inv.Id = ii.InvoiceId
+                LEFT JOIN jobfile jf ON ii.JobFileId = jf.Id
+                LEFT JOIN blitem_jobfile bij ON jf.Id = bij.JobFile_Id
+                LEFT JOIN blitem bli ON bij.BLItem_Id = bli.Id
+                LEFT JOIN yarditemtype bit ON bli.ItemTypeId = bit.Id
+                LEFT JOIN commodityitem ci ON bli.Id = ci.BlItemId
+                LEFT JOIN bl bl ON bli.BlId = bl.Id
+                WHERE bl.BlNumber = p_BlNumber AND inv.Deleted = 0
+                GROUP BY inv.Id, inv.InvoiceNumber, tp.Label, inv.ValIdationDate, inv.TotalAmount, bl.BlNumber, bl.Id, inv.StatusId, invs.Label
+                ORDER BY inv.ValIdationDate DESC;
+            END$$
 
 DROP PROCEDURE IF EXISTS `GetPendingInvoicingItemsPerBLNumber`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `GetPendingInvoicingItemsPerBLNumber` (IN `p_BlNumber` VARCHAR(100))  BEGIN
@@ -294,6 +363,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetPendingInvoicingItemsPerBLNumber
         COALESCE(bli.`Number`, '') AS `number`,
         CONCAT('[', COALESCE(bit.`Label`, ''), ']') AS `type`,
         COALESCE(ci.`NumberOfPackages`, '') AS `description`,
+        COALESCE(jf.`Id`, 0) AS `jobFileId`,
         FALSE AS `isDraft`,
         FALSE AS `dnPrintable`
     FROM `blitem` bli
@@ -344,45 +414,100 @@ END$$
 
 DROP PROCEDURE IF EXISTS `GetYardItemTrackingMovements`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `GetYardItemTrackingMovements` (IN `p_YardItemId` INT, IN `p_YardItemNumber` VARCHAR(100), IN `p_BillOfLadingNumber` VARCHAR(100))  BEGIN
-    SELECT 
-        COALESCE(evt.`EventDate`, '') AS `Date`,
-        COALESCE(et.`Label`, '') AS `EventTypeName`,
-        COALESCE(et.`Code`, '') AS `EventTypeCode`,
-        COALESCE('True', '') AS `CreatedByIES`,
-        COALESCE('', '') AS `Position`
-    FROM `event` evt
-    LEFT JOIN `eventtype` et ON evt.`EventTypeId` = et.`Id`
-    LEFT JOIN `jobfile` jf ON evt.`JobFileId` = jf.`Id`
-    LEFT JOIN `blitem_jobfile` bij ON jf.`Id` = bij.`JobFile_Id`
-    LEFT JOIN `blitem` bli ON bij.`BLItem_Id` = bli.`Id`
-    LEFT JOIN `bl` bl ON bli.`BlId` = bl.`Id`
-    WHERE bli.`Number` = p_YardItemNumber
-    AND bl.`BlNumber` = p_BillOfLadingNumber
-    ORDER BY evt.`EventDate` DESC;
+    SELECT
+        evt.EventDate AS Date,
+        et.Label AS EventTypeName,
+        et.Code AS EventTypeCode,
+        'True' AS CreatedByIES,
+        '' AS Position
+    FROM event evt
+    INNER JOIN eventtype et ON evt.EventTypeId = et.Id
+    INNER JOIN jobfile jf ON evt.JobFileId = jf.Id
+    INNER JOIN blitem_jobfile bij ON jf.Id = bij.JobFile_Id
+    INNER JOIN blitem bli ON bij.BLItem_Id = bli.Id
+    INNER JOIN bl ON bli.BlId = bl.Id
+    WHERE bli.Number = p_YardItemNumber
+    AND bl.BlNumber = p_BillOfLadingNumber
+    ORDER BY evt.EventDate DESC;
 END$$
+
+DROP PROCEDURE IF EXISTS `MarkCartAsPaid`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `MarkCartAsPaid` (IN `p_CartId` INT)  BEGIN
+    UPDATE Cart
+    SET IsSent = 1
+    WHERE Id = p_CartId;
+    
+    SELECT ROW_COUNT() AS affectedRows;
+    END$$
 
 DROP PROCEDURE IF EXISTS `RemoveInvoiceFromCart`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `RemoveInvoiceFromCart` (IN `p_CustomerUserId` INT, IN `p_InvoiceId` INT)  BEGIN
     DECLARE v_CartId INT;
 
-    -- Récupérer le panier de l'utilisateur
-    SELECT `Id` INTO v_CartId
-    FROM `Cart`
-    WHERE `CustomerUserId` = p_CustomerUserId AND `Deleted` = 0
+    SELECT Id INTO v_CartId
+    FROM Cart
+    WHERE CustomerUserId = p_CustomerUserId AND Deleted = 0 AND IsSent = 0
     LIMIT 1;
 
     IF v_CartId IS NOT NULL THEN
-        -- Supprimer l'article du panier
-        DELETE FROM `CartItem`
-        WHERE `CartId` = v_CartId AND `InvoiceId` = p_InvoiceId;
+        DELETE FROM CartItem
+        WHERE CartId = v_CartId AND InvoiceId = p_InvoiceId;
 
-        -- Retourner le nombre d'articles restants
         SELECT 
             v_CartId AS cartId,
-            (SELECT COUNT(*) FROM `CartItem` WHERE `CartId` = v_CartId) AS itemCount;
+            (SELECT COUNT(*) FROM CartItem WHERE CartId = v_CartId) AS itemCount;
     ELSE
         SELECT 0 AS cartId, 0 AS itemCount;
     END IF;
+    END$$
+
+DROP PROCEDURE IF EXISTS `UpdateCustomUserInfo`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateCustomUserInfo` (IN `p_UserId` INT, IN `p_FirstName` VARCHAR(2000), IN `p_LastName` VARCHAR(2000), IN `p_PhoneNumber` VARCHAR(100), IN `p_CellPhone` VARCHAR(100), IN `p_CompanyName` VARCHAR(2000), IN `p_CompanyAddress` VARCHAR(2000), IN `p_AccountType` INT)  BEGIN
+    UPDATE `customerusers`
+    SET 
+        `FirstName` = p_FirstName,
+        `LastName` = p_LastName,
+        `PhoneNumber` = p_PhoneNumber,
+        `CompanyName` = p_CompanyName,
+        `CompanyAddress` = p_CompanyAddress,
+        `CustomerUsersTypeId` = p_AccountType
+    WHERE `Id` = p_UserId;
+    
+    SELECT ROW_COUNT() AS `AffectedRows`;
+END$$
+
+DROP PROCEDURE IF EXISTS `UpdateCustomUserStatus`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateCustomUserStatus` (IN `p_UserId` INT, IN `p_StatusId` INT)  BEGIN
+    UPDATE `customerusers`
+    SET `CustomerUsersStatusId` = p_StatusId
+    WHERE `Id` = p_UserId;
+    
+    SELECT ROW_COUNT() AS `AffectedRows`;
+END$$
+
+DROP PROCEDURE IF EXISTS `UpdateCustomUserThirdPartyCodes`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateCustomUserThirdPartyCodes` (IN `p_UserId` INT, IN `p_ThirdPartyCodesJson` JSON)  BEGIN
+    DECLARE v_Index INT DEFAULT 0;
+    DECLARE v_Count INT DEFAULT 0;
+    DECLARE v_ThirdPartyId INT;
+    
+    -- Supprimer les codes tiers existants pour cet utilisateur
+    DELETE FROM `customerusers_thirdparty`
+    WHERE `CustomerUsers_Id` = p_UserId;
+    
+    -- Ajouter les nouveaux codes tiers
+    SET v_Count = JSON_LENGTH(p_ThirdPartyCodesJson);
+    
+    WHILE v_Index < v_Count DO
+        SET v_ThirdPartyId = JSON_EXTRACT(p_ThirdPartyCodesJson, CONCAT('$[', v_Index, ']'));
+        
+        INSERT INTO `customerusers_thirdparty` (`CustomerUsers_Id`, `ThirdParty_Id`)
+        VALUES (p_UserId, v_ThirdPartyId);
+        
+        SET v_Index = v_Index + 1;
+    END WHILE;
+    
+    SELECT 'OK' AS `Result`;
 END$$
 
 DROP PROCEDURE IF EXISTS `UpdateInvoiceStatus`$$
@@ -399,8 +524,18 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateInvoiceStatus` (IN `p_Invoice
         InvoiceNumber = v_NextInvoiceNumber
     WHERE Id = p_InvoiceId AND Deleted = 0;
     
-    SELECT 1 AS Success, 'Facture validée' AS Message;
-END$$
+    -- Si le statut est 4 (Paid), mettre à jour IsSent pour les paniers avec toutes factures payées
+        UPDATE Cart c
+        SET c.IsSent = 1
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM CartItem ci
+            LEFT JOIN invoice inv ON ci.InvoiceId = inv.Id
+            WHERE ci.CartId = c.Id
+            AND inv.StatusId = 3
+        );
+   
+    END$$
 
 DELIMITER ;
 
@@ -412,12 +547,12 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `area`;
 CREATE TABLE IF NOT EXISTS `area` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Code` varchar(100) DEFAULT NULL,
-  `TerminalId` int DEFAULT NULL,
+  `TerminalId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_Area_Terminal` (`TerminalId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `area`
@@ -434,72 +569,70 @@ INSERT INTO `area` (`Id`, `Code`, `TerminalId`) VALUES
 
 DROP TABLE IF EXISTS `bl`;
 CREATE TABLE IF NOT EXISTS `bl` (
-  `Id` int NOT NULL AUTO_INCREMENT,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `BlNumber` varchar(100) DEFAULT NULL,
-  `ConsigneeId` int DEFAULT NULL,
-  `RelatedCustomerId` int DEFAULT NULL,
-  `CallId` int DEFAULT NULL,
+  `ConsigneeId` int UNSIGNED DEFAULT NULL,
+  `RelatedCustomerId` int UNSIGNED DEFAULT NULL,
+  `CallId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_BL_Consignee` (`ConsigneeId`),
   KEY `FK_BL_RelatedCustomer` (`RelatedCustomerId`),
   KEY `FK_BL_Call` (`CallId`)
-) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=56 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `bl`
 --
 
 INSERT INTO `bl` (`Id`, `BlNumber`, `ConsigneeId`, `RelatedCustomerId`, `CallId`) VALUES
-(1, 'EBKG50590500', 0, 2, 1),
 (2, 'AEV61087218', 5, 3, 2),
 (3, 'MEDU54857008', 6, 4, 3),
-(4, 'HAPG59434443', 5, 5, 4),
-(5, 'OOCL41075590', 6, 6, 5),
-(6, 'EVER64557303', 7, 7, 6),
-(7, 'COSC96520163', 8, 8, 7),
-(8, 'YMLN85266502', 9, 9, 8),
-(9, 'EBKG69895473', 10, 10, 9),
-(10, 'AEV53640107', 11, 11, 10),
-(11, 'MEDU65294359', 12, 12, 11),
-(12, 'HAPG53204800', 13, 13, 12),
-(13, 'OOCL55188258', 14, 14, 13),
-(14, 'EVER69977921', 15, 15, 14),
-(15, 'COSC28451360', 7, 16, 15),
-(16, 'YMLN97947302', 8, 17, 16),
-(17, 'EBKG54098502', 9, 18, 17),
-(18, 'AEV45987466', 10, 19, 18),
-(19, 'MEDU68854563', 11, 20, 19),
-(20, 'HAPG48681627', 12, 2, 20),
-(21, 'OOCL29837741', 13, 3, 21),
-(22, 'EVER41303193', 14, 4, 22),
-(23, 'COSC84782369', 5, 5, 23),
-(24, 'YMLN77749504', 6, 6, 24),
-(25, 'EBKG90487082', 7, 7, 25),
-(26, 'AEV52196302', 8, 8, 26),
-(27, 'MEDU57713276', 9, 9, 27),
-(28, 'HAPG43795044', 10, 10, 28),
-(29, 'OOCL97811313', 11, 11, 29),
-(30, 'EVER45814409', 12, 12, 30),
-(31, 'COSC55205452', 13, 13, 31),
-(32, 'YMLN30662769', 14, 14, 32),
-(33, 'EBKG49124230', 15, 15, 33),
-(34, 'AEV73687587', 15, 16, 34),
-(35, 'MEDU78308577', 0, 17, 35),
-(36, 'HAPG31864521', 5, 18, 36),
-(37, 'OOCL86507212', 6, 19, 37),
-(38, 'EVER92686375', 7, 20, 38),
-(39, 'COSC66084921', 8, 2, 39),
-(40, 'YMLN39158494', 9, 3, 40),
-(41, 'EBKG43625368', 10, 4, 41),
-(42, 'AEV74117863', 5, 5, 42),
-(43, 'MEDU52493795', 6, 6, 43),
-(44, 'HAPG54434068', 7, 7, 44),
-(45, 'OOCL48156911', 8, 8, 45),
-(46, 'EVER69194775', 9, 9, 46),
-(47, 'COSC53554945', 10, 10, 47),
-(48, 'YMLN37437956', 11, 11, 48),
-(49, 'EBKG54528093', 12, 12, 49),
-(50, 'AEV63324556', 13, 13, 50);
+(4, 'HAPG59434443', 7, 5, 4),
+(5, 'OOCL41075590', 8, 6, 5),
+(6, 'EVER64557303', 9, 7, 6),
+(7, 'COSC96520163', 10, 8, 7),
+(8, 'YMLN85266502', 11, 9, 8),
+(9, 'EBKG69895473', 12, 10, 9),
+(10, 'AEV53640107', 13, 11, 10),
+(11, 'MEDU65294359', 14, 12, 11),
+(12, 'HAPG53204800', 15, 13, 12),
+(13, 'OOCL55188258', 20, 14, 13),
+(14, 'EVER69977921', 21, 15, 14),
+(15, 'COSC28451360', 22, 16, 15),
+(16, 'YMLN97947302', 23, 17, 16),
+(17, 'EBKG54098502', 5, 18, 17),
+(18, 'AEV45987466', 6, 19, 18),
+(19, 'MEDU68854563', 7, 20, 19),
+(20, 'HAPG48681627', 8, 2, 20),
+(21, 'OOCL29837741', 9, 3, 21),
+(22, 'EVER41303193', 10, 4, 22),
+(23, 'COSC84782369', 11, 5, 23),
+(24, 'YMLN77749504', 12, 6, 24),
+(25, 'EBKG90487082', 13, 7, 25),
+(26, 'AEV52196302', 14, 8, 26),
+(27, 'MEDU57713276', 15, 9, 27),
+(28, 'HAPG43795044', 20, 10, 28),
+(29, 'OOCL97811313', 21, 11, 29),
+(30, 'EVER45814409', 22, 12, 30),
+(31, 'COSC55205452', 23, 13, 31),
+(32, 'YMLN30662769', 5, 14, 32),
+(33, 'EBKG49124230', 6, 15, 33),
+(34, 'AEV73687587', 7, 16, 34),
+(36, 'HAPG31864521', 8, 18, 36),
+(37, 'OOCL86507212', 9, 19, 37),
+(38, 'EVER92686375', 10, 20, 38),
+(39, 'COSC66084921', 11, 2, 39),
+(40, 'YMLN39158494', 12, 3, 40),
+(41, 'EBKG43625368', 13, 4, 41),
+(42, 'AEV74117863', 14, 5, 42),
+(43, 'MEDU52493795', 15, 6, 43),
+(44, 'HAPG54434068', 20, 7, 44),
+(45, 'OOCL48156911', 21, 8, 45),
+(46, 'EVER69194775', 22, 9, 46),
+(47, 'COSC53554945', 23, 10, 47),
+(48, 'YMLN37437956', 5, 11, 48),
+(49, 'EBKG54528093', 6, 12, 49),
+(50, 'AEV63324556', 7, 13, 50);
 
 -- --------------------------------------------------------
 
@@ -509,13 +642,13 @@ INSERT INTO `bl` (`Id`, `BlNumber`, `ConsigneeId`, `RelatedCustomerId`, `CallId`
 
 DROP TABLE IF EXISTS `blitem`;
 CREATE TABLE IF NOT EXISTS `blitem` (
-  `Id` int NOT NULL AUTO_INCREMENT,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Number` varchar(100) DEFAULT NULL,
   `Weight` decimal(10,0) DEFAULT NULL,
   `Volume` decimal(10,0) DEFAULT NULL,
-  `BlId` int DEFAULT NULL,
-  `ItemTypeId` int DEFAULT NULL,
-  `ItemCodeId` int DEFAULT NULL,
+  `BlId` int UNSIGNED DEFAULT NULL,
+  `ItemTypeId` int UNSIGNED DEFAULT NULL,
+  `ItemCodeId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_BLItem_BL` (`BlId`),
   KEY `FK_BLItem_ItemCode` (`ItemCodeId`),
@@ -586,8 +719,8 @@ INSERT INTO `blitem` (`Id`, `Number`, `Weight`, `Volume`, `BlId`, `ItemTypeId`, 
 
 DROP TABLE IF EXISTS `blitem_jobfile`;
 CREATE TABLE IF NOT EXISTS `blitem_jobfile` (
-  `BLItem_Id` int NOT NULL,
-  `JobFile_Id` int NOT NULL,
+  `BLItem_Id` int UNSIGNED NOT NULL,
+  `JobFile_Id` int UNSIGNED NOT NULL,
   PRIMARY KEY (`BLItem_Id`,`JobFile_Id`),
   KEY `FK_BLItem_JobFile_JobFile` (`JobFile_Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
@@ -631,200 +764,22 @@ INSERT INTO `blitem_jobfile` (`BLItem_Id`, `JobFile_Id`) VALUES
 (47, 1),
 (48, 1),
 (50, 1),
-(2, 2),
-(3, 3),
-(4, 4),
-(5, 5),
-(6, 6),
-(7, 7),
-(8, 8),
-(9, 9),
-(10, 10),
-(11, 11),
-(12, 12),
-(13, 13),
-(14, 14),
-(15, 15),
-(1, 51),
-(1, 52),
-(2, 53),
-(2, 54),
-(3, 55),
-(3, 56),
 (4, 57),
-(4, 58),
-(4, 59),
-(4, 60),
-(4, 61),
-(4, 62),
-(4, 63),
-(5, 64),
 (5, 65),
-(5, 66),
-(5, 67),
-(5, 68),
-(5, 69),
-(5, 70),
-(6, 71),
-(6, 72),
 (7, 73),
-(7, 74),
-(7, 75),
-(7, 76),
-(7, 77),
-(7, 78),
-(7, 79),
-(8, 80),
-(8, 81),
-(9, 82),
-(9, 83),
-(10, 84),
-(10, 85),
-(11, 86),
-(11, 87),
-(12, 88),
-(12, 89),
 (13, 90),
-(13, 91),
-(13, 92),
-(13, 93),
-(13, 94),
-(13, 95),
-(13, 96),
 (14, 97),
-(14, 98),
-(14, 99),
-(14, 100),
-(14, 101),
-(14, 102),
-(14, 103),
-(15, 104),
-(15, 105),
-(16, 106),
-(16, 107),
-(17, 108),
-(17, 109),
-(18, 110),
-(18, 111),
-(19, 112),
-(19, 113),
 (20, 114),
-(20, 115),
-(20, 116),
-(20, 117),
-(20, 118),
-(20, 119),
-(20, 120),
-(21, 121),
-(21, 122),
-(22, 123),
-(22, 124),
-(23, 125),
-(23, 126),
 (24, 127),
-(24, 128),
-(24, 129),
-(24, 130),
-(24, 131),
-(24, 132),
-(24, 133),
-(25, 134),
-(25, 135),
-(26, 136),
-(26, 137),
-(27, 138),
-(27, 139),
 (28, 140),
-(28, 141),
-(28, 142),
-(28, 143),
-(28, 144),
-(28, 145),
-(28, 146),
-(29, 147),
-(29, 148),
-(30, 149),
-(30, 150),
-(31, 151),
-(31, 152),
-(32, 153),
-(32, 154),
-(33, 155),
-(33, 156),
 (34, 157),
-(34, 158),
-(34, 159),
-(34, 160),
-(34, 161),
-(34, 162),
-(34, 163),
 (35, 164),
-(35, 165),
-(35, 166),
-(35, 167),
-(35, 168),
-(35, 169),
-(35, 170),
-(36, 171),
-(36, 172),
-(37, 173),
-(37, 174),
-(38, 175),
-(38, 176),
 (39, 177),
-(39, 178),
-(39, 179),
-(39, 180),
-(39, 181),
-(39, 182),
-(39, 183),
-(40, 184),
-(40, 185),
 (41, 186),
-(41, 187),
-(41, 188),
-(41, 189),
-(41, 190),
-(41, 191),
-(41, 192),
-(42, 193),
-(42, 194),
-(42, 195),
-(42, 196),
-(42, 197),
 (42, 198),
-(42, 199),
-(43, 200),
-(43, 201),
 (44, 202),
-(44, 203),
-(44, 204),
-(44, 205),
-(44, 206),
-(44, 207),
-(44, 208),
-(45, 209),
-(45, 210),
-(46, 211),
 (46, 212),
-(46, 213),
-(46, 214),
-(46, 215),
-(46, 216),
-(46, 217),
-(47, 218),
-(47, 219),
-(48, 220),
-(48, 221),
-(49, 222),
-(49, 223),
-(49, 224),
-(49, 225),
-(49, 226),
-(49, 227),
-(49, 228),
-(50, 229),
-(50, 230);
+(49, 222);
 
 -- --------------------------------------------------------
 
@@ -834,21 +789,20 @@ INSERT INTO `blitem_jobfile` (`BLItem_Id`, `JobFile_Id`) VALUES
 
 DROP TABLE IF EXISTS `call`;
 CREATE TABLE IF NOT EXISTS `call` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `CallNumber` varchar(40) DEFAULT NULL,
   `VesselArrivalDate` datetime DEFAULT NULL,
   `VesselDepatureDate` datetime DEFAULT NULL,
-  `ThirdPartyId` int DEFAULT NULL,
+  `ThirdPartyId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_Call_ThirdParty` (`ThirdPartyId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=77 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `call`
 --
 
 INSERT INTO `call` (`Id`, `CallNumber`, `VesselArrivalDate`, `VesselDepatureDate`, `ThirdPartyId`) VALUES
-(0, 'MSC-001', '2025-09-03 03:00:00', '2025-09-15 03:00:00', 0),
 (1, 'CALL_2025_001', '2025-11-10 08:00:00', '2025-11-25 18:00:00', 1),
 (2, 'CALL_2025_002', '2025-11-15 10:30:00', '2025-11-30 20:00:00', 2),
 (3, 'CALL_2025_003', '2025-11-18 14:00:00', '2025-12-05 22:00:00', 3),
@@ -868,59 +822,59 @@ INSERT INTO `call` (`Id`, `CallNumber`, `VesselArrivalDate`, `VesselDepatureDate
 (17, 'CALL_2025_0171', '2025-07-14 00:00:00', '2025-07-24 00:00:00', 4),
 (18, 'CALL_2025_0761', '2025-03-28 00:00:00', '2025-04-07 00:00:00', 4),
 (19, 'CALL_2025_0963', '2025-01-20 00:00:00', '2025-01-30 00:00:00', 4),
-(20, 'CALL_2025_0468', '2025-08-10 00:00:00', '2025-08-20 00:00:00', 5),
-(21, 'CALL_2025_0925', '2025-03-11 00:00:00', '2025-03-21 00:00:00', 5),
-(22, 'CALL_2025_0041', '2025-06-29 00:00:00', '2025-07-09 00:00:00', 5),
-(23, 'CALL_2025_0908', '2025-03-02 00:00:00', '2025-03-12 00:00:00', 5),
-(24, 'CALL_2025_0099', '2025-01-05 00:00:00', '2025-01-15 00:00:00', 5),
-(25, 'CALL_2025_0072', '2025-06-29 00:00:00', '2025-07-09 00:00:00', 6),
-(26, 'CALL_2025_0690', '2025-08-04 00:00:00', '2025-08-14 00:00:00', 6),
-(27, 'CALL_2025_0772', '2025-06-09 00:00:00', '2025-06-19 00:00:00', 6),
-(28, 'CALL_2025_0210', '2025-01-13 00:00:00', '2025-01-23 00:00:00', 6),
-(29, 'CALL_2025_0827', '2025-06-28 00:00:00', '2025-07-08 00:00:00', 6),
-(30, 'CALL_2025_0022', '2025-05-08 00:00:00', '2025-05-18 00:00:00', 7),
-(31, 'CALL_2025_0982', '2025-06-17 00:00:00', '2025-06-27 00:00:00', 7),
-(32, 'CALL_2025_0594', '2025-02-15 00:00:00', '2025-02-25 00:00:00', 7),
-(33, 'CALL_2025_0365', '2025-09-26 00:00:00', '2025-10-06 00:00:00', 8),
-(34, 'CALL_2025_0090', '2025-02-22 00:00:00', '2025-03-04 00:00:00', 8),
-(35, 'CALL_2025_0767', '2025-09-22 00:00:00', '2025-10-02 00:00:00', 8),
-(36, 'CALL_2025_0066', '2025-03-08 00:00:00', '2025-03-18 00:00:00', 9),
-(37, 'CALL_2025_0981', '2025-07-29 00:00:00', '2025-08-08 00:00:00', 9),
-(38, 'CALL_2025_0880', '2025-05-28 00:00:00', '2025-06-07 00:00:00', 9),
-(39, 'CALL_2025_0701', '2025-01-04 00:00:00', '2025-01-14 00:00:00', 9),
-(40, 'CALL_2025_0752', '2025-05-27 00:00:00', '2025-06-06 00:00:00', 9),
-(41, 'CALL_2025_0527', '2025-04-15 00:00:00', '2025-04-25 00:00:00', 10),
-(42, 'CALL_2025_0358', '2025-07-18 00:00:00', '2025-07-28 00:00:00', 10),
-(43, 'CALL_2025_0147', '2025-02-18 00:00:00', '2025-02-28 00:00:00', 10),
-(44, 'CALL_2025_0146', '2025-02-16 00:00:00', '2025-02-26 00:00:00', 10),
-(45, 'CALL/2025/00045', '2025-05-03 00:00:00', '2025-05-05 00:00:00', 100),
-(46, 'CALL/2025/00046', '2025-11-24 00:00:00', '2025-12-01 00:00:00', 101),
-(47, 'CALL/2025/00047', '2025-01-28 00:00:00', '2025-02-02 00:00:00', 102),
-(48, 'CALL/2025/00048', '2025-05-11 00:00:00', '2025-05-13 00:00:00', 103),
+(20, 'CALL_2025_0468', '2025-08-10 00:00:00', '2025-08-20 00:00:00', 2),
+(21, 'CALL_2025_0925', '2025-03-11 00:00:00', '2025-03-21 00:00:00', 3),
+(22, 'CALL_2025_0041', '2025-06-29 00:00:00', '2025-07-09 00:00:00', 4),
+(23, 'CALL_2025_0908', '2025-03-02 00:00:00', '2025-03-12 00:00:00', 1),
+(24, 'CALL_2025_0099', '2025-01-05 00:00:00', '2025-01-15 00:00:00', 2),
+(25, 'CALL_2025_0072', '2025-06-29 00:00:00', '2025-07-09 00:00:00', 3),
+(26, 'CALL_2025_0690', '2025-08-04 00:00:00', '2025-08-14 00:00:00', 4),
+(27, 'CALL_2025_0772', '2025-06-09 00:00:00', '2025-06-19 00:00:00', 104),
+(28, 'CALL_2025_0210', '2025-01-13 00:00:00', '2025-01-23 00:00:00', 105),
+(29, 'CALL_2025_0827', '2025-06-28 00:00:00', '2025-07-08 00:00:00', 106),
+(30, 'CALL_2025_0022', '2025-05-08 00:00:00', '2025-05-18 00:00:00', 107),
+(31, 'CALL_2025_0982', '2025-06-17 00:00:00', '2025-06-27 00:00:00', 1),
+(32, 'CALL_2025_0594', '2025-02-15 00:00:00', '2025-02-25 00:00:00', 2),
+(33, 'CALL_2025_0365', '2025-09-26 00:00:00', '2025-10-06 00:00:00', 3),
+(34, 'CALL_2025_0090', '2025-02-22 00:00:00', '2025-03-04 00:00:00', 4),
+(35, 'CALL_2025_0767', '2025-09-22 00:00:00', '2025-10-02 00:00:00', 1),
+(36, 'CALL_2025_0066', '2025-03-08 00:00:00', '2025-03-18 00:00:00', 2),
+(37, 'CALL_2025_0981', '2025-07-29 00:00:00', '2025-08-08 00:00:00', 3),
+(38, 'CALL_2025_0880', '2025-05-28 00:00:00', '2025-06-07 00:00:00', 4),
+(39, 'CALL_2025_0701', '2025-01-04 00:00:00', '2025-01-14 00:00:00', 104),
+(40, 'CALL_2025_0752', '2025-05-27 00:00:00', '2025-06-06 00:00:00', 105),
+(41, 'CALL_2025_0527', '2025-04-15 00:00:00', '2025-04-25 00:00:00', 106),
+(42, 'CALL_2025_0358', '2025-07-18 00:00:00', '2025-07-28 00:00:00', 107),
+(43, 'CALL_2025_0147', '2025-02-18 00:00:00', '2025-02-28 00:00:00', 1),
+(44, 'CALL_2025_0146', '2025-02-16 00:00:00', '2025-02-26 00:00:00', 2),
+(45, 'CALL/2025/00045', '2025-05-03 00:00:00', '2025-05-05 00:00:00', 1),
+(46, 'CALL/2025/00046', '2025-11-24 00:00:00', '2025-12-01 00:00:00', 2),
+(47, 'CALL/2025/00047', '2025-01-28 00:00:00', '2025-02-02 00:00:00', 3),
+(48, 'CALL/2025/00048', '2025-05-11 00:00:00', '2025-05-13 00:00:00', 4),
 (49, 'CALL/2025/00049', '2025-10-13 00:00:00', '2025-10-15 00:00:00', 104),
 (50, 'CALL/2025/00050', '2025-06-21 00:00:00', '2025-06-26 00:00:00', 105),
 (51, 'CALL/2025/00051', '2025-08-03 00:00:00', '2025-08-10 00:00:00', 106),
 (52, 'CALL/2025/00052', '2025-06-28 00:00:00', '2025-07-02 00:00:00', 107),
-(53, 'CALL/2025/00053', '2025-05-13 00:00:00', '2025-05-16 00:00:00', 100),
-(54, 'CALL/2025/00054', '2025-01-30 00:00:00', '2025-02-01 00:00:00', 101),
-(55, 'CALL/2025/00055', '2025-06-09 00:00:00', '2025-06-14 00:00:00', 102),
-(56, 'CALL/2025/00056', '2025-04-11 00:00:00', '2025-04-18 00:00:00', 103),
+(53, 'CALL/2025/00053', '2025-05-13 00:00:00', '2025-05-16 00:00:00', 1),
+(54, 'CALL/2025/00054', '2025-01-30 00:00:00', '2025-02-01 00:00:00', 2),
+(55, 'CALL/2025/00055', '2025-06-09 00:00:00', '2025-06-14 00:00:00', 3),
+(56, 'CALL/2025/00056', '2025-04-11 00:00:00', '2025-04-18 00:00:00', 4),
 (57, 'CALL/2025/00057', '2025-05-29 00:00:00', '2025-06-02 00:00:00', 104),
 (58, 'CALL/2025/00058', '2025-05-13 00:00:00', '2025-05-16 00:00:00', 105),
 (59, 'CALL/2025/00059', '2025-03-22 00:00:00', '2025-03-28 00:00:00', 106),
 (60, 'CALL/2025/00060', '2025-05-03 00:00:00', '2025-05-08 00:00:00', 107),
-(61, 'CALL/2025/00061', '2025-04-12 00:00:00', '2025-04-18 00:00:00', 100),
-(62, 'CALL/2025/00062', '2025-07-26 00:00:00', '2025-07-30 00:00:00', 101),
-(63, 'CALL/2025/00063', '2025-08-15 00:00:00', '2025-08-18 00:00:00', 102),
-(64, 'CALL/2025/00064', '2025-10-09 00:00:00', '2025-10-12 00:00:00', 103),
+(61, 'CALL/2025/00061', '2025-04-12 00:00:00', '2025-04-18 00:00:00', 1),
+(62, 'CALL/2025/00062', '2025-07-26 00:00:00', '2025-07-30 00:00:00', 2),
+(63, 'CALL/2025/00063', '2025-08-15 00:00:00', '2025-08-18 00:00:00', 3),
+(64, 'CALL/2025/00064', '2025-10-09 00:00:00', '2025-10-12 00:00:00', 4),
 (65, 'CALL/2025/00065', '2025-11-03 00:00:00', '2025-11-09 00:00:00', 104),
 (66, 'CALL/2025/00066', '2025-09-11 00:00:00', '2025-09-13 00:00:00', 105),
 (67, 'CALL/2025/00067', '2025-11-14 00:00:00', '2025-11-17 00:00:00', 106),
 (68, 'CALL/2025/00068', '2025-01-20 00:00:00', '2025-01-22 00:00:00', 107),
-(69, 'CALL/2025/00069', '2025-07-06 00:00:00', '2025-07-12 00:00:00', 100),
-(70, 'CALL/2025/00070', '2025-08-10 00:00:00', '2025-08-13 00:00:00', 101),
-(71, 'CALL/2025/00071', '2025-05-18 00:00:00', '2025-05-21 00:00:00', 102),
-(72, 'CALL/2025/00072', '2025-03-02 00:00:00', '2025-03-08 00:00:00', 103),
+(69, 'CALL/2025/00069', '2025-07-06 00:00:00', '2025-07-12 00:00:00', 1),
+(70, 'CALL/2025/00070', '2025-08-10 00:00:00', '2025-08-13 00:00:00', 2),
+(71, 'CALL/2025/00071', '2025-05-18 00:00:00', '2025-05-21 00:00:00', 3),
+(72, 'CALL/2025/00072', '2025-03-02 00:00:00', '2025-03-08 00:00:00', 4),
 (73, 'CALL/2025/00073', '2025-03-06 00:00:00', '2025-03-13 00:00:00', 104),
 (74, 'CALL/2025/00074', '2025-01-15 00:00:00', '2025-01-17 00:00:00', 105),
 (75, 'CALL/2025/00075', '2025-10-26 00:00:00', '2025-10-31 00:00:00', 106),
@@ -934,20 +888,21 @@ INSERT INTO `call` (`Id`, `CallNumber`, `VesselArrivalDate`, `VesselDepatureDate
 
 DROP TABLE IF EXISTS `cart`;
 CREATE TABLE IF NOT EXISTS `cart` (
-  `Id` int NOT NULL AUTO_INCREMENT,
-  `CustomerUserId` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `CustomerUserId` int UNSIGNED DEFAULT NULL,
+  `IsSent` bit(1) NOT NULL DEFAULT b'0',
   `CreatedDate` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `Deleted` bit(1) NOT NULL DEFAULT b'0',
   PRIMARY KEY (`Id`),
   KEY `FK_Cart_CustomerUserId` (`CustomerUserId`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `cart`
 --
 
-INSERT INTO `cart` (`Id`, `CustomerUserId`, `CreatedDate`, `Deleted`) VALUES
-(2, 1, '2025-12-06 17:58:18', b'0');
+INSERT INTO `cart` (`Id`, `CustomerUserId`, `IsSent`, `CreatedDate`, `Deleted`) VALUES
+(2, 1, b'1', '2025-12-06 17:58:18', b'0');
 
 -- --------------------------------------------------------
 
@@ -957,23 +912,24 @@ INSERT INTO `cart` (`Id`, `CustomerUserId`, `CreatedDate`, `Deleted`) VALUES
 
 DROP TABLE IF EXISTS `cartitem`;
 CREATE TABLE IF NOT EXISTS `cartitem` (
-  `Id` int NOT NULL AUTO_INCREMENT,
-  `CartId` int NOT NULL,
-  `InvoiceId` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `InvoicePaidAmount` decimal(18,2) NOT NULL DEFAULT '0.00',
-  `InvoiceNumber` varchar(100) NOT NULL,
+  `InvoiceNumber` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `BillingDate` datetime DEFAULT NULL,
+  `CartId` int UNSIGNED DEFAULT NULL,
+  `InvoiceId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_CartItem_CartId` (`CartId`),
   KEY `FK_CartItem_InvoiceId` (`InvoiceId`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `cartitem`
 --
 
-INSERT INTO `cartitem` (`Id`, `CartId`, `InvoiceId`, `InvoicePaidAmount`, `InvoiceNumber`, `BillingDate`) VALUES
-(4, 2, 1, '6.00', '251018767', '2025-12-06 18:27:57');
+INSERT INTO `cartitem` (`Id`, `InvoicePaidAmount`, `InvoiceNumber`, `BillingDate`, `CartId`, `InvoiceId`) VALUES
+(1, '8.90', '251000001', '2025-12-20 14:08:56', 0, 1),
+(4, '6.00', '251018767', '2025-12-06 18:27:57', 2, 1);
 
 -- --------------------------------------------------------
 
@@ -983,10 +939,10 @@ INSERT INTO `cartitem` (`Id`, `CartId`, `InvoiceId`, `InvoicePaidAmount`, `Invoi
 
 DROP TABLE IF EXISTS `commodity`;
 CREATE TABLE IF NOT EXISTS `commodity` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Label` varchar(500) DEFAULT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=1119 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `commodity`
@@ -2120,15 +2076,15 @@ INSERT INTO `commodity` (`Id`, `Label`) VALUES
 
 DROP TABLE IF EXISTS `commodityitem`;
 CREATE TABLE IF NOT EXISTS `commodityitem` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Weight` decimal(10,0) DEFAULT NULL,
   `NumberOfPackages` int DEFAULT NULL,
-  `CommodityId` int DEFAULT NULL,
-  `BlItemId` int DEFAULT NULL,
+  `CommodityId` int UNSIGNED DEFAULT NULL,
+  `BlItemId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_CommodityItem_Commodity` (`CommodityId`),
   KEY `FK_CommodityItem_BLItem` (`BlItemId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `commodityitem`
@@ -2152,10 +2108,10 @@ INSERT INTO `commodityitem` (`Id`, `Weight`, `NumberOfPackages`, `CommodityId`, 
 
 DROP TABLE IF EXISTS `commodity_backup_renumber`;
 CREATE TABLE IF NOT EXISTS `commodity_backup_renumber` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Label` varchar(500) DEFAULT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=3313 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `commodity_backup_renumber`
@@ -3289,13 +3245,13 @@ INSERT INTO `commodity_backup_renumber` (`Id`, `Label`) VALUES
 
 DROP TABLE IF EXISTS `contract`;
 CREATE TABLE IF NOT EXISTS `contract` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Code` varchar(50) DEFAULT NULL,
   `InvoiceLabel` varchar(256) DEFAULT NULL,
-  `TaxCodeId` int DEFAULT NULL,
+  `TaxCodeId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_Contract_TaxCodes` (`TaxCodeId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=699 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `contract`
@@ -3321,7 +3277,10 @@ INSERT INTO `contract` (`Id`, `Code`, `InvoiceLabel`, `TaxCodeId`) VALUES
 (670, 'CDRLV02IMPTKVID', NULL, 2),
 (671, 'CDRLV02EXPTKVID', NULL, 1),
 (672, 'CDRLV01EXPTKVID', NULL, 1),
-(695, 'CSTAIMPPAA01_Terra', NULL, 2);
+(695, 'CSTAIMPPAA01_Terra', NULL, 2),
+(696, 'CACCONAGECONTENEURPLEIN', 'Acconage Conteneur Plein (Marchandises diverses)', 2),
+(697, 'CRELEVAGECONTENEURPLEIN', 'Relevage Conteneur Plein (Marchandises diverses)', 2),
+(698, 'CSTATIONNEMENTCONTENEURPLEIN', 'Stationnement Conteneur Plein', 2);
 
 -- --------------------------------------------------------
 
@@ -3331,8 +3290,8 @@ INSERT INTO `contract` (`Id`, `Code`, `InvoiceLabel`, `TaxCodeId`) VALUES
 
 DROP TABLE IF EXISTS `contract_eventtype`;
 CREATE TABLE IF NOT EXISTS `contract_eventtype` (
-  `Contract_Id` int NOT NULL,
-  `EventType_Id` int NOT NULL,
+  `Contract_Id` int UNSIGNED NOT NULL,
+  `EventType_Id` int UNSIGNED NOT NULL,
   PRIMARY KEY (`Contract_Id`,`EventType_Id`),
   KEY `FK_Contract_EventType_EventType` (`EventType_Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
@@ -3352,7 +3311,10 @@ INSERT INTO `contract_eventtype` (`Contract_Id`, `EventType_Id`) VALUES
 (3, 3),
 (2, 4),
 (3, 5),
-(3, 6);
+(3, 6),
+(696, 21),
+(697, 21),
+(698, 21);
 
 -- --------------------------------------------------------
 
@@ -3362,42 +3324,79 @@ INSERT INTO `contract_eventtype` (`Contract_Id`, `EventType_Id`) VALUES
 
 DROP TABLE IF EXISTS `customeruserblsearchhistory`;
 CREATE TABLE IF NOT EXISTS `customeruserblsearchhistory` (
-  `Id` int NOT NULL,
-  `BlNumber` varchar(100) DEFAULT NULL,
-  `ShipName` varchar(500) DEFAULT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `BlNumber` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ShipName` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `ArrivalDate` datetime DEFAULT NULL,
   `ItemCount` int DEFAULT NULL,
-  `UserId` int DEFAULT NULL,
+  `UserId` int UNSIGNED DEFAULT NULL,
   `SearchDate` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`Id`),
-  KEY `FK_UserBLSearchHistory_UserId` (`UserId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+  KEY `UserId` (`UserId`)
+) ENGINE=InnoDB AUTO_INCREMENT=227 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `customeruserblsearchhistory`
 --
 
 INSERT INTO `customeruserblsearchhistory` (`Id`, `BlNumber`, `ShipName`, `ArrivalDate`, `ItemCount`, `UserId`, `SearchDate`) VALUES
-(4, 'EBKG08737243', 'Maersk Line', '2025-11-15 10:30:00', 1, 2, '2025-11-19 08:00:00'),
-(5, 'AEV0238293', 'Maersk Line', '2025-11-15 10:30:00', 1, 2, '2025-11-20 16:20:00'),
-(6, 'MEDUDM992142', 'Mediterranean Shipping Company', '2025-11-10 08:00:00', 1, 2, '2025-11-21 10:10:00'),
-(8, 'AEV0239463', 'CMA CGM', '2025-11-18 14:00:00', 1, 3, '2025-11-19 15:45:00'),
-(9, 'AEV0238293', 'Maersk Line', '2025-11-15 10:30:00', 1, 3, '2025-11-21 09:00:00'),
-(10, 'MEDUDM992142', 'Mediterranean Shipping Company', '2025-11-10 08:00:00', 1, 3, '2025-11-22 12:00:00'),
-(15, 'MEDUDM992142', 'Mediterranean Shipping Company', '2025-11-10 08:00:00', 2, 1, '2025-12-06 15:06:05'),
-(16, 'MEDUDM992142', 'Mediterranean Shipping Company', '2025-11-10 08:00:00', 2, 1, '2025-12-06 15:20:13'),
-(19, 'AEV39722212', 'Mediterranean Shipping Company', '2025-05-13 00:00:00', 3, NULL, '2025-05-20 00:00:00'),
-(25, 'YMLN64099879', 'Evergreen Line', '2025-05-13 00:00:00', 3, NULL, '2025-05-21 00:00:00'),
-(27, 'EBKG11132021', 'Orient Overseas Container Line', '2025-05-29 00:00:00', 3, NULL, '2025-06-05 00:00:00'),
-(47, 'COSC50175774', 'Orient Overseas Container Line', '2025-05-29 00:00:00', 3, NULL, '2025-06-07 00:00:00'),
-(49, 'EBKG42863161', 'Orient Overseas Container Line', '2025-05-29 00:00:00', 3, NULL, '2025-06-08 00:00:00'),
-(77, 'OOCL13755555', 'Orient Overseas Container Line', '2025-11-03 00:00:00', 4, 2, '2025-11-07 00:00:00'),
-(78, 'OOCL13755555', 'Orient Overseas Container Line', '2025-11-03 00:00:00', 4, 2, '2025-11-11 00:00:00'),
-(87, 'HAPG69425581', 'China Ocean Shipping Company', '2025-11-14 00:00:00', 4, 3, '2025-11-19 00:00:00'),
-(98, 'MEDU72790983', 'China Ocean Shipping Company', '2025-11-14 00:00:00', 3, 3, '2025-11-22 00:00:00'),
-(151, 'AEV21880191', 'Orient Overseas Container Line', '2025-10-13 00:00:00', 2, 1, '2025-12-13 16:57:37'),
-(152, 'HAPG54434068', 'WORLD LOGISTICS', '2025-02-16 00:00:00', 1, 1, '2025-12-13 18:05:24'),
-(153, 'EBKG43625368', 'WORLD LOGISTICS', '2025-04-15 00:00:00', 1, 1, '2025-12-13 18:10:47');
+(170, 'EVER45814409', 'Yang Ming Marine Transport', '2025-05-08 00:00:00', 1, 1, '2025-12-14 01:34:44'),
+(171, 'YMLN39158494', 'Evergreen Line', '2025-05-27 00:00:00', 1, 1, '2025-12-14 01:34:44'),
+(172, 'AEV74117863', 'Yang Ming Marine Transport', '2025-07-18 00:00:00', 1, 1, '2025-12-14 01:34:44'),
+(173, 'HAPG43795044', 'Evergreen Line', '2025-01-13 00:00:00', 1, 1, '2025-12-14 01:34:44'),
+(174, 'AEV63324556', 'Evergreen Line', '2025-06-21 00:00:00', 1, 1, '2025-12-14 01:34:44'),
+(175, 'AEV74117863', 'Yang Ming Marine Transport', '2025-07-18 00:00:00', 1, 2, '2025-12-14 01:34:44'),
+(176, 'COSC66084921', 'Orient Overseas Container Line', '2025-01-04 00:00:00', 1, 2, '2025-12-14 01:34:44'),
+(177, 'EVER45814409', 'Yang Ming Marine Transport', '2025-05-08 00:00:00', 1, 2, '2025-12-14 01:34:44'),
+(178, 'EBKG43625368', 'China Ocean Shipping Company', '2025-04-15 00:00:00', 1, 2, '2025-12-14 01:34:44'),
+(179, 'OOCL97811313', 'China Ocean Shipping Company', '2025-06-28 00:00:00', 1, 2, '2025-12-14 01:34:44'),
+(180, 'YMLN85266502', 'Mediterranean Shipping Company', '2025-07-21 00:00:00', 1, 3, '2025-12-14 01:34:44'),
+(181, 'COSC84782369', 'Mediterranean Shipping Company', '2025-03-02 00:00:00', 1, 3, '2025-12-14 01:34:44'),
+(182, 'HAPG59434443', 'Mediterranean Shipping Company', '2025-06-27 00:00:00', 1, 3, '2025-12-14 01:34:44'),
+(183, 'COSC66084921', 'Orient Overseas Container Line', '2025-01-04 00:00:00', 1, 3, '2025-12-14 01:34:44'),
+(184, 'COSC55205452', 'Mediterranean Shipping Company', '2025-06-17 00:00:00', 1, 3, '2025-12-14 01:34:44'),
+(185, 'EBKG49124230', 'CMA CGM', '2025-09-26 00:00:00', 1, 4, '2025-12-14 01:34:44'),
+(186, 'YMLN97947302', 'CMA CGM', '2025-05-03 00:00:00', 1, 4, '2025-12-14 01:34:44'),
+(187, 'COSC28451360', 'CMA CGM', '2025-09-29 00:00:00', 1, 4, '2025-12-14 01:34:44'),
+(188, 'OOCL29837741', 'CMA CGM', '2025-03-11 00:00:00', 1, 4, '2025-12-14 01:34:44'),
+(189, 'AEV52196302', 'Hapag-Lloyd', '2025-08-04 00:00:00', 1, 4, '2025-12-14 01:34:44'),
+(190, 'AEV45987466', 'Hapag-Lloyd', '2025-03-28 00:00:00', 1, 5, '2025-12-14 01:34:44'),
+(191, 'EVER64557303', 'Mediterranean Shipping Company', '2025-05-28 00:00:00', 1, 5, '2025-12-14 01:34:44'),
+(192, 'HAPG59434443', 'Mediterranean Shipping Company', '2025-06-27 00:00:00', 1, 5, '2025-12-14 01:34:44'),
+(193, 'EBKG54098502', 'Hapag-Lloyd', '2025-07-14 00:00:00', 1, 5, '2025-12-14 01:34:44'),
+(194, 'OOCL41075590', 'Mediterranean Shipping Company', '2025-01-12 00:00:00', 1, 5, '2025-12-14 01:34:44'),
+(195, 'MEDU52493795', 'Mediterranean Shipping Company', '2025-02-18 00:00:00', 1, 6, '2025-12-14 01:34:44'),
+(196, 'EVER64557303', 'Mediterranean Shipping Company', '2025-05-28 00:00:00', 1, 6, '2025-12-14 01:34:44'),
+(197, 'COSC55205452', 'Mediterranean Shipping Company', '2025-06-17 00:00:00', 1, 6, '2025-12-14 01:34:44'),
+(198, 'COSC84782369', 'Mediterranean Shipping Company', '2025-03-02 00:00:00', 1, 6, '2025-12-14 01:34:44'),
+(199, 'YMLN85266502', 'Mediterranean Shipping Company', '2025-07-21 00:00:00', 1, 6, '2025-12-14 01:34:44'),
+(200, 'EVER69977921', 'CMA CGM', '2025-09-07 00:00:00', 1, 7, '2025-12-14 01:34:44'),
+(201, 'YMLN30662769', 'Maersk Line', '2025-02-15 00:00:00', 1, 7, '2025-12-14 01:34:44'),
+(202, 'OOCL48156911', 'Mediterranean Shipping Company', '2025-05-03 00:00:00', 1, 7, '2025-12-14 01:34:44'),
+(203, 'YMLN97947302', 'CMA CGM', '2025-05-03 00:00:00', 1, 7, '2025-12-14 01:34:44'),
+(204, 'OOCL29837741', 'CMA CGM', '2025-03-11 00:00:00', 1, 7, '2025-12-14 01:34:44'),
+(205, 'AEV53640107', 'Maersk Line', '2025-08-18 00:00:00', 1, 8, '2025-12-14 01:34:44'),
+(206, 'MEDU54857008', 'CMA CGM', '2025-11-18 14:00:00', 1, 8, '2025-12-14 01:34:44'),
+(207, 'OOCL41075590', 'Mediterranean Shipping Company', '2025-01-12 00:00:00', 1, 8, '2025-12-14 01:34:44'),
+(208, 'EBKG69895473', 'Maersk Line', '2025-07-26 00:00:00', 1, 8, '2025-12-14 01:34:44'),
+(209, 'EVER69977921', 'CMA CGM', '2025-09-07 00:00:00', 1, 8, '2025-12-14 01:34:44'),
+(210, 'AEV52196302', 'Hapag-Lloyd', '2025-08-04 00:00:00', 1, 9, '2025-12-14 01:34:44'),
+(211, 'YMLN37437956', 'Hapag-Lloyd', '2025-05-11 00:00:00', 1, 9, '2025-12-14 01:34:44'),
+(212, 'EBKG49124230', 'CMA CGM', '2025-09-26 00:00:00', 1, 9, '2025-12-14 01:34:44'),
+(213, 'YMLN97947302', 'CMA CGM', '2025-05-03 00:00:00', 1, 9, '2025-12-14 01:34:44'),
+(214, 'MEDU54857008', 'CMA CGM', '2025-11-18 14:00:00', 1, 9, '2025-12-14 01:34:44'),
+(215, 'OOCL86507212', 'CMA CGM', '2025-07-29 00:00:00', 1, 10, '2025-12-14 01:34:44'),
+(216, 'COSC66084921', 'Orient Overseas Container Line', '2025-01-04 00:00:00', 1, 10, '2025-12-14 01:34:44'),
+(217, 'YMLN97947302', 'CMA CGM', '2025-05-03 00:00:00', 1, 10, '2025-12-14 01:34:44'),
+(218, 'EBKG54528093', 'Orient Overseas Container Line', '2025-10-13 00:00:00', 1, 10, '2025-12-14 01:34:44'),
+(219, 'OOCL55188258', 'CMA CGM', '2025-09-12 00:00:00', 1, 10, '2025-12-14 01:34:44'),
+(220, 'AEV73687587', 'Hapag-Lloyd', '2025-02-22 00:00:00', 1, 11, '2025-12-14 01:34:44'),
+(221, 'EBKG54098502', 'Hapag-Lloyd', '2025-07-14 00:00:00', 1, 11, '2025-12-14 01:34:44'),
+(222, 'EVER92686375', 'Hapag-Lloyd', '2025-05-28 00:00:00', 1, 11, '2025-12-14 01:34:44'),
+(223, 'AEV63324556', 'Evergreen Line', '2025-06-21 00:00:00', 1, 11, '2025-12-14 01:34:44'),
+(224, 'AEV45987466', 'Hapag-Lloyd', '2025-03-28 00:00:00', 1, 11, '2025-12-14 01:34:44'),
+(225, 'OOCL86507212', 'CMA CGM', '2025-07-29 00:00:00', 1, 10, '2025-12-14 01:42:37'),
+(226, 'OOCL55188258', 'CMA CGM', '2025-09-12 00:00:00', 1, 10, '2025-12-14 01:43:42');
 
 -- --------------------------------------------------------
 
@@ -3407,39 +3406,38 @@ INSERT INTO `customeruserblsearchhistory` (`Id`, `BlNumber`, `ShipName`, `Arriva
 
 DROP TABLE IF EXISTS `customerusers`;
 CREATE TABLE IF NOT EXISTS `customerusers` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `UserName` varchar(512) DEFAULT NULL,
   `PasswordHash` varchar(2000) DEFAULT NULL,
-  `EmailConfirmed` int DEFAULT NULL,
+  `EmailConfirmed` int UNSIGNED DEFAULT '0',
   `FirstName` varchar(2000) DEFAULT NULL,
   `LastName` varchar(2000) DEFAULT NULL,
   `CompanyName` varchar(2000) DEFAULT NULL,
   `CompanyAddress` varchar(2000) DEFAULT NULL,
   `PhoneNumber` varchar(100) DEFAULT NULL,
-  `CustomerUsersStatusId` int DEFAULT NULL,
-  `CustomerUsersTypeId` int DEFAULT NULL,
+  `CustomerUsersStatusId` int UNSIGNED DEFAULT NULL,
+  `CustomerUsersTypeId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_CustomerUsers_Status` (`CustomerUsersStatusId`),
   KEY `FK_CustomerUsers_Type` (`CustomerUsersTypeId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `customerusers`
 --
 
 INSERT INTO `customerusers` (`Id`, `UserName`, `PasswordHash`, `EmailConfirmed`, `FirstName`, `LastName`, `CompanyName`, `CompanyAddress`, `PhoneNumber`, `CustomerUsersStatusId`, `CustomerUsersTypeId`) VALUES
-(0, 'client1', NULL, NULL, 'Client', 'User1', NULL, NULL, NULL, NULL, 1),
-(1, 'karimex@user.com', 'hashed_password_1', 1, 'Ahmed', 'Hassan', 'KARIMEX', '123 Rue du Commerce, Casablanca', '+212661234567', 1, 2),
-(2, 'import@company.com', 'hashed_password_2', 1, 'Mohamed', 'Bennani', 'IMPORT EXPORT SARL', '456 Avenue Hassan II, Rabat', '+212662345678', 1, 2),
-(3, 'trade@intl.com', 'hashed_password_3', 1, 'Fatima', 'Alaoui', 'COMMERCE INTERNATIONAL', '789 Boulevard Zerktouni, Casablanca', '+212663456789', 1, 3),
-(4, 'client4', NULL, NULL, 'Client', 'User4', NULL, NULL, NULL, NULL, 1),
-(5, 'client5', NULL, NULL, 'Client', 'User5', NULL, NULL, NULL, NULL, 1),
-(6, 'client6', NULL, NULL, 'Client', 'User6', NULL, NULL, NULL, NULL, 1),
-(7, 'client7', NULL, NULL, 'Client', 'User7', NULL, NULL, NULL, NULL, 1),
-(8, 'client8', NULL, NULL, 'Client', 'User8', NULL, NULL, NULL, NULL, 1),
-(9, 'client9', NULL, NULL, 'Client', 'User9', NULL, NULL, NULL, NULL, 1),
-(10, 'client10', NULL, NULL, 'Client', 'User10', NULL, NULL, NULL, NULL, 1),
-(11, 'client11', NULL, NULL, 'Client', 'User11', NULL, NULL, NULL, NULL, 1);
+(1, 'karimex@user.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 1, 'Ahmed', 'Hassan', 'KARIMEX', '123 Rue du Commerce, Casablanca', '+212661234567', 1, 2),
+(2, 'import@company.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 1, 'Mohamed', 'Bennani', 'IMPORT EXPORT SARL', '456 Avenue Hassan II, Rabat', '+212662345678', 2, 2),
+(3, 'trade@intl.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 1, 'Fatima', 'Alaoui', 'COMMERCE INTERNATIONAL', '789 Boulevard Zerktouni, Casablanca', '+212663456789', 3, 3),
+(4, 'client4@yopmail.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 0, 'Client', 'User4', NULL, NULL, NULL, 4, 1),
+(5, 'client5@yopmail.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 0, 'Client', 'User5', NULL, NULL, NULL, 1, 1),
+(6, 'client6@yopmail.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 0, 'Client', 'User6', NULL, NULL, NULL, 1, 1),
+(7, 'client7@yopmail.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 0, 'Client', 'User7', NULL, NULL, NULL, 5, 1),
+(8, 'client8@yopmail.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 0, 'Client', 'User8', NULL, NULL, NULL, 1, 1),
+(9, 'client9@yopmail.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 0, 'Client', 'User9', NULL, NULL, NULL, 3, 1),
+(10, 'client10@yopmail.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 0, 'Client', 'User10', NULL, NULL, NULL, 3, 1),
+(11, 'client11@yopmail.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 0, 'Client', 'User11', NULL, NULL, NULL, 3, 1);
 
 -- --------------------------------------------------------
 
@@ -3449,20 +3447,20 @@ INSERT INTO `customerusers` (`Id`, `UserName`, `PasswordHash`, `EmailConfirmed`,
 
 DROP TABLE IF EXISTS `customerusersstatus`;
 CREATE TABLE IF NOT EXISTS `customerusersstatus` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Label` varchar(256) DEFAULT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `customerusersstatus`
 --
 
 INSERT INTO `customerusersstatus` (`Id`, `Label`) VALUES
-(1, 'Actif'),
-(2, 'Inactif'),
-(3, 'Suspendu'),
-(4, 'En attente'),
+(1, 'En attente Utilisateur'),
+(2, 'En attente Admin'),
+(3, 'Activé'),
+(4, 'Désactivé'),
 (5, 'Supprimé');
 
 -- --------------------------------------------------------
@@ -3473,18 +3471,18 @@ INSERT INTO `customerusersstatus` (`Id`, `Label`) VALUES
 
 DROP TABLE IF EXISTS `customeruserstype`;
 CREATE TABLE IF NOT EXISTS `customeruserstype` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Label` varchar(256) DEFAULT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `customeruserstype`
 --
 
 INSERT INTO `customeruserstype` (`Id`, `Label`) VALUES
-(1, 'Administrateur'),
-(2, 'Client Standard'),
+(1, 'Client'),
+(2, 'Client TMS'),
 (3, 'Client Premium'),
 (4, 'Partenaire');
 
@@ -3496,8 +3494,8 @@ INSERT INTO `customeruserstype` (`Id`, `Label`) VALUES
 
 DROP TABLE IF EXISTS `customerusers_thirdparty`;
 CREATE TABLE IF NOT EXISTS `customerusers_thirdparty` (
-  `CustomerUsers_Id` int NOT NULL,
-  `ThirdParty_Id` int NOT NULL,
+  `CustomerUsers_Id` int UNSIGNED NOT NULL,
+  `ThirdParty_Id` int UNSIGNED NOT NULL,
   PRIMARY KEY (`CustomerUsers_Id`,`ThirdParty_Id`),
   KEY `FK_CustomerUsers_ThirdParty_ThirdParty` (`ThirdParty_Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
@@ -3507,43 +3505,171 @@ CREATE TABLE IF NOT EXISTS `customerusers_thirdparty` (
 --
 
 INSERT INTO `customerusers_thirdparty` (`CustomerUsers_Id`, `ThirdParty_Id`) VALUES
-(0, 1),
-(3, 1),
-(5, 1),
-(6, 1),
-(0, 2),
-(4, 3),
-(4, 4),
-(5, 4),
+(1, 5),
+(2, 5),
+(3, 5),
+(4, 5),
+(5, 5),
+(6, 5),
+(7, 5),
+(8, 5),
+(9, 5),
+(10, 5),
+(11, 5),
+(1, 6),
+(2, 6),
+(3, 6),
+(4, 6),
+(5, 6),
+(6, 6),
+(7, 6),
+(8, 6),
+(9, 6),
+(10, 6),
+(11, 6),
+(1, 7),
+(2, 7),
+(3, 7),
+(4, 7),
+(5, 7),
+(6, 7),
+(7, 7),
+(8, 7),
+(9, 7),
+(10, 7),
+(11, 7),
+(1, 8),
+(2, 8),
+(3, 8),
+(4, 8),
+(5, 8),
+(6, 8),
+(7, 8),
+(8, 8),
+(9, 8),
+(10, 8),
+(11, 8),
+(1, 9),
+(2, 9),
+(3, 9),
+(4, 9),
+(5, 9),
+(6, 9),
+(7, 9),
+(8, 9),
+(9, 9),
+(10, 9),
+(11, 9),
 (1, 10),
+(2, 10),
+(3, 10),
+(4, 10),
+(5, 10),
+(6, 10),
+(7, 10),
+(8, 10),
+(9, 10),
+(10, 10),
+(11, 10),
+(1, 11),
 (2, 11),
+(3, 11),
+(4, 11),
+(5, 11),
+(6, 11),
+(7, 11),
+(8, 11),
+(9, 11),
+(10, 11),
+(11, 11),
+(1, 12),
+(2, 12),
 (3, 12),
-(6, 16),
-(7, 16),
-(3, 18),
-(4, 18),
-(7, 18),
-(0, 19),
-(5, 19),
-(1, 100),
-(2, 100),
-(3, 100),
-(1, 101),
-(2, 101),
-(3, 101),
-(1, 102),
-(2, 102),
-(3, 102),
-(1, 103),
-(2, 104),
-(3, 104),
-(1, 105),
-(3, 105),
-(1, 106),
-(2, 106),
-(3, 106),
-(1, 107),
-(2, 107);
+(4, 12),
+(5, 12),
+(6, 12),
+(7, 12),
+(8, 12),
+(9, 12),
+(10, 12),
+(11, 12),
+(1, 13),
+(2, 13),
+(3, 13),
+(4, 13),
+(5, 13),
+(6, 13),
+(7, 13),
+(8, 13),
+(9, 13),
+(10, 13),
+(11, 13),
+(1, 14),
+(2, 14),
+(3, 14),
+(4, 14),
+(5, 14),
+(6, 14),
+(7, 14),
+(8, 14),
+(9, 14),
+(10, 14),
+(11, 14),
+(1, 15),
+(2, 15),
+(3, 15),
+(4, 15),
+(5, 15),
+(6, 15),
+(7, 15),
+(8, 15),
+(9, 15),
+(10, 15),
+(11, 15),
+(1, 20),
+(2, 20),
+(3, 20),
+(4, 20),
+(5, 20),
+(6, 20),
+(7, 20),
+(8, 20),
+(9, 20),
+(10, 20),
+(11, 20),
+(1, 21),
+(2, 21),
+(3, 21),
+(4, 21),
+(5, 21),
+(6, 21),
+(7, 21),
+(8, 21),
+(9, 21),
+(10, 21),
+(11, 21),
+(1, 22),
+(2, 22),
+(3, 22),
+(4, 22),
+(5, 22),
+(6, 22),
+(7, 22),
+(8, 22),
+(9, 22),
+(10, 22),
+(11, 22),
+(1, 23),
+(2, 23),
+(3, 23),
+(4, 23),
+(5, 23),
+(6, 23),
+(7, 23),
+(8, 23),
+(9, 23),
+(10, 23),
+(11, 23);
 
 -- --------------------------------------------------------
 
@@ -3553,17 +3679,17 @@ INSERT INTO `customerusers_thirdparty` (`CustomerUsers_Id`, `ThirdParty_Id`) VAL
 
 DROP TABLE IF EXISTS `document`;
 CREATE TABLE IF NOT EXISTS `document` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Text` varchar(100) DEFAULT NULL,
   `Date` datetime DEFAULT NULL,
-  `BlId` int DEFAULT NULL,
-  `JobFileId` int DEFAULT NULL,
-  `DocumentTypeId` int DEFAULT NULL,
+  `BlId` int UNSIGNED DEFAULT NULL,
+  `JobFileId` int UNSIGNED DEFAULT NULL,
+  `DocumentTypeId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_Document_BL` (`BlId`),
   KEY `FK_Document_JobFile` (`JobFileId`),
   KEY `FK_Document_DocumentType` (`DocumentTypeId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `document`
@@ -3584,10 +3710,10 @@ INSERT INTO `document` (`Id`, `Text`, `Date`, `BlId`, `JobFileId`, `DocumentType
 
 DROP TABLE IF EXISTS `documenttype`;
 CREATE TABLE IF NOT EXISTS `documenttype` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Label` varchar(200) DEFAULT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `documenttype`
@@ -3608,14 +3734,14 @@ INSERT INTO `documenttype` (`Id`, `Label`) VALUES
 
 DROP TABLE IF EXISTS `event`;
 CREATE TABLE IF NOT EXISTS `event` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `EventDate` datetime DEFAULT NULL,
-  `JobFileId` int DEFAULT NULL,
-  `EventTypeId` int DEFAULT NULL,
+  `JobFileId` int UNSIGNED DEFAULT NULL,
+  `EventTypeId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_Event_JobFile` (`JobFileId`),
   KEY `FK_Event_EventType` (`EventTypeId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=1306 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `event`
@@ -3623,58 +3749,44 @@ CREATE TABLE IF NOT EXISTS `event` (
 
 INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (1, '2025-11-04 01:00:00', 1, 4),
-(2, '2025-11-05 09:00:00', 1, 29),
 (3, '2025-11-06 01:00:00', 1, 37),
 (4, '2025-11-06 06:00:00', 1, 32),
 (5, '2025-11-06 13:00:00', 1, 9),
 (6, '2025-11-26 07:00:00', 2, 2),
 (7, '2025-11-28 13:00:00', 2, 38),
 (8, '2025-01-28 00:00:00', 3, 4),
-(9, '2025-01-31 00:00:00', 3, 20),
-(10, '2025-02-03 00:00:00', 3, 20),
 (11, '2025-02-05 00:00:00', 3, 20),
 (12, '2025-02-07 00:00:00', 3, 33),
 (13, '2025-02-10 00:00:00', 3, 9),
 (14, '2025-01-31 00:00:00', 4, 4),
 (15, '2025-10-15 00:00:00', 5, 4),
 (16, '2025-10-13 00:00:00', 6, 4),
-(17, '2025-10-15 00:00:00', 6, 32),
-(18, '2025-10-17 00:00:00', 6, 33),
 (19, '2025-10-20 00:00:00', 6, 21),
 (20, '2025-10-21 00:00:00', 6, 24),
 (21, '2025-11-01 00:00:00', 6, 6),
 (22, '2025-11-26 00:00:00', 7, 4),
 (23, '2025-11-27 00:00:00', 8, 4),
 (24, '2025-11-24 00:00:00', 9, 4),
-(25, '2025-11-25 00:00:00', 9, 29),
-(26, '2025-11-28 00:00:00', 9, 35),
 (27, '2025-12-02 00:00:00', 9, 35),
 (28, '2025-12-05 00:00:00', 9, 19),
 (29, '2025-12-09 00:00:00', 9, 6),
 (30, '2025-01-28 00:00:00', 10, 4),
 (31, '2025-01-30 00:00:00', 11, 4),
-(32, '2025-02-01 00:00:00', 11, 21),
-(33, '2025-02-03 00:00:00', 11, 29),
 (34, '2025-02-04 00:00:00', 11, 29),
 (35, '2025-02-08 00:00:00', 11, 31),
 (36, '2025-03-01 00:00:00', 11, 6),
 (37, '2025-05-11 00:00:00', 12, 4),
-(38, '2025-05-14 00:00:00', 12, 23),
-(39, '2025-05-16 00:00:00', 12, 32),
 (40, '2025-05-17 00:00:00', 12, 24),
 (41, '2025-05-18 00:00:00', 12, 31),
 (42, '2025-05-22 00:00:00', 12, 6),
 (43, '2025-05-14 00:00:00', 13, 4),
 (44, '2025-05-12 00:00:00', 14, 4),
 (45, '2025-05-13 00:00:00', 15, 4),
-(46, '2025-05-15 00:00:00', 15, 33),
-(47, '2025-05-18 00:00:00', 15, 23),
 (48, '2025-05-22 00:00:00', 15, 31),
 (49, '2025-05-24 00:00:00', 15, 33),
 (50, '2025-06-01 00:00:00', 15, 9),
 (51, '2025-01-30 00:00:00', 16, 4),
 (52, '2025-01-29 00:00:00', 17, 4),
-(53, '2025-01-31 00:00:00', 17, 29),
 (54, '2025-02-02 00:00:00', 17, 33),
 (55, '2025-02-03 00:00:00', 17, 20),
 (56, '2025-02-15 00:00:00', 17, 9),
@@ -3689,8 +3801,6 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (65, '2025-05-19 00:00:00', 21, 35),
 (66, '2025-06-07 00:00:00', 21, 6),
 (67, '2025-11-26 00:00:00', 22, 4),
-(68, '2025-11-27 00:00:00', 22, 33),
-(69, '2025-12-01 00:00:00', 22, 24),
 (70, '2025-12-04 00:00:00', 22, 29),
 (71, '2025-12-05 00:00:00', 22, 31),
 (72, '2025-12-17 00:00:00', 22, 8),
@@ -3707,14 +3817,11 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (83, '2025-05-19 00:00:00', 29, 23),
 (84, '2025-06-05 00:00:00', 29, 9),
 (85, '2025-08-04 00:00:00', 30, 4),
-(86, '2025-08-07 00:00:00', 30, 35),
-(87, '2025-08-08 00:00:00', 30, 19),
 (88, '2025-08-10 00:00:00', 30, 23),
 (89, '2025-08-13 00:00:00', 30, 21),
 (90, '2025-08-20 00:00:00', 30, 8),
 (91, '2025-06-24 00:00:00', 31, 4),
 (92, '2025-06-24 00:00:00', 32, 4),
-(93, '2025-06-27 00:00:00', 32, 23),
 (94, '2025-07-01 00:00:00', 32, 21),
 (95, '2025-07-02 00:00:00', 32, 23),
 (96, '2025-07-12 00:00:00', 32, 8),
@@ -3723,15 +3830,12 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (99, '2025-06-27 00:00:00', 33, 19),
 (100, '2025-06-30 00:00:00', 33, 9),
 (101, '2025-05-04 00:00:00', 34, 4),
-(102, '2025-05-05 00:00:00', 34, 31),
-(103, '2025-05-07 00:00:00', 34, 32),
 (104, '2025-05-11 00:00:00', 34, 33),
 (105, '2025-05-12 00:00:00', 34, 19),
 (106, '2025-05-23 00:00:00', 34, 9),
 (107, '2025-05-06 00:00:00', 35, 4),
 (108, '2025-05-03 00:00:00', 36, 4),
 (109, '2025-05-05 00:00:00', 37, 4),
-(110, '2025-05-06 00:00:00', 37, 31),
 (111, '2025-05-08 00:00:00', 37, 23),
 (112, '2025-05-11 00:00:00', 37, 19),
 (113, '2025-05-15 00:00:00', 37, 6),
@@ -3741,18 +3845,15 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (117, '2025-02-02 00:00:00', 39, 23),
 (118, '2025-02-27 00:00:00', 39, 8),
 (119, '2025-01-31 00:00:00', 40, 4),
-(120, '2025-02-01 00:00:00', 40, 35),
 (121, '2025-02-04 00:00:00', 40, 35),
 (122, '2025-02-05 00:00:00', 40, 19),
 (123, '2025-02-13 00:00:00', 40, 6),
 (124, '2025-08-05 00:00:00', 41, 4),
-(125, '2025-08-08 00:00:00', 41, 35),
 (126, '2025-08-10 00:00:00', 41, 20),
 (127, '2025-08-12 00:00:00', 41, 24),
 (128, '2025-08-30 00:00:00', 41, 8),
 (129, '2025-06-22 00:00:00', 42, 4),
 (130, '2025-06-22 00:00:00', 43, 4),
-(131, '2025-06-24 00:00:00', 43, 24),
 (132, '2025-06-27 00:00:00', 43, 19),
 (133, '2025-06-28 00:00:00', 43, 35),
 (134, '2025-07-17 00:00:00', 43, 8),
@@ -3769,7 +3870,6 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (145, '2025-07-01 00:00:00', 46, 33),
 (146, '2025-07-17 00:00:00', 46, 8),
 (147, '2025-06-24 00:00:00', 47, 4),
-(148, '2025-06-25 00:00:00', 47, 17),
 (149, '2025-06-27 00:00:00', 47, 20),
 (150, '2025-06-30 00:00:00', 47, 35),
 (151, '2025-07-09 00:00:00', 47, 8),
@@ -3782,7 +3882,6 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (158, '2025-08-10 00:00:00', 52, 17),
 (159, '2025-08-28 00:00:00', 52, 9),
 (160, '2025-08-03 00:00:00', 53, 4),
-(161, '2025-08-06 00:00:00', 53, 29),
 (162, '2025-08-07 00:00:00', 53, 31),
 (163, '2025-08-10 00:00:00', 53, 17),
 (164, '2025-08-22 00:00:00', 53, 9),
@@ -3819,13 +3918,11 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (195, '2025-10-16 00:00:00', 65, 19),
 (196, '2025-10-23 00:00:00', 65, 8),
 (197, '2025-10-14 00:00:00', 66, 4),
-(198, '2025-10-17 00:00:00', 66, 32),
 (199, '2025-10-20 00:00:00', 66, 35),
 (200, '2025-10-24 00:00:00', 66, 23),
 (201, '2025-10-28 00:00:00', 66, 8),
 (202, '2025-10-14 00:00:00', 67, 4),
 (203, '2025-01-31 00:00:00', 68, 4),
-(204, '2025-02-01 00:00:00', 68, 35),
 (205, '2025-02-03 00:00:00', 68, 21),
 (206, '2025-02-06 00:00:00', 68, 35),
 (207, '2025-02-08 00:00:00', 68, 8),
@@ -3834,7 +3931,6 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (210, '2025-02-05 00:00:00', 69, 20),
 (211, '2025-02-09 00:00:00', 69, 9),
 (212, '2025-10-14 00:00:00', 70, 4),
-(213, '2025-10-16 00:00:00', 70, 19),
 (214, '2025-10-18 00:00:00', 70, 19),
 (215, '2025-10-22 00:00:00', 70, 23),
 (216, '2025-11-08 00:00:00', 70, 6),
@@ -3848,8 +3944,6 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (224, '2025-07-21 00:00:00', 73, 8),
 (225, '2025-05-05 00:00:00', 74, 4),
 (226, '2025-05-03 00:00:00', 75, 4),
-(227, '2025-05-04 00:00:00', 75, 31),
-(228, '2025-05-07 00:00:00', 75, 20),
 (229, '2025-05-09 00:00:00', 75, 31),
 (230, '2025-05-12 00:00:00', 75, 35),
 (231, '2025-05-25 00:00:00', 75, 6),
@@ -3864,13 +3958,10 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (240, '2025-05-14 00:00:00', 84, 4),
 (241, '2025-05-04 00:00:00', 85, 4),
 (242, '2025-05-04 00:00:00', 86, 4),
-(243, '2025-05-07 00:00:00', 86, 33),
-(244, '2025-05-09 00:00:00', 86, 29),
 (245, '2025-05-12 00:00:00', 86, 31),
 (246, '2025-05-16 00:00:00', 86, 17),
 (247, '2025-05-25 00:00:00', 86, 6),
 (248, '2025-05-03 00:00:00', 87, 4),
-(249, '2025-05-04 00:00:00', 87, 19),
 (250, '2025-05-05 00:00:00', 87, 19),
 (251, '2025-05-09 00:00:00', 87, 33),
 (252, '2025-05-24 00:00:00', 87, 9),
@@ -3879,8 +3970,6 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (255, '2025-05-11 00:00:00', 88, 35),
 (256, '2025-06-04 00:00:00', 88, 8),
 (257, '2025-10-16 00:00:00', 89, 4),
-(258, '2025-10-17 00:00:00', 89, 33),
-(259, '2025-10-21 00:00:00', 89, 24),
 (260, '2025-10-24 00:00:00', 89, 35),
 (261, '2025-10-28 00:00:00', 89, 21),
 (262, '2025-11-02 00:00:00', 89, 8),
@@ -3892,7 +3981,6 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (268, '2025-05-09 00:00:00', 91, 31),
 (269, '2025-05-27 00:00:00', 91, 8),
 (270, '2025-05-05 00:00:00', 92, 4),
-(271, '2025-05-06 00:00:00', 92, 24),
 (272, '2025-05-09 00:00:00', 92, 20),
 (273, '2025-05-10 00:00:00', 92, 19),
 (274, '2025-06-02 00:00:00', 92, 9),
@@ -3901,8 +3989,6 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (277, '2025-11-26 00:00:00', 93, 29),
 (278, '2025-12-20 00:00:00', 93, 8),
 (279, '2025-11-24 00:00:00', 94, 4),
-(280, '2025-11-26 00:00:00', 94, 31),
-(281, '2025-11-27 00:00:00', 94, 24),
 (282, '2025-12-01 00:00:00', 94, 29),
 (283, '2025-12-04 00:00:00', 94, 24),
 (284, '2025-12-11 00:00:00', 94, 8),
@@ -3913,7 +3999,6 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (289, '2025-01-31 00:00:00', 97, 31),
 (290, '2025-02-19 00:00:00', 97, 8),
 (291, '2025-01-29 00:00:00', 98, 4),
-(292, '2025-01-31 00:00:00', 98, 23),
 (293, '2025-02-04 00:00:00', 98, 19),
 (294, '2025-02-05 00:00:00', 98, 20),
 (295, '2025-02-15 00:00:00', 98, 8),
@@ -3924,15 +4009,12 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (300, '2025-02-03 00:00:00', 101, 33),
 (301, '2025-02-11 00:00:00', 101, 6),
 (302, '2025-06-22 00:00:00', 102, 4),
-(303, '2025-06-25 00:00:00', 102, 20),
-(304, '2025-06-27 00:00:00', 102, 33),
 (305, '2025-06-28 00:00:00', 102, 33),
 (306, '2025-07-02 00:00:00', 102, 32),
 (307, '2025-07-17 00:00:00', 102, 9),
 (308, '2025-08-03 00:00:00', 103, 4),
 (309, '2025-08-03 00:00:00', 104, 4),
 (310, '2025-08-05 00:00:00', 105, 4),
-(311, '2025-08-06 00:00:00', 105, 24),
 (312, '2025-08-08 00:00:00', 105, 21),
 (313, '2025-08-12 00:00:00', 105, 19),
 (314, '2025-08-14 00:00:00', 105, 8),
@@ -3941,38 +4023,29 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (317, '2025-05-09 00:00:00', 106, 19),
 (318, '2025-05-28 00:00:00', 106, 8),
 (319, '2025-05-15 00:00:00', 107, 4),
-(320, '2025-05-18 00:00:00', 107, 31),
 (321, '2025-05-21 00:00:00', 107, 19),
 (322, '2025-05-23 00:00:00', 107, 24),
 (323, '2025-06-07 00:00:00', 107, 6),
 (324, '2025-05-15 00:00:00', 108, 4),
 (325, '2025-05-16 00:00:00', 109, 4),
 (326, '2025-05-13 00:00:00', 110, 4),
-(327, '2025-05-14 00:00:00', 110, 24),
-(328, '2025-05-16 00:00:00', 110, 29),
 (329, '2025-05-18 00:00:00', 110, 17),
 (330, '2025-05-20 00:00:00', 110, 19),
 (331, '2025-05-21 00:00:00', 110, 9),
 (332, '2025-05-15 00:00:00', 111, 4),
 (333, '2025-05-13 00:00:00', 112, 4),
-(334, '2025-05-16 00:00:00', 112, 35),
 (335, '2025-05-19 00:00:00', 112, 29),
 (336, '2025-05-21 00:00:00', 112, 19),
 (337, '2025-05-28 00:00:00', 112, 9),
 (338, '2025-05-31 00:00:00', 113, 4),
-(339, '2025-06-02 00:00:00', 113, 32),
-(340, '2025-06-06 00:00:00', 113, 24),
 (341, '2025-06-07 00:00:00', 113, 35),
 (342, '2025-06-11 00:00:00', 113, 24),
 (343, '2025-06-16 00:00:00', 113, 8),
 (344, '2025-05-29 00:00:00', 114, 4),
-(345, '2025-06-01 00:00:00', 114, 29),
-(346, '2025-06-02 00:00:00', 114, 20),
 (347, '2025-06-06 00:00:00', 114, 33),
 (348, '2025-06-10 00:00:00', 114, 32),
 (349, '2025-06-24 00:00:00', 114, 8),
 (350, '2025-05-13 00:00:00', 115, 4),
-(351, '2025-05-14 00:00:00', 115, 35),
 (352, '2025-05-16 00:00:00', 115, 33),
 (353, '2025-05-18 00:00:00', 115, 21),
 (354, '2025-05-20 00:00:00', 115, 8),
@@ -3982,31 +4055,23 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (358, '2025-05-18 00:00:00', 117, 29),
 (359, '2025-05-21 00:00:00', 117, 8),
 (360, '2025-05-14 00:00:00', 118, 4),
-(361, '2025-05-17 00:00:00', 118, 33),
-(362, '2025-05-21 00:00:00', 118, 19),
 (363, '2025-05-22 00:00:00', 118, 31),
 (364, '2025-05-24 00:00:00', 118, 32),
 (365, '2025-06-07 00:00:00', 118, 8),
 (366, '2025-01-31 00:00:00', 119, 4),
-(367, '2025-02-01 00:00:00', 119, 32),
 (368, '2025-02-04 00:00:00', 119, 20),
 (369, '2025-02-06 00:00:00', 119, 35),
 (370, '2025-02-21 00:00:00', 119, 8),
 (371, '2025-02-01 00:00:00', 120, 4),
-(372, '2025-02-02 00:00:00', 120, 31),
 (373, '2025-02-04 00:00:00', 120, 29),
 (374, '2025-02-07 00:00:00', 120, 24),
 (375, '2025-02-17 00:00:00', 120, 9),
 (376, '2025-01-30 00:00:00', 121, 4),
-(377, '2025-02-01 00:00:00', 121, 21),
-(378, '2025-02-04 00:00:00', 121, 33),
 (379, '2025-02-06 00:00:00', 121, 29),
 (380, '2025-02-07 00:00:00', 121, 32),
 (381, '2025-02-21 00:00:00', 121, 6),
 (382, '2025-05-14 00:00:00', 122, 4),
 (383, '2025-05-31 00:00:00', 123, 4),
-(384, '2025-06-03 00:00:00', 123, 17),
-(385, '2025-06-05 00:00:00', 123, 21),
 (386, '2025-06-07 00:00:00', 123, 35),
 (387, '2025-06-09 00:00:00', 123, 33),
 (388, '2025-06-27 00:00:00', 123, 9),
@@ -4016,13 +4081,10 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (392, '2025-06-19 00:00:00', 124, 8),
 (393, '2025-05-15 00:00:00', 125, 4),
 (394, '2025-05-16 00:00:00', 126, 4),
-(395, '2025-05-18 00:00:00', 126, 21),
-(396, '2025-05-22 00:00:00', 126, 29),
 (397, '2025-05-26 00:00:00', 126, 29),
 (398, '2025-05-29 00:00:00', 126, 24),
 (399, '2025-06-05 00:00:00', 126, 9),
 (400, '2025-03-25 00:00:00', 127, 4),
-(401, '2025-03-26 00:00:00', 127, 33),
 (402, '2025-03-27 00:00:00', 127, 24),
 (403, '2025-03-29 00:00:00', 127, 32),
 (404, '2025-04-23 00:00:00', 127, 8),
@@ -4033,8 +4095,6 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (409, '2025-04-13 00:00:00', 129, 4),
 (410, '2025-04-13 00:00:00', 130, 4),
 (411, '2025-04-11 00:00:00', 131, 4),
-(412, '2025-04-14 00:00:00', 131, 31),
-(413, '2025-04-16 00:00:00', 131, 29),
 (414, '2025-04-19 00:00:00', 131, 24),
 (415, '2025-04-21 00:00:00', 131, 24),
 (416, '2025-04-29 00:00:00', 131, 9),
@@ -4052,12 +4112,10 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (428, '2025-05-21 00:00:00', 135, 17),
 (429, '2025-06-10 00:00:00', 135, 6),
 (430, '2025-05-13 00:00:00', 136, 4),
-(431, '2025-05-14 00:00:00', 136, 32),
 (432, '2025-05-15 00:00:00', 136, 29),
 (433, '2025-05-19 00:00:00', 136, 35),
 (434, '2025-06-01 00:00:00', 136, 6),
 (435, '2025-05-16 00:00:00', 137, 4),
-(436, '2025-05-17 00:00:00', 137, 20),
 (437, '2025-05-19 00:00:00', 137, 29),
 (438, '2025-05-21 00:00:00', 137, 29),
 (439, '2025-06-02 00:00:00', 137, 8),
@@ -4067,19 +4125,14 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (443, '2025-05-18 00:00:00', 138, 6),
 (444, '2025-05-14 00:00:00', 139, 4),
 (445, '2025-05-13 00:00:00', 140, 4),
-(446, '2025-05-14 00:00:00', 140, 23),
-(447, '2025-05-15 00:00:00', 140, 33),
 (448, '2025-05-18 00:00:00', 140, 35),
 (449, '2025-05-22 00:00:00', 140, 32),
 (450, '2025-06-06 00:00:00', 140, 9),
 (451, '2025-05-14 00:00:00', 141, 4),
-(452, '2025-05-17 00:00:00', 141, 19),
 (453, '2025-05-20 00:00:00', 141, 32),
 (454, '2025-05-23 00:00:00', 141, 20),
 (455, '2025-06-08 00:00:00', 141, 9),
 (456, '2025-05-13 00:00:00', 142, 4),
-(457, '2025-05-15 00:00:00', 142, 32),
-(458, '2025-05-18 00:00:00', 142, 29),
 (459, '2025-05-20 00:00:00', 142, 21),
 (460, '2025-05-23 00:00:00', 142, 24),
 (461, '2025-05-26 00:00:00', 142, 8),
@@ -4094,21 +4147,16 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (470, '2025-05-31 00:00:00', 148, 4),
 (471, '2025-05-29 00:00:00', 149, 4),
 (472, '2025-05-31 00:00:00', 150, 4),
-(473, '2025-06-01 00:00:00', 150, 31),
-(474, '2025-06-03 00:00:00', 150, 17),
 (475, '2025-06-04 00:00:00', 150, 32),
 (476, '2025-06-06 00:00:00', 150, 24),
 (477, '2025-06-20 00:00:00', 150, 6),
 (478, '2025-05-14 00:00:00', 151, 4),
 (479, '2025-05-13 00:00:00', 152, 4),
 (480, '2025-05-29 00:00:00', 153, 4),
-(481, '2025-05-30 00:00:00', 153, 33),
-(482, '2025-06-01 00:00:00', 153, 17),
 (483, '2025-06-05 00:00:00', 153, 20),
 (484, '2025-06-06 00:00:00', 153, 20),
 (485, '2025-06-20 00:00:00', 153, 8),
 (486, '2025-05-30 00:00:00', 154, 4),
-(487, '2025-06-01 00:00:00', 154, 35),
 (488, '2025-06-04 00:00:00', 154, 24),
 (489, '2025-06-05 00:00:00', 154, 29),
 (490, '2025-06-25 00:00:00', 154, 9),
@@ -4121,7 +4169,6 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (497, '2025-03-25 00:00:00', 156, 24),
 (498, '2025-04-15 00:00:00', 156, 6),
 (499, '2025-03-22 00:00:00', 157, 4),
-(500, '2025-03-25 00:00:00', 157, 35),
 (501, '2025-03-29 00:00:00', 157, 21),
 (502, '2025-04-02 00:00:00', 157, 29),
 (503, '2025-04-03 00:00:00', 157, 8),
@@ -4138,8 +4185,6 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (514, '2025-02-09 00:00:00', 162, 9),
 (515, '2025-02-01 00:00:00', 163, 4),
 (516, '2025-06-11 00:00:00', 164, 4),
-(517, '2025-06-14 00:00:00', 164, 21),
-(518, '2025-06-15 00:00:00', 164, 29),
 (519, '2025-06-16 00:00:00', 164, 21),
 (520, '2025-06-19 00:00:00', 164, 35),
 (521, '2025-06-21 00:00:00', 164, 9),
@@ -4153,13 +4198,11 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (529, '2025-06-04 00:00:00', 167, 33),
 (530, '2025-06-23 00:00:00', 167, 8),
 (531, '2025-05-29 00:00:00', 168, 4),
-(532, '2025-06-01 00:00:00', 168, 19),
 (533, '2025-06-03 00:00:00', 168, 32),
 (534, '2025-06-07 00:00:00', 168, 20),
 (535, '2025-06-15 00:00:00', 168, 8),
 (536, '2025-06-10 00:00:00', 169, 4),
 (537, '2025-06-01 00:00:00', 170, 4),
-(538, '2025-06-04 00:00:00', 170, 21),
 (539, '2025-06-06 00:00:00', 170, 31),
 (540, '2025-06-09 00:00:00', 170, 19),
 (541, '2025-06-14 00:00:00', 170, 9),
@@ -4169,19 +4212,15 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (545, '2025-05-22 00:00:00', 171, 6),
 (546, '2025-05-15 00:00:00', 172, 4),
 (547, '2025-05-15 00:00:00', 173, 4),
-(548, '2025-05-18 00:00:00', 173, 20),
-(549, '2025-05-19 00:00:00', 173, 24),
 (550, '2025-05-23 00:00:00', 173, 31),
 (551, '2025-05-26 00:00:00', 173, 33),
 (552, '2025-06-01 00:00:00', 173, 8),
 (553, '2025-05-30 00:00:00', 174, 4),
 (554, '2025-06-01 00:00:00', 175, 4),
-(555, '2025-06-04 00:00:00', 175, 33),
 (556, '2025-06-08 00:00:00', 175, 33),
 (557, '2025-06-11 00:00:00', 175, 31),
 (558, '2025-06-12 00:00:00', 175, 6),
 (559, '2025-05-29 00:00:00', 176, 4),
-(560, '2025-05-30 00:00:00', 176, 32),
 (561, '2025-05-31 00:00:00', 176, 29),
 (562, '2025-06-01 00:00:00', 176, 33),
 (563, '2025-06-03 00:00:00', 176, 8),
@@ -4190,15 +4229,12 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (566, '2025-05-08 00:00:00', 177, 31),
 (567, '2025-05-20 00:00:00', 177, 6),
 (568, '2025-05-31 00:00:00', 178, 4),
-(569, '2025-06-03 00:00:00', 178, 35),
 (570, '2025-06-06 00:00:00', 178, 32),
 (571, '2025-06-10 00:00:00', 178, 23),
 (572, '2025-06-16 00:00:00', 178, 9),
 (573, '2025-06-01 00:00:00', 179, 4),
 (574, '2025-04-13 00:00:00', 180, 4),
 (575, '2025-04-12 00:00:00', 181, 4),
-(576, '2025-04-14 00:00:00', 181, 20),
-(577, '2025-04-15 00:00:00', 181, 19),
 (578, '2025-04-19 00:00:00', 181, 19),
 (579, '2025-04-23 00:00:00', 181, 35),
 (580, '2025-04-25 00:00:00', 181, 8),
@@ -4207,13 +4243,10 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (583, '2025-03-24 00:00:00', 184, 4),
 (584, '2025-04-13 00:00:00', 185, 4),
 (585, '2025-04-12 00:00:00', 186, 4),
-(586, '2025-04-14 00:00:00', 186, 33),
 (587, '2025-04-16 00:00:00', 186, 35),
 (588, '2025-04-18 00:00:00', 186, 21),
 (589, '2025-04-29 00:00:00', 186, 9),
 (590, '2025-03-22 00:00:00', 187, 4),
-(591, '2025-03-24 00:00:00', 187, 19),
-(592, '2025-03-26 00:00:00', 187, 35),
 (593, '2025-03-29 00:00:00', 187, 35),
 (594, '2025-04-01 00:00:00', 187, 33),
 (595, '2025-04-06 00:00:00', 187, 6),
@@ -4254,7 +4287,6 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (630, '2025-05-20 00:00:00', 202, 35),
 (631, '2025-05-24 00:00:00', 202, 9),
 (632, '2025-05-13 00:00:00', 203, 4),
-(633, '2025-05-15 00:00:00', 203, 29),
 (634, '2025-05-18 00:00:00', 203, 29),
 (635, '2025-05-19 00:00:00', 203, 31),
 (636, '2025-06-09 00:00:00', 203, 6),
@@ -4263,19 +4295,14 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (639, '2025-05-21 00:00:00', 204, 32),
 (640, '2025-06-03 00:00:00', 204, 8),
 (641, '2025-09-12 00:00:00', 205, 4),
-(642, '2025-09-13 00:00:00', 205, 35),
-(643, '2025-09-17 00:00:00', 205, 17),
 (644, '2025-09-19 00:00:00', 205, 17),
 (645, '2025-09-23 00:00:00', 205, 33),
 (646, '2025-10-09 00:00:00', 205, 8),
 (647, '2025-09-12 00:00:00', 206, 4),
-(648, '2025-09-14 00:00:00', 206, 21),
 (649, '2025-09-18 00:00:00', 206, 29),
 (650, '2025-09-21 00:00:00', 206, 21),
 (651, '2025-10-01 00:00:00', 206, 9),
 (652, '2025-07-29 00:00:00', 207, 4),
-(653, '2025-07-31 00:00:00', 207, 21),
-(654, '2025-08-03 00:00:00', 207, 23),
 (655, '2025-08-05 00:00:00', 207, 21),
 (656, '2025-08-09 00:00:00', 207, 29),
 (657, '2025-08-27 00:00:00', 207, 9),
@@ -4285,19 +4312,15 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (661, '2025-11-06 00:00:00', 208, 8),
 (662, '2025-10-12 00:00:00', 209, 4),
 (663, '2025-10-12 00:00:00', 210, 4),
-(664, '2025-10-15 00:00:00', 210, 31),
-(665, '2025-10-18 00:00:00', 210, 17),
 (666, '2025-10-22 00:00:00', 210, 17),
 (667, '2025-10-24 00:00:00', 210, 24),
 (668, '2025-10-26 00:00:00', 210, 8),
 (669, '2025-10-10 00:00:00', 211, 4),
 (670, '2025-10-10 00:00:00', 212, 4),
-(671, '2025-10-12 00:00:00', 212, 33),
 (672, '2025-10-15 00:00:00', 212, 21),
 (673, '2025-10-19 00:00:00', 212, 32),
 (674, '2025-10-25 00:00:00', 212, 8),
 (675, '2025-09-14 00:00:00', 213, 4),
-(676, '2025-09-17 00:00:00', 213, 29),
 (677, '2025-09-21 00:00:00', 213, 29),
 (678, '2025-09-23 00:00:00', 213, 19),
 (679, '2025-10-02 00:00:00', 213, 8),
@@ -4319,8 +4342,6 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (695, '2025-10-27 00:00:00', 220, 8),
 (696, '2025-01-20 00:00:00', 221, 4),
 (697, '2025-01-23 00:00:00', 222, 4),
-(698, '2025-01-25 00:00:00', 222, 20),
-(699, '2025-01-26 00:00:00', 222, 33),
 (700, '2025-01-28 00:00:00', 222, 29),
 (701, '2025-01-29 00:00:00', 222, 19),
 (702, '2025-02-16 00:00:00', 222, 9),
@@ -4329,8 +4350,6 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (705, '2025-01-25 00:00:00', 223, 35),
 (706, '2025-01-29 00:00:00', 223, 6),
 (707, '2025-01-20 00:00:00', 224, 4),
-(708, '2025-01-22 00:00:00', 224, 20),
-(709, '2025-01-23 00:00:00', 224, 23),
 (710, '2025-01-25 00:00:00', 224, 33),
 (711, '2025-01-27 00:00:00', 224, 17),
 (712, '2025-02-14 00:00:00', 224, 8),
@@ -4340,23 +4359,18 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 (716, '2025-08-12 00:00:00', 225, 9),
 (717, '2025-01-20 00:00:00', 226, 4),
 (718, '2025-01-21 00:00:00', 227, 4),
-(719, '2025-01-22 00:00:00', 227, 31),
 (720, '2025-01-26 00:00:00', 227, 35),
 (721, '2025-01-28 00:00:00', 227, 24),
 (722, '2025-01-31 00:00:00', 227, 9),
 (723, '2025-01-20 00:00:00', 228, 4),
-(724, '2025-01-23 00:00:00', 228, 35),
-(725, '2025-01-25 00:00:00', 228, 35),
 (726, '2025-01-27 00:00:00', 228, 17),
 (727, '2025-01-30 00:00:00', 228, 32),
 (728, '2025-02-07 00:00:00', 228, 9),
 (729, '2025-08-17 00:00:00', 229, 4),
-(730, '2025-08-18 00:00:00', 229, 24),
 (731, '2025-08-19 00:00:00', 229, 35),
 (732, '2025-08-23 00:00:00', 229, 31),
 (733, '2025-09-10 00:00:00', 229, 9),
 (734, '2025-11-04 00:00:00', 230, 4),
-(735, '2025-11-07 00:00:00', 230, 32),
 (736, '2025-11-10 00:00:00', 230, 23),
 (737, '2025-11-11 00:00:00', 230, 21),
 (738, '2025-11-23 00:00:00', 230, 9),
@@ -4936,13 +4950,13 @@ INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
 
 DROP TABLE IF EXISTS `eventtype`;
 CREATE TABLE IF NOT EXISTS `eventtype` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Code` varchar(4) DEFAULT NULL,
   `Label` varchar(100) DEFAULT NULL,
-  `FamilyId` int DEFAULT NULL,
+  `FamilyId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_EventType_Family` (`FamilyId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=70 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `eventtype`
@@ -4960,63 +4974,63 @@ INSERT INTO `eventtype` (`Id`, `Code`, `Label`, `FamilyId`) VALUES
 (10, 'BUDM', 'event_type_DAMAGE_INV_bulk', 8),
 (11, 'VEDM', 'event_type_DAMAGE_INV_vehicle', 8),
 (12, 'CIDM', 'event_type_DAMAGE_INV_cistern', 8),
-(13, 'DEIN', 'event_type_INSPECTION', 4),
-(14, 'BUDE', 'event_type_INSPECTION_bulk', 4),
-(15, 'VEDE', 'event_type_INSPECTION_vehicle', 4),
-(16, 'CIDE', 'event_type_INSPECTION_cistern', 4),
-(17, 'DERE', 'event_type_REPAIR', 3),
-(18, 'BUDE', 'event_type_REPAIR_bulk', 3),
-(19, 'VEDE', 'event_type_REPAIR_vehicle', 3),
-(20, 'CIDE', 'event_type_REPAIR_cistern', 3),
-(21, 'DECL', 'event_type_CLEANING', 5),
-(22, 'BUDE', 'event_type_CLEANING_bulk', 5),
-(23, 'VEDE', 'event_type_CLEANING_vehicle', 5),
-(24, 'CIDE', 'event_type_CLEANING_cistern', 5),
-(25, 'DEPA', 'event_type_PACKING', 6),
-(26, 'BUDE', 'event_type_PACKING_bulk', 6),
-(27, 'VEDE', 'event_type_PACKING_vehicle', 6),
-(28, 'CIDE', 'event_type_PACKING_cistern', 6),
-(29, 'DEMO', 'event_type_MOVE', 1),
-(30, 'BUDE', 'event_type_MOVE_bulk', 1),
-(31, 'VEDE', 'event_type_MOVE_vehicle', 1),
-(32, 'CIDE', 'event_type_MOVE_cistern', 1),
-(33, 'DETR', 'event_type_TRANSFER', 9),
-(34, 'BUDE', 'event_type_TRANSFER_bulk', 9),
-(35, 'VEDE', 'event_type_TRANSFER_vehicle', 9),
-(36, 'CIDE', 'event_type_TRANSFER_cistern', 9),
-(37, 'DEWE', 'event_type_WEIGHT_MEASUREMENT', 10),
-(38, 'BUDE', 'event_type_WEIGHT_MEASUREMENT_bulk', 10),
-(39, 'VEDE', 'event_type_WEIGHT_MEASUREMENT_vehicle', 10),
-(40, 'CIDE', 'event_type_WEIGHT_MEASUREMENT_cistern', 10),
-(41, 'DEUN', 'event_type_UNSTUFFING', 11),
-(42, 'BUDE', 'event_type_UNSTUFFING_bulk', 11),
-(43, 'VEDE', 'event_type_UNSTUFFING_vehicle', 11),
-(44, 'CIDE', 'event_type_UNSTUFFING_cistern', 11),
-(45, 'DEST', 'event_type_STUFFING', 12),
-(46, 'BUDE', 'event_type_STUFFING_bulk', 12),
-(47, 'VEDE', 'event_type_STUFFING_vehicle', 12),
-(48, 'CIDE', 'event_type_STUFFING_cistern', 12),
-(49, 'DEFE', 'event_type_FEE', 13),
-(50, 'BUDE', 'event_type_FEE_bulk', 13),
-(51, 'VEDE', 'event_type_FEE_vehicle', 13),
-(52, 'CIDE', 'event_type_FEE_cistern', 13),
-(53, 'DETE', 'event_type_TEMPERATURE_MEASUREMENT', 14),
-(54, 'BUDE', 'event_type_TEMPERATURE_MEASUREMENT_bulk', 14),
-(55, 'VEDE', 'event_type_TEMPERATURE_MEASUREMENT_vehicle', 14),
-(56, 'CIDE', 'event_type_TEMPERATURE_MEASUREMENT_cistern', 14),
-(57, 'DESP', 'event_type_SPLIT', 15),
-(58, 'BUDE', 'event_type_SPLIT_bulk', 15),
-(59, 'VEDE', 'event_type_SPLIT_vehicle', 15),
-(60, 'CIDE', 'event_type_SPLIT_cistern', 15),
-(61, 'DEMI', 'event_type_MISC_FEE', 13),
-(62, 'DEMI', 'event_type_MISC_FEE2', 13),
-(63, 'DEMI', 'event_type_MISC_FEE3', 13),
-(64, 'DEMI', 'event_type_MISC_FEE4', 13),
-(65, 'DEMI', 'event_type_MISC_FEE5', 13),
-(66, 'DEMI', 'event_type_MISC_FEE6', 13),
-(67, 'DEMI', 'event_type_MISC_FEE7', 13),
-(68, 'DEMI', 'event_type_MISC_FEE8', 13),
-(69, 'DEMI', 'event_type_MISC_FEE9', 13);
+(13, 'DAMA', 'event_type_DAMAGE_INV', 8),
+(14, 'BLFE', 'event_type_BL_FEE', 13),
+(15, 'TMS', 'Temperature Measure', 14),
+(16, 'EMIN', 'Entrée de Vide par Camion … VT', 7),
+(17, 'EMIW', 'Entrée de Vide par Wagon … VT', 7),
+(18, 'EMIX', 'Entrée de Vide pour Embarquement', 7),
+(19, 'EPTI', 'Entrée Frigo vide pour PTI … ATL', 7),
+(20, 'EREP', 'Retour Vide de Réparation', 7),
+(21, 'DECH', 'Débarquement conteneur', 7),
+(22, 'RMER', 'Reprise du Parc : Mvt maritime', 7),
+(23, 'RLIS', 'Retour Plein de Scanner', 7),
+(24, 'RLIV', 'Livraison Refusée par la Douane', 7),
+(25, 'FUIX', 'Entrée Plein Export sur Camion', 7),
+(26, 'FUIW', 'Entrée Plein Export par Wagon', 7),
+(27, 'RTER', 'Reprise du Parc : Mvt Terrestre', 7),
+(28, 'REGE', 'REGUL. ENTREE / PORTABLE', 7),
+(29, 'REEX', 'Réexportation', 4),
+(30, 'EMOD', 'Enlèvement vide sous palan', 2),
+(31, 'EMOU', 'Sortie de Vide par voie terrestre', 2),
+(32, 'EMOW', 'Sortie de Vide par wagon', 2),
+(33, 'EMOX', 'Sortie Vide pour Empotage', 2),
+(34, 'SODV', 'Sortie Dépot Vide', 2),
+(35, 'SPTI', 'Sortie Frigo vide PTI par Camion', 2),
+(36, 'FUOT', 'Sortie de Plein Transbo', 2),
+(37, 'DELS', 'Livraison Plein Import pour Scanner', 2),
+(38, 'DELW', 'Livraison Plein Import par Wagon', 2),
+(39, 'DELQ', 'Livraison Guerite Quai', 2),
+(40, 'FUOX', 'Sortie de Plein Export', 2),
+(41, 'LOAD', 'Embarquement', 2),
+(42, 'SCAO', 'Sortie après scanner douane', 2),
+(43, 'BREP', 'Sortie pour Réparation', 2),
+(44, 'OULS', 'Sortie Provisoire de VT => LS', 2),
+(45, 'REGS', 'REGUL. SORTIE / PORTABLE', 2),
+(46, 'QUAI', 'QUAI', 13),
+(47, 'RAIL', 'Livraison Wagon', 13),
+(48, 'SCAN', 'SCAN', 13),
+(49, 'DEST', 'DEST', 13),
+(50, 'RLIW', 'Retour Plein de Wagon', 7),
+(51, 'DVIS', 'Double Relevage Visite Douane', 4),
+(52, 'SVGM', 'Saisie Manuelle VGM', 4),
+(53, 'DRLV', 'Double relevage', 4),
+(54, 'SRLV', 'Relevage', 4),
+(55, 'LAFE', 'Late Arrival Fee', 4),
+(56, 'REFU', 'Conteneur Refusé à la Guérite', 4),
+(57, 'ENAN', 'Entrée Anticipée', 4),
+(58, 'EPSP', 'Enlèvement Plein Sous Palan', 2),
+(59, 'REQI', 'Réquisition', 4),
+(60, 'TREQ', 'Transfert Requisition', 4),
+(61, 'DELR', 'Transfert Suite Requisition', 2),
+(62, 'WVGM', 'Poids VGM', 10),
+(63, 'DEPO', 'Sortie pour Dépotage', 2),
+(64, 'TRAN', 'TRANS', 9),
+(65, 'PSEC', 'Transfert Parc Sécurité', 4),
+(66, 'SVIX', 'Sortie vide export', 2),
+(67, 'VTPA', 'Transfert Parc Extérieur', 4),
+(68, 'ETER', 'entrée Terra', 7),
+(69, 'STER', 'sortie Terra', 2);
 
 -- --------------------------------------------------------
 
@@ -5026,10 +5040,10 @@ INSERT INTO `eventtype` (`Id`, `Code`, `Label`, `FamilyId`) VALUES
 
 DROP TABLE IF EXISTS `family`;
 CREATE TABLE IF NOT EXISTS `family` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Label` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `family`
@@ -5060,14 +5074,14 @@ INSERT INTO `family` (`Id`, `Label`) VALUES
 
 DROP TABLE IF EXISTS `invoice`;
 CREATE TABLE IF NOT EXISTS `invoice` (
-  `Id` int NOT NULL AUTO_INCREMENT,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `InvoiceNumber` int DEFAULT NULL,
-  `ValIdationDate` date DEFAULT NULL,
+  `ValIdationDate` datetime DEFAULT NULL,
   `SubTotalAmount` decimal(10,0) DEFAULT NULL,
   `TotalTaxAmount` decimal(10,0) DEFAULT NULL,
   `TotalAmount` decimal(10,0) DEFAULT NULL,
-  `BilledThirdPartyId` int DEFAULT NULL,
-  `StatusId` int DEFAULT '1',
+  `BilledThirdPartyId` int UNSIGNED DEFAULT NULL,
+  `StatusId` int UNSIGNED DEFAULT '1',
   `Deleted` int UNSIGNED NOT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_Invoice_BilledThirdParty` (`BilledThirdPartyId`),
@@ -5079,191 +5093,191 @@ CREATE TABLE IF NOT EXISTS `invoice` (
 --
 
 INSERT INTO `invoice` (`Id`, `InvoiceNumber`, `ValIdationDate`, `SubTotalAmount`, `TotalTaxAmount`, `TotalAmount`, `BilledThirdPartyId`, `StatusId`, `Deleted`) VALUES
-(1, 251000001, '2025-12-13', '7414', '1482', '8896', 5, 3, 0),
-(2, 251000002, '2025-12-13', '5577', '1115', '6692', 6, 3, 0),
-(3, 251000003, '2025-07-23', '3139', '627', '3766', 7, 1, 0),
-(4, 251000004, '2025-01-09', '5835', '1167', '7002', 8, 3, 0),
-(5, 251000005, '2025-05-12', '4608', '921', '5529', 9, 3, 0),
-(370, 251000006, '2025-12-13', '9433', '1886', '11319', 10, 4, 0),
-(371, 251000007, '2025-12-13', '3928', '785', '4713', 11, 4, 0),
-(372, 251000008, '2025-12-13', '5933', '1186', '7119', 12, 4, 0),
-(373, 251000009, '2025-12-13', '8266', '1653', '9919', 13, 4, 0),
-(374, 251000010, '2025-12-13', '5345', '1069', '6414', 14, 4, 0),
-(375, 251000011, '2025-12-13', '7193', '1438', '8631', 15, 4, 0),
-(376, 251000012, '2025-12-13', '1061', '212', '1273', 0, 1, 0),
-(377, 251000013, '2025-12-13', '5376', '1075', '6451', 5, 1, 0),
-(378, 251000014, '2025-12-13', '9881', '1976', '11857', 6, 3, 0),
-(379, 251000015, '2025-12-13', '4320', '864', '5184', 7, 3, 0),
-(380, 251000016, '2025-12-13', '3748', '749', '4497', 8, 4, 0),
-(381, 251000017, '2025-12-13', '3315', '663', '3978', 9, 4, 0),
-(382, 251000018, '2025-12-13', '2998', '599', '3597', 10, 3, 0),
-(383, 251000019, '2025-12-13', '3939', '787', '4726', 11, 1, 0),
-(384, 251000020, '2025-12-13', '1666', '333', '1999', 12, 1, 0),
-(385, 251000021, '2025-12-13', '5280', '1056', '6336', 13, 3, 0),
-(386, 251000022, '2025-12-13', '6453', '1290', '7743', 14, 3, 0),
-(387, 251000023, '2025-12-13', '4745', '949', '5694', 15, 4, 0),
-(388, 251000024, '2025-12-13', '3506', '701', '4207', 0, 4, 0),
-(389, 251000025, '2025-12-13', '6367', '1273', '7640', 5, 3, 0),
-(390, 251000026, '2025-12-13', '7368', '1473', '8841', 6, 4, 0),
-(391, 251000027, '2025-12-13', '4656', '931', '5587', 7, 4, 0),
-(392, 251000028, '2025-12-13', '7256', '1451', '8707', 5, 1, 0),
-(393, 251000029, '2025-12-13', '7386', '1477', '8863', 6, 1, 0),
-(394, 251000030, '2025-12-13', '1962', '392', '2354', 7, 3, 0),
-(395, 251000031, '2025-12-13', '4475', '895', '5370', 8, 3, 0),
-(396, 251000032, '2025-12-13', '5101', '1020', '6121', 9, 4, 0),
-(397, 251000033, '2025-12-13', '9101', '1820', '10921', 10, 4, 0),
-(398, 251000034, '2025-12-13', '5959', '1191', '7150', 11, 3, 0),
-(399, 251000035, '2025-12-13', '8557', '1711', '10268', 12, 4, 0),
-(400, 251000036, '2025-12-13', '4817', '963', '5780', 13, 4, 0),
-(401, 251000037, '2025-12-13', '3412', '682', '4094', 14, 4, 0),
-(402, 251000038, '2025-12-13', '2622', '524', '3146', 15, 4, 0),
-(403, 251000039, '2025-12-13', '1193', '238', '1431', 8, 4, 0),
-(404, 251000040, '2025-12-13', '1830', '366', '2196', 9, 4, 0),
-(405, 251000041, '2025-12-13', '4914', '982', '5896', 10, 4, 0),
-(406, 251000042, '2025-12-13', '2702', '540', '3242', 11, 4, 0),
-(407, 251000043, '2025-12-13', '7481', '1496', '8977', 12, 4, 0),
-(408, 251000044, '2025-12-13', '3425', '685', '4110', 13, 4, 0),
-(409, 251000045, '2025-12-13', '9057', '1811', '10868', 14, 1, 0),
-(410, 251000046, '2025-12-13', '7420', '1484', '8904', 15, 1, 0),
-(411, 251000047, '2025-12-13', '3240', '648', '3888', 0, 3, 0),
-(412, 251000048, '2025-12-13', '4494', '898', '5392', 5, 3, 0),
-(413, 251000049, '2025-12-13', '9525', '1905', '11430', 6, 4, 0),
-(414, 251000050, '2025-12-13', '3370', '674', '4044', 7, 4, 0),
-(415, 251000051, '2025-12-13', '6041', '1208', '7249', 8, 3, 0),
-(416, 251000052, '2025-12-13', '2273', '454', '2727', 9, 1, 0),
-(417, 251000053, '2025-12-13', '3875', '775', '4650', 10, 1, 0),
-(418, 251000054, '2025-12-13', '9591', '1918', '11509', 11, 3, 0),
-(419, 251000055, '2025-12-13', '5515', '1103', '6618', 5, 3, 0),
-(420, 251000056, '2025-12-13', '5632', '1126', '6758', 6, 4, 0),
-(421, 251000057, '2025-12-13', '5380', '1076', '6456', 7, 4, 0),
-(422, 251000058, '2025-12-13', '5282', '1056', '6338', 8, 3, 0),
-(423, 251000059, '2025-12-13', '6114', '1222', '7336', 9, 4, 0),
-(424, 251000060, '2025-12-13', '6504', '1300', '7804', 10, 4, 0),
-(425, 251000061, '2025-12-13', '2620', '524', '3144', 11, 4, 0),
-(426, 251000062, '2025-12-13', '1490', '298', '1788', 12, 4, 0),
-(427, 251000063, '2025-12-13', '1223', '244', '1467', 13, 4, 0),
-(428, 251000064, '2025-12-13', '6353', '1270', '7623', 14, 4, 0),
-(429, 251000065, '2025-12-13', '7321', '1464', '8785', 15, 4, 0),
-(430, 251000066, '2025-12-13', '3495', '699', '4194', 12, 4, 0),
-(431, 251000067, '2025-12-13', '8192', '1638', '9830', 13, 4, 0),
-(432, 251000068, '2025-12-13', '9812', '1962', '11774', 14, 4, 0),
-(433, 251000069, '2025-12-13', '2408', '481', '2889', 15, 1, 0),
-(434, 251000070, '2025-12-13', '5153', '1030', '6183', 0, 1, 0),
-(435, 251000071, '2025-12-13', '2087', '417', '2504', 5, 3, 0),
-(436, 251000072, '2025-12-13', '5042', '1008', '6050', 6, 3, 0),
-(437, 251000073, '2025-12-13', '4227', '845', '5072', 7, 4, 0),
-(438, 251000074, '2025-12-13', '8904', '1780', '10684', 8, 4, 0),
-(439, 251000075, '2025-12-13', '8752', '1750', '10502', 9, 3, 0),
-(440, 251000076, '2025-12-13', '5381', '1076', '6457', 10, 4, 0),
-(441, 251000077, '2025-12-13', '5493', '1098', '6591', 11, 4, 0),
-(442, 251000078, '2025-12-13', '4146', '829', '4975', 12, 4, 0),
-(443, 251000079, '2025-12-13', '3393', '678', '4071', 13, 4, 0),
-(444, 251000080, '2025-12-13', '1886', '377', '2263', 14, 4, 0),
-(445, 251000081, '2025-12-13', '9023', '1804', '10827', 15, 4, 0),
-(446, 251000082, '2025-12-13', '5590', '1118', '6708', 5, 1, 0),
-(447, 251000083, '2025-12-13', '6565', '1313', '7878', 6, 1, 0),
-(448, 251000084, '2025-12-13', '2658', '531', '3189', 7, 3, 0),
-(449, 251000085, '2025-12-13', '8424', '1684', '10108', 8, 3, 0),
-(450, 251000086, '2025-12-13', '7976', '1595', '9571', 9, 4, 0),
-(451, 251000087, '2025-12-13', '4115', '823', '4938', 10, 4, 0),
-(452, 251000088, '2025-12-13', '1465', '293', '1758', 11, 3, 0),
-(453, 251000089, '2025-12-13', '9529', '1905', '11434', 12, 4, 0),
-(454, 251000090, '2025-12-13', '6468', '1293', '7761', 13, 4, 0),
-(455, 251000091, '2025-12-13', '3851', '770', '4621', 14, 4, 0),
-(456, 251000092, '2025-12-13', '3781', '756', '4537', 15, 4, 0),
-(457, 251000093, '2025-12-13', '3382', '676', '4058', 0, 4, 0),
-(458, 251000094, '2025-12-13', '3200', '640', '3840', 5, 4, 0),
-(459, 251000095, '2025-12-13', '7162', '1432', '8594', 6, 1, 0),
-(460, 251000096, '2025-12-13', '4074', '814', '4888', 7, 1, 0),
-(461, 251000097, '2025-12-13', '1781', '356', '2137', 8, 3, 0),
-(462, 251000098, '2025-12-13', '9857', '1971', '11828', 9, 3, 0),
-(463, 251000099, '2025-12-13', '1928', '385', '2313', 10, 4, 0),
-(464, 251000100, '2025-12-13', '5124', '1024', '6148', 11, 4, 0),
-(465, 251000101, '2025-12-13', '1799', '359', '2158', 12, 3, 0),
-(466, 251000102, '2025-12-13', '9674', '1934', '11608', 13, 4, 0),
-(467, 251000103, '2025-12-13', '4389', '877', '5266', 14, 4, 0),
-(468, 251000104, '2025-12-13', '3312', '662', '3974', 15, 4, 0),
-(469, 251000105, '2025-12-13', '3085', '617', '3702', 0, 4, 0),
-(470, 251000106, '2025-12-13', '5006', '1001', '6007', 5, 4, 0),
-(471, 251000107, '2025-12-13', '6122', '1224', '7346', 6, 4, 0),
-(472, 251000108, '2025-12-13', '7281', '1456', '8737', 7, 4, 0),
-(473, 251000109, '2025-12-13', '3752', '750', '4502', 5, 4, 0),
-(474, 251000110, '2025-12-13', '5088', '1017', '6105', 6, 4, 0),
-(475, 251000111, '2025-12-13', '6624', '1324', '7948', 7, 4, 0),
-(476, 251000112, '2025-12-13', '4883', '976', '5859', 8, 1, 0),
-(477, 251000113, '2025-12-13', '4751', '950', '5701', 9, 1, 0),
-(478, 251000114, '2025-12-13', '4273', '854', '5127', 10, 3, 0),
-(479, 251000115, '2025-12-13', '3609', '721', '4330', 11, 3, 0),
-(480, 251000116, '2025-12-13', '8328', '1665', '9993', 12, 4, 0),
-(481, 251000117, '2025-12-13', '4920', '984', '5904', 13, 4, 0),
-(482, 251000118, '2025-12-13', '3015', '603', '3618', 14, 3, 0),
-(483, 251000119, '2025-12-13', '8328', '1665', '9993', 15, 1, 0),
-(484, 251000120, '2025-12-13', '6746', '1349', '8095', 8, 1, 0),
-(485, 251000121, '2025-12-13', '3268', '653', '3921', 9, 3, 0),
-(486, 251000122, '2025-12-13', '9226', '1845', '11071', 10, 3, 0),
-(487, 251000123, '2025-12-13', '6343', '1268', '7611', 11, 4, 0),
-(488, 251000124, '2025-12-13', '3795', '759', '4554', 12, 4, 0),
-(489, 251000125, '2025-12-13', '8611', '1722', '10333', 13, 3, 0),
-(490, 251000126, '2025-12-13', '9052', '1810', '10862', 14, 4, 0),
-(491, 251000127, '2025-12-13', '8198', '1639', '9837', 15, 4, 0),
-(492, 251000128, '2025-12-13', '6506', '1301', '7807', 0, 4, 0),
-(493, 251000129, '2025-12-13', '3758', '751', '4509', 5, 4, 0),
-(494, 251000130, '2025-12-13', '3917', '783', '4700', 6, 4, 0),
-(495, 251000131, '2025-12-13', '1003', '200', '1203', 7, 4, 0),
-(496, 251000132, '2025-12-13', '3733', '746', '4479', 8, 1, 0),
-(497, 251000133, '2025-12-13', '4851', '970', '5821', 9, 1, 0),
-(498, 251000134, '2025-12-13', '6445', '1289', '7734', 10, 3, 0),
-(499, 251000135, '2025-12-13', '6803', '1360', '8163', 11, 3, 0),
-(500, 251000136, '2025-12-13', '6742', '1348', '8090', 5, 4, 0),
-(501, 251000137, '2025-12-13', '7931', '1586', '9517', 6, 4, 0),
-(502, 251000138, '2025-12-13', '1094', '218', '1312', 7, 3, 0),
-(503, 251000139, '2025-12-13', '5938', '1187', '7125', 8, 4, 0),
-(504, 251000140, '2025-12-13', '3419', '683', '4102', 9, 4, 0),
-(505, 251000141, '2025-12-13', '8767', '1753', '10520', 10, 1, 0),
-(506, 251000142, '2025-12-13', '8738', '1747', '10485', 11, 1, 0),
-(507, 251000143, '2025-12-13', '5446', '1089', '6535', 12, 3, 0),
-(508, 251000144, '2025-12-13', '4643', '928', '5571', 13, 3, 0),
-(509, 251000145, '2025-12-13', '5285', '1057', '6342', 14, 4, 0),
-(510, 251000146, '2025-12-13', '7336', '1467', '8803', 15, 4, 0),
-(511, 251000147, '2025-12-13', '4219', '843', '5062', 12, 3, 0),
-(512, 251000148, '2025-12-13', '7755', '1551', '9306', 13, 1, 0),
-(513, 251000149, '2025-12-13', '6614', '1322', '7936', 14, 1, 0),
-(514, 251000150, '2025-12-13', '9308', '1861', '11169', 15, 3, 0),
-(515, 251000151, '2025-12-13', '1201', '240', '1441', 0, 3, 0),
-(516, 251000152, '2025-12-13', '2553', '510', '3063', 5, 4, 0),
-(517, 251000153, '2025-12-13', '7953', '1590', '9543', 6, 4, 0),
-(518, 251000154, '2025-12-13', '8878', '1775', '10653', 7, 3, 0),
-(519, 251000155, '2025-12-13', '5039', '1007', '6046', 8, 4, 0),
-(520, 251000156, '2025-12-13', '8512', '1702', '10214', 9, 4, 0),
-(521, 251000157, '2025-12-13', '3847', '769', '4616', 10, 3, 0),
-(522, 251000158, '2025-12-13', '9469', '1893', '11362', 11, 1, 0),
-(523, 251000159, '2025-12-13', '9565', '1913', '11478', 12, 3, 0),
-(524, 251000160, '2025-12-13', '1622', '324', '1946', 13, 3, 0),
-(525, 251000161, '2025-12-13', '4045', '809', '4854', 14, 4, 0),
-(526, 251000162, '2025-12-13', '4848', '969', '5817', 15, 4, 0),
-(527, 251000163, '2025-12-13', '6811', '1362', '8173', 5, 3, 0),
-(528, 251000164, '2025-12-13', '4741', '948', '5689', 6, 4, 0),
-(529, 251000165, '2025-12-13', '7871', '1574', '9445', 7, 4, 0),
-(530, 251000166, '2025-12-13', '3956', '791', '4747', 8, 1, 0),
-(531, 251000167, '2025-12-13', '4525', '905', '5430', 9, 1, 0),
-(532, 251000168, '2025-12-13', '3146', '629', '3775', 10, 3, 0),
-(533, 251000169, '2025-12-13', '7834', '1566', '9400', 11, 3, 0),
-(534, 251000170, '2025-12-13', '6811', '1362', '8173', 12, 4, 0),
-(535, 251000171, '2025-12-13', '5876', '1175', '7051', 13, 4, 0),
-(536, 251000172, '2025-12-13', '9462', '1892', '11354', 14, 3, 0),
-(537, 251000173, '2025-12-13', '7311', '1462', '8773', 15, 4, 0),
-(538, 251000174, '2025-12-13', '7390', '1478', '8868', 0, 4, 0),
-(539, 251000175, '2025-12-13', '7611', '1522', '9133', 5, 4, 0),
-(540, 251000176, '2025-12-13', '1207', '241', '1448', 6, 4, 0),
-(541, 251000177, '2025-12-13', '1190', '238', '1428', 7, 1, 0),
-(542, 251000178, '2025-12-13', '4146', '829', '4975', 8, 1, 0),
-(543, 251000179, '2025-12-13', '8290', '1658', '9948', 9, 3, 0),
-(544, 251000180, '2025-12-13', '7923', '1584', '9507', 10, 3, 0),
-(545, 251000181, '2025-12-13', '2530', '506', '3036', 11, 4, 0),
-(546, 251000182, '2025-12-13', '9350', '1870', '11220', 12, 4, 0),
-(547, 251000183, '2025-12-13', '9034', '1806', '10840', 13, 3, 0),
-(548, 251000184, '2025-12-13', '6967', '1393', '8360', 14, 4, 0),
-(549, 251000185, '2025-12-13', '4575', '915', '5490', 15, 4, 0);
+(1, 251000196, '2025-12-20 18:32:42', '7414', '1482', '8896', 5, 4, 0),
+(2, 251000191, '2025-12-20 16:39:39', '5577', '1115', '6692', 6, 3, 0),
+(3, NULL, '2025-07-23 00:00:00', '3139', '627', '3766', 7, 1, 0),
+(4, 251000197, '2025-12-20 18:32:42', '5835', '1167', '7002', 8, 3, 0),
+(5, 251000198, '2025-12-20 18:42:02', '4608', '921', '5529', 9, 4, 0),
+(370, 251000006, '2025-12-13 00:00:00', '9433', '1886', '11319', 10, 4, 0),
+(371, 251000007, '2025-12-13 00:00:00', '3928', '785', '4713', 11, 4, 0),
+(372, 251000008, '2025-12-13 00:00:00', '5933', '1186', '7119', 12, 4, 0),
+(373, 251000009, '2025-12-13 00:00:00', '8266', '1653', '9919', 13, 4, 0),
+(374, 251000010, '2025-12-13 00:00:00', '5345', '1069', '6414', 14, 4, 0),
+(375, 251000011, '2025-12-13 00:00:00', '7193', '1438', '8631', 15, 4, 0),
+(376, NULL, '2025-12-13 00:00:00', '1061', '212', '1273', 0, 1, 0),
+(377, NULL, '2025-12-13 00:00:00', '5376', '1075', '6451', 5, 1, 0),
+(378, 251000014, '2025-12-13 00:00:00', '9881', '1976', '11857', 6, 3, 0),
+(379, 251000015, '2025-12-13 00:00:00', '4320', '864', '5184', 7, 3, 0),
+(380, 251000016, '2025-12-13 00:00:00', '3748', '749', '4497', 8, 4, 0),
+(381, 251000017, '2025-12-13 00:00:00', '3315', '663', '3978', 9, 4, 0),
+(382, 251000018, '2025-12-13 00:00:00', '2998', '599', '3597', 10, 3, 0),
+(383, NULL, '2025-12-13 00:00:00', '3939', '787', '4726', 11, 1, 0),
+(384, NULL, '2025-12-13 00:00:00', '1666', '333', '1999', 12, 1, 0),
+(385, 251000021, '2025-12-13 00:00:00', '5280', '1056', '6336', 13, 3, 0),
+(386, 251000022, '2025-12-13 00:00:00', '6453', '1290', '7743', 14, 3, 0),
+(387, 251000023, '2025-12-13 00:00:00', '4745', '949', '5694', 15, 4, 0),
+(388, 251000024, '2025-12-13 00:00:00', '3506', '701', '4207', 0, 4, 0),
+(389, 251000025, '2025-12-13 00:00:00', '6367', '1273', '7640', 5, 3, 0),
+(390, 251000026, '2025-12-13 00:00:00', '7368', '1473', '8841', 6, 4, 0),
+(391, 251000027, '2025-12-13 00:00:00', '4656', '931', '5587', 7, 4, 0),
+(392, NULL, '2025-12-13 00:00:00', '7256', '1451', '8707', 5, 1, 0),
+(393, NULL, '2025-12-13 00:00:00', '7386', '1477', '8863', 6, 1, 0),
+(394, 251000030, '2025-12-13 00:00:00', '1962', '392', '2354', 7, 3, 0),
+(395, 251000031, '2025-12-13 00:00:00', '4475', '895', '5370', 8, 3, 0),
+(396, 251000032, '2025-12-13 00:00:00', '5101', '1020', '6121', 9, 4, 0),
+(397, 251000033, '2025-12-13 00:00:00', '9101', '1820', '10921', 10, 4, 0),
+(398, 251000034, '2025-12-13 00:00:00', '5959', '1191', '7150', 11, 3, 0),
+(399, 251000035, '2025-12-13 00:00:00', '8557', '1711', '10268', 12, 4, 0),
+(400, 251000036, '2025-12-13 00:00:00', '4817', '963', '5780', 13, 4, 0),
+(401, 251000037, '2025-12-13 00:00:00', '3412', '682', '4094', 14, 4, 0),
+(402, 251000038, '2025-12-13 00:00:00', '2622', '524', '3146', 15, 4, 0),
+(403, 251000039, '2025-12-13 00:00:00', '1193', '238', '1431', 8, 4, 0),
+(404, 251000040, '2025-12-13 00:00:00', '1830', '366', '2196', 9, 4, 0),
+(405, 251000041, '2025-12-13 00:00:00', '4914', '982', '5896', 10, 4, 0),
+(406, 251000042, '2025-12-13 00:00:00', '2702', '540', '3242', 11, 4, 0),
+(407, 251000043, '2025-12-13 00:00:00', '7481', '1496', '8977', 12, 4, 0),
+(408, 251000044, '2025-12-13 00:00:00', '3425', '685', '4110', 13, 4, 0),
+(409, NULL, '2025-12-13 00:00:00', '9057', '1811', '10868', 14, 1, 0),
+(410, NULL, '2025-12-13 00:00:00', '7420', '1484', '8904', 15, 1, 0),
+(411, 251000047, '2025-12-13 00:00:00', '3240', '648', '3888', 0, 3, 0),
+(412, 251000048, '2025-12-13 00:00:00', '4494', '898', '5392', 5, 3, 0),
+(413, 251000049, '2025-12-13 00:00:00', '9525', '1905', '11430', 6, 4, 0),
+(414, 251000050, '2025-12-13 00:00:00', '3370', '674', '4044', 7, 4, 0),
+(415, 251000051, '2025-12-13 00:00:00', '6041', '1208', '7249', 8, 3, 0),
+(416, NULL, '2025-12-13 00:00:00', '2273', '454', '2727', 9, 1, 0),
+(417, NULL, '2025-12-13 00:00:00', '3875', '775', '4650', 10, 1, 0),
+(418, 251000054, '2025-12-13 00:00:00', '9591', '1918', '11509', 11, 3, 0),
+(419, 251000055, '2025-12-13 00:00:00', '5515', '1103', '6618', 5, 3, 0),
+(420, 251000056, '2025-12-13 00:00:00', '5632', '1126', '6758', 6, 4, 0),
+(421, 251000057, '2025-12-13 00:00:00', '5380', '1076', '6456', 7, 4, 0),
+(422, 251000058, '2025-12-13 00:00:00', '5282', '1056', '6338', 8, 3, 0),
+(423, 251000059, '2025-12-13 00:00:00', '6114', '1222', '7336', 9, 4, 0),
+(424, 251000060, '2025-12-13 00:00:00', '6504', '1300', '7804', 10, 4, 0),
+(425, 251000061, '2025-12-13 00:00:00', '2620', '524', '3144', 11, 4, 0),
+(426, 251000062, '2025-12-13 00:00:00', '1490', '298', '1788', 12, 4, 0),
+(427, 251000063, '2025-12-13 00:00:00', '1223', '244', '1467', 13, 4, 0),
+(428, 251000064, '2025-12-13 00:00:00', '6353', '1270', '7623', 14, 4, 0),
+(429, 251000065, '2025-12-13 00:00:00', '7321', '1464', '8785', 15, 4, 0),
+(430, 251000066, '2025-12-13 00:00:00', '3495', '699', '4194', 12, 4, 0),
+(431, 251000067, '2025-12-13 00:00:00', '8192', '1638', '9830', 13, 4, 0),
+(432, 251000068, '2025-12-13 00:00:00', '9812', '1962', '11774', 14, 4, 0),
+(433, NULL, '2025-12-13 00:00:00', '2408', '481', '2889', 15, 1, 0),
+(434, NULL, '2025-12-13 00:00:00', '5153', '1030', '6183', 0, 1, 0),
+(435, 251000071, '2025-12-13 00:00:00', '2087', '417', '2504', 5, 3, 0),
+(436, 251000072, '2025-12-13 00:00:00', '5042', '1008', '6050', 6, 3, 0),
+(437, 251000073, '2025-12-13 00:00:00', '4227', '845', '5072', 7, 4, 0),
+(438, 251000074, '2025-12-13 00:00:00', '8904', '1780', '10684', 8, 4, 0),
+(439, 251000075, '2025-12-13 00:00:00', '8752', '1750', '10502', 9, 3, 0),
+(440, 251000076, '2025-12-13 00:00:00', '5381', '1076', '6457', 10, 4, 0),
+(441, 251000077, '2025-12-13 00:00:00', '5493', '1098', '6591', 11, 4, 0),
+(442, 251000078, '2025-12-13 00:00:00', '4146', '829', '4975', 12, 4, 0),
+(443, 251000079, '2025-12-13 00:00:00', '3393', '678', '4071', 13, 4, 0),
+(444, 251000080, '2025-12-13 00:00:00', '1886', '377', '2263', 14, 4, 0),
+(445, 251000081, '2025-12-13 00:00:00', '9023', '1804', '10827', 15, 4, 0),
+(446, NULL, '2025-12-13 00:00:00', '5590', '1118', '6708', 5, 1, 0),
+(447, NULL, '2025-12-13 00:00:00', '6565', '1313', '7878', 6, 1, 0),
+(448, 251000084, '2025-12-13 00:00:00', '2658', '531', '3189', 7, 3, 0),
+(449, 251000085, '2025-12-13 00:00:00', '8424', '1684', '10108', 8, 3, 0),
+(450, 251000086, '2025-12-13 00:00:00', '7976', '1595', '9571', 9, 4, 0),
+(451, 251000087, '2025-12-13 00:00:00', '4115', '823', '4938', 10, 4, 0),
+(452, 251000088, '2025-12-13 00:00:00', '1465', '293', '1758', 11, 3, 0),
+(453, 251000089, '2025-12-13 00:00:00', '9529', '1905', '11434', 12, 4, 0),
+(454, 251000090, '2025-12-13 00:00:00', '6468', '1293', '7761', 13, 4, 0),
+(455, 251000091, '2025-12-13 00:00:00', '3851', '770', '4621', 14, 4, 0),
+(456, 251000092, '2025-12-13 00:00:00', '3781', '756', '4537', 15, 4, 0),
+(457, 251000093, '2025-12-13 00:00:00', '3382', '676', '4058', 0, 4, 0),
+(458, 251000094, '2025-12-13 00:00:00', '3200', '640', '3840', 5, 4, 0),
+(459, NULL, '2025-12-13 00:00:00', '7162', '1432', '8594', 6, 1, 0),
+(460, NULL, '2025-12-13 00:00:00', '4074', '814', '4888', 7, 1, 0),
+(461, 251000097, '2025-12-13 00:00:00', '1781', '356', '2137', 8, 3, 0),
+(462, 251000098, '2025-12-13 00:00:00', '9857', '1971', '11828', 9, 3, 0),
+(463, 251000099, '2025-12-13 00:00:00', '1928', '385', '2313', 10, 4, 0),
+(464, 251000100, '2025-12-13 00:00:00', '5124', '1024', '6148', 11, 4, 0),
+(465, 251000101, '2025-12-13 00:00:00', '1799', '359', '2158', 12, 3, 0),
+(466, 251000102, '2025-12-13 00:00:00', '9674', '1934', '11608', 13, 4, 0),
+(467, 251000103, '2025-12-13 00:00:00', '4389', '877', '5266', 14, 4, 0),
+(468, 251000104, '2025-12-13 00:00:00', '3312', '662', '3974', 15, 4, 0),
+(469, 251000105, '2025-12-13 00:00:00', '3085', '617', '3702', 0, 4, 0),
+(470, 251000106, '2025-12-13 00:00:00', '5006', '1001', '6007', 5, 4, 0),
+(471, 251000107, '2025-12-13 00:00:00', '6122', '1224', '7346', 6, 4, 0),
+(472, 251000108, '2025-12-13 00:00:00', '7281', '1456', '8737', 7, 4, 0),
+(473, 251000109, '2025-12-13 00:00:00', '3752', '750', '4502', 5, 4, 0),
+(474, 251000110, '2025-12-13 00:00:00', '5088', '1017', '6105', 6, 4, 0),
+(475, 251000111, '2025-12-13 00:00:00', '6624', '1324', '7948', 7, 4, 0),
+(476, NULL, '2025-12-13 00:00:00', '4883', '976', '5859', 8, 1, 0),
+(477, NULL, '2025-12-13 00:00:00', '4751', '950', '5701', 9, 1, 0),
+(478, 251000114, '2025-12-13 00:00:00', '4273', '854', '5127', 10, 3, 0),
+(479, 251000115, '2025-12-13 00:00:00', '3609', '721', '4330', 11, 3, 0),
+(480, 251000116, '2025-12-13 00:00:00', '8328', '1665', '9993', 12, 4, 0),
+(481, 251000117, '2025-12-13 00:00:00', '4920', '984', '5904', 13, 4, 0),
+(482, 251000118, '2025-12-13 00:00:00', '3015', '603', '3618', 14, 3, 0),
+(483, NULL, '2025-12-13 00:00:00', '8328', '1665', '9993', 15, 1, 0),
+(484, NULL, '2025-12-13 00:00:00', '6746', '1349', '8095', 8, 1, 0),
+(485, 251000121, '2025-12-13 00:00:00', '3268', '653', '3921', 9, 3, 0),
+(486, 251000122, '2025-12-13 00:00:00', '9226', '1845', '11071', 10, 3, 0),
+(487, 251000123, '2025-12-13 00:00:00', '6343', '1268', '7611', 11, 4, 0),
+(488, 251000124, '2025-12-13 00:00:00', '3795', '759', '4554', 12, 4, 0),
+(489, 251000125, '2025-12-13 00:00:00', '8611', '1722', '10333', 13, 3, 0),
+(490, 251000126, '2025-12-13 00:00:00', '9052', '1810', '10862', 14, 4, 0),
+(491, 251000127, '2025-12-13 00:00:00', '8198', '1639', '9837', 15, 4, 0),
+(492, 251000128, '2025-12-13 00:00:00', '6506', '1301', '7807', 0, 4, 0),
+(493, 251000129, '2025-12-13 00:00:00', '3758', '751', '4509', 5, 4, 0),
+(494, 251000130, '2025-12-13 00:00:00', '3917', '783', '4700', 6, 4, 0),
+(495, 251000131, '2025-12-13 00:00:00', '1003', '200', '1203', 7, 4, 0),
+(496, NULL, '2025-12-13 00:00:00', '3733', '746', '4479', 8, 1, 0),
+(497, NULL, '2025-12-13 00:00:00', '4851', '970', '5821', 9, 1, 0),
+(498, 251000134, '2025-12-13 00:00:00', '6445', '1289', '7734', 10, 3, 0),
+(499, 251000135, '2025-12-13 00:00:00', '6803', '1360', '8163', 11, 3, 0),
+(500, 251000136, '2025-12-13 00:00:00', '6742', '1348', '8090', 5, 4, 0),
+(501, 251000137, '2025-12-13 00:00:00', '7931', '1586', '9517', 6, 4, 0),
+(502, 251000138, '2025-12-13 00:00:00', '1094', '218', '1312', 7, 3, 0),
+(503, 251000139, '2025-12-13 00:00:00', '5938', '1187', '7125', 8, 4, 0),
+(504, 251000140, '2025-12-13 00:00:00', '3419', '683', '4102', 9, 4, 0),
+(505, NULL, '2025-12-13 22:42:17', '8767', '1753', '10520', 10, 2, 0),
+(506, NULL, '2025-12-13 22:41:22', '8738', '1747', '10485', 11, 2, 0),
+(507, 251000143, '2025-12-13 00:00:00', '5446', '1089', '6535', 12, 3, 0),
+(508, 251000144, '2025-12-13 00:00:00', '4643', '928', '5571', 13, 3, 0),
+(509, 251000145, '2025-12-13 00:00:00', '5285', '1057', '6342', 14, 4, 0),
+(510, 251000146, '2025-12-13 00:00:00', '7336', '1467', '8803', 15, 4, 0),
+(511, 251000147, '2025-12-13 00:00:00', '4219', '843', '5062', 12, 3, 0),
+(512, NULL, '2025-12-13 00:00:00', '7755', '1551', '9306', 13, 1, 0),
+(513, NULL, '2025-12-13 00:00:00', '6614', '1322', '7936', 14, 1, 0),
+(514, 251000150, '2025-12-13 00:00:00', '9308', '1861', '11169', 15, 3, 0),
+(515, 251000151, '2025-12-13 00:00:00', '1201', '240', '1441', 0, 3, 0),
+(516, 251000152, '2025-12-13 00:00:00', '2553', '510', '3063', 5, 4, 0),
+(517, 251000153, '2025-12-13 00:00:00', '7953', '1590', '9543', 6, 4, 0),
+(518, 251000154, '2025-12-13 00:00:00', '8878', '1775', '10653', 7, 3, 0),
+(519, 251000155, '2025-12-13 00:00:00', '5039', '1007', '6046', 8, 4, 0),
+(520, 251000156, '2025-12-13 00:00:00', '8512', '1702', '10214', 9, 4, 0),
+(521, 251000157, '2025-12-13 00:00:00', '3847', '769', '4616', 10, 3, 0),
+(522, NULL, '2025-12-13 00:00:00', '9469', '1893', '11362', 11, 1, 0),
+(523, 251000159, '2025-12-13 00:00:00', '9565', '1913', '11478', 12, 3, 0),
+(524, 251000160, '2025-12-13 00:00:00', '1622', '324', '1946', 13, 3, 0),
+(525, 251000161, '2025-12-13 00:00:00', '4045', '809', '4854', 14, 4, 0),
+(526, 251000162, '2025-12-13 00:00:00', '4848', '969', '5817', 15, 4, 0),
+(527, 251000163, '2025-12-13 00:00:00', '6811', '1362', '8173', 5, 3, 0),
+(528, 251000164, '2025-12-13 00:00:00', '4741', '948', '5689', 6, 4, 0),
+(529, 251000165, '2025-12-13 00:00:00', '7871', '1574', '9445', 7, 4, 0),
+(530, NULL, '2025-12-13 00:00:00', '3956', '791', '4747', 8, 1, 0),
+(531, NULL, '2025-12-13 00:00:00', '4525', '905', '5430', 9, 1, 0),
+(532, 251000168, '2025-12-13 00:00:00', '3146', '629', '3775', 10, 3, 0),
+(533, 251000169, '2025-12-13 00:00:00', '7834', '1566', '9400', 11, 3, 0),
+(534, 251000170, '2025-12-13 00:00:00', '6811', '1362', '8173', 12, 4, 0),
+(535, 251000171, '2025-12-13 00:00:00', '5876', '1175', '7051', 13, 4, 0),
+(536, 251000172, '2025-12-13 00:00:00', '9462', '1892', '11354', 14, 3, 0),
+(537, 251000173, '2025-12-13 00:00:00', '7311', '1462', '8773', 15, 4, 0),
+(538, 251000174, '2025-12-13 00:00:00', '7390', '1478', '8868', 0, 4, 0),
+(539, 251000175, '2025-12-13 00:00:00', '7611', '1522', '9133', 5, 4, 0),
+(540, 251000176, '2025-12-13 00:00:00', '1207', '241', '1448', 6, 4, 0),
+(541, NULL, '2025-12-13 00:00:00', '1190', '238', '1428', 7, 1, 0),
+(542, NULL, '2025-12-13 00:00:00', '4146', '829', '4975', 8, 1, 0),
+(543, 251000179, '2025-12-13 00:00:00', '8290', '1658', '9948', 9, 3, 0),
+(544, 251000180, '2025-12-13 00:00:00', '7923', '1584', '9507', 10, 3, 0),
+(545, 251000181, '2025-12-13 00:00:00', '2530', '506', '3036', 11, 4, 0),
+(546, 251000182, '2025-12-13 00:00:00', '9350', '1870', '11220', 12, 4, 0),
+(547, 251000183, '2025-12-13 00:00:00', '9034', '1806', '10840', 13, 3, 0),
+(548, 251000184, '2025-12-13 00:00:00', '6967', '1393', '8360', 14, 4, 0),
+(549, 251000185, '2025-12-13 00:00:00', '4575', '915', '5490', 15, 4, 0);
 
 -- --------------------------------------------------------
 
@@ -5273,16 +5287,16 @@ INSERT INTO `invoice` (`Id`, `InvoiceNumber`, `ValIdationDate`, `SubTotalAmount`
 
 DROP TABLE IF EXISTS `invoiceitem`;
 CREATE TABLE IF NOT EXISTS `invoiceitem` (
-  `Id` int NOT NULL AUTO_INCREMENT,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Quantity` int DEFAULT NULL,
   `Rate` decimal(10,0) DEFAULT NULL,
   `Amount` decimal(10,0) DEFAULT NULL,
   `CalculatedTax` decimal(10,0) DEFAULT NULL,
-  `InvoiceId` int DEFAULT NULL,
-  `JobFileId` int DEFAULT NULL,
-  `EventId` int DEFAULT NULL,
-  `SubscriptionId` int DEFAULT NULL,
-  `RateRangePeriodId` int DEFAULT NULL,
+  `InvoiceId` int UNSIGNED DEFAULT NULL,
+  `JobFileId` int UNSIGNED DEFAULT NULL,
+  `EventId` int UNSIGNED DEFAULT NULL,
+  `SubscriptionId` int UNSIGNED DEFAULT NULL,
+  `RateRangePeriodId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_InvoiceItem_Invoice` (`InvoiceId`),
   KEY `FK_InvoiceItem_JobFile` (`JobFileId`),
@@ -5496,10 +5510,10 @@ INSERT INTO `invoiceitem` (`Id`, `Quantity`, `Rate`, `Amount`, `CalculatedTax`, 
 
 DROP TABLE IF EXISTS `invoicestatus`;
 CREATE TABLE IF NOT EXISTS `invoicestatus` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Label` varchar(256) DEFAULT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `invoicestatus`
@@ -5524,11 +5538,11 @@ INSERT INTO `invoicestatus` (`Id`, `Label`) VALUES
 
 DROP TABLE IF EXISTS `jobfile`;
 CREATE TABLE IF NOT EXISTS `jobfile` (
-  `Id` int NOT NULL AUTO_INCREMENT,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `DateOpen` datetime DEFAULT NULL,
   `DateClose` datetime DEFAULT NULL,
-  `ShippingLineId` int DEFAULT NULL,
-  `PositionId` int DEFAULT NULL,
+  `ShippingLineId` int UNSIGNED DEFAULT NULL,
+  `PositionId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_JobFile_ShippingLine` (`ShippingLineId`),
   KEY `FK_JobFile_Position` (`PositionId`)
@@ -5541,54 +5555,88 @@ CREATE TABLE IF NOT EXISTS `jobfile` (
 INSERT INTO `jobfile` (`Id`, `DateOpen`, `DateClose`, `ShippingLineId`, `PositionId`) VALUES
 (1, '2025-05-21 00:00:00', '2025-08-12 00:00:00', NULL, NULL),
 (2, '2025-09-12 00:00:00', NULL, NULL, NULL),
-(3, '2025-08-22 00:00:00', NULL, NULL, NULL),
-(4, '2025-07-26 00:00:00', NULL, NULL, NULL),
-(5, '2025-11-10 00:00:00', '2026-01-25 00:00:00', NULL, NULL),
-(6, '2025-06-29 00:00:00', NULL, NULL, NULL),
+(3, '2025-08-22 00:00:00', '2025-02-10 00:00:00', NULL, NULL),
+(4, '2025-07-26 00:00:00', '2025-01-31 01:00:00', NULL, NULL),
+(5, '2025-11-10 00:00:00', NULL, NULL, NULL),
+(6, '2025-06-29 00:00:00', '2025-11-01 00:00:00', NULL, NULL),
 (7, '2025-08-18 00:00:00', NULL, NULL, NULL),
-(8, '2025-06-25 00:00:00', '2025-07-30 00:00:00', NULL, NULL),
+(8, '2025-06-25 00:00:00', NULL, NULL, NULL),
 (9, '2025-11-10 00:00:00', '2025-12-06 00:00:00', NULL, NULL),
 (10, '2025-03-23 00:00:00', NULL, NULL, NULL),
 (11, '2025-04-16 00:00:00', '2025-05-13 00:00:00', NULL, NULL),
-(12, '2025-10-30 00:00:00', NULL, NULL, NULL),
-(13, '2025-07-16 00:00:00', '2025-09-11 00:00:00', NULL, NULL),
-(14, '2025-03-28 00:00:00', '2025-05-01 00:00:00', NULL, NULL),
-(15, '2025-07-11 00:00:00', NULL, NULL, NULL),
-(51, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(12, '2025-10-30 00:00:00', '2025-05-22 00:00:00', NULL, NULL),
+(13, '2025-07-16 00:00:00', NULL, NULL, NULL),
+(14, '2025-03-28 00:00:00', NULL, NULL, NULL),
+(15, '2025-07-11 00:00:00', '2025-06-01 00:00:00', NULL, NULL),
+(16, '2025-12-14 01:08:14', NULL, 16, 1),
+(17, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 12, 1),
+(18, '2025-12-14 01:08:14', NULL, 14, 1),
+(19, '2025-12-14 01:08:14', NULL, 17, 1),
+(20, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 20, 1),
+(21, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 103, 1),
+(22, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 2, 1),
+(23, '2025-12-14 01:08:14', NULL, 101, 1),
+(24, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 14, 1),
+(25, '2025-12-14 01:08:14', NULL, 11, 1),
+(26, '2025-12-14 01:08:14', NULL, 100, 1),
+(27, '2025-12-14 01:08:14', NULL, 102, 1),
+(28, '2025-12-14 01:08:14', NULL, 101, 1),
+(29, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 4, 1),
+(30, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 22, 1),
+(31, '2025-12-14 01:08:14', NULL, 14, 1),
+(32, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 107, 1),
+(33, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 23, 1),
+(34, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 11, 1),
+(36, '2025-12-14 01:08:14', NULL, 13, 1),
+(37, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 2, 1),
+(38, '2025-12-14 01:08:14', NULL, 106, 1),
+(39, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 16, 1),
+(40, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 4, 1),
+(41, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 103, 1),
+(42, '2025-12-14 01:08:14', NULL, 15, 1),
+(43, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 12, 1),
+(44, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 11, 1),
+(45, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 23, 1),
+(46, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 4, 1),
+(47, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 22, 1),
+(48, '2025-12-14 01:08:14', NULL, 16, 1),
+(49, '2025-12-14 01:08:14', NULL, 105, 1),
+(50, '2025-12-14 01:08:14', NULL, 8, 1),
+(51, '2025-12-13 17:54:11', NULL, 1, 1),
 (52, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (53, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (54, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (55, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(56, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(56, '2025-12-13 17:54:11', NULL, 1, 1),
 (57, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(58, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(59, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(58, '2025-12-13 17:54:11', NULL, 1, 1),
+(59, '2025-12-13 17:54:11', NULL, 1, 1),
 (60, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (61, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(62, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(62, '2025-12-13 17:54:11', NULL, 1, 1),
 (63, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(64, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(64, '2025-12-13 17:54:11', NULL, 1, 1),
 (65, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (66, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(67, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(67, '2025-12-13 17:54:11', NULL, 1, 1),
 (68, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (69, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (70, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(71, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(71, '2025-12-13 17:54:11', NULL, 1, 1),
 (72, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (73, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(74, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(74, '2025-12-13 17:54:11', NULL, 1, 1),
 (75, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(76, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(77, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(78, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(79, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(80, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(81, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(82, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(83, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(84, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(85, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(76, '2025-12-13 17:54:11', NULL, 1, 1),
+(77, '2025-12-13 17:54:11', NULL, 1, 1),
+(78, '2025-12-13 17:54:11', NULL, 1, 1),
+(79, '2025-12-13 17:54:11', NULL, 1, 1),
+(80, '2025-12-13 17:54:11', NULL, 1, 1),
+(81, '2025-12-13 17:54:11', NULL, 1, 1),
+(82, '2025-12-13 17:54:11', NULL, 1, 1),
+(83, '2025-12-13 17:54:11', NULL, 1, 1),
+(84, '2025-12-13 17:54:11', NULL, 1, 1),
+(85, '2025-12-13 17:54:11', NULL, 1, 1),
 (86, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (87, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (88, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
@@ -5598,111 +5646,111 @@ INSERT INTO `jobfile` (`Id`, `DateOpen`, `DateClose`, `ShippingLineId`, `Positio
 (92, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (93, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (94, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(95, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(96, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(95, '2025-12-13 17:54:11', NULL, 1, 1),
+(96, '2025-12-13 17:54:11', NULL, 1, 1),
 (97, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (98, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(99, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(100, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(99, '2025-12-13 17:54:11', NULL, 1, 1),
+(100, '2025-12-13 17:54:11', NULL, 1, 1),
 (101, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (102, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(103, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(104, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(103, '2025-12-13 17:54:11', NULL, 1, 1),
+(104, '2025-12-13 17:54:11', NULL, 1, 1),
 (105, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (106, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (107, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(108, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(109, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(108, '2025-12-13 17:54:11', NULL, 1, 1),
+(109, '2025-12-13 17:54:11', NULL, 1, 1),
 (110, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(111, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(111, '2025-12-13 17:54:11', NULL, 1, 1),
 (112, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (113, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (114, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (115, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(116, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(116, '2025-12-13 17:54:11', NULL, 1, 1),
 (117, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (118, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (119, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (120, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (121, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(122, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(122, '2025-12-13 17:54:11', NULL, 1, 1),
 (123, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (124, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(125, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(125, '2025-12-13 17:54:11', NULL, 1, 1),
 (126, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (127, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (128, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(129, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(130, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(129, '2025-12-13 17:54:11', NULL, 1, 1),
+(130, '2025-12-13 17:54:11', NULL, 1, 1),
 (131, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (132, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (133, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(134, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(134, '2025-12-13 17:54:11', NULL, 1, 1),
 (135, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (136, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (137, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (138, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(139, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(139, '2025-12-13 17:54:11', NULL, 1, 1),
 (140, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (141, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (142, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(143, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(144, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(145, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(143, '2025-12-13 17:54:11', NULL, 1, 1),
+(144, '2025-12-13 17:54:11', NULL, 1, 1),
+(145, '2025-12-13 17:54:11', NULL, 1, 1),
 (146, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(147, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(148, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(149, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(147, '2025-12-13 17:54:11', NULL, 1, 1),
+(148, '2025-12-13 17:54:11', NULL, 1, 1),
+(149, '2025-12-13 17:54:11', NULL, 1, 1),
 (150, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(151, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(152, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(151, '2025-12-13 17:54:11', NULL, 1, 1),
+(152, '2025-12-13 17:54:11', NULL, 1, 1),
 (153, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (154, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (155, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (156, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (157, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(158, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(159, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(160, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(158, '2025-12-13 17:54:11', NULL, 1, 1),
+(159, '2025-12-13 17:54:11', NULL, 1, 1),
+(160, '2025-12-13 17:54:11', NULL, 1, 1),
 (161, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (162, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(163, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(163, '2025-12-13 17:54:11', NULL, 1, 1),
 (164, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(165, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(165, '2025-12-13 17:54:11', NULL, 1, 1),
 (166, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (167, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (168, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(169, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(169, '2025-12-13 17:54:11', NULL, 1, 1),
 (170, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (171, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(172, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(172, '2025-12-13 17:54:11', NULL, 1, 1),
 (173, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(174, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(174, '2025-12-13 17:54:11', NULL, 1, 1),
 (175, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (176, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (177, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (178, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(179, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(180, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(179, '2025-12-13 17:54:11', NULL, 1, 1),
+(180, '2025-12-13 17:54:11', NULL, 1, 1),
 (181, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(182, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(183, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(184, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(185, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(182, '2025-12-13 17:54:11', NULL, 1, 1),
+(183, '2025-12-13 17:54:11', NULL, 1, 1),
+(184, '2025-12-13 17:54:11', NULL, 1, 1),
+(185, '2025-12-13 17:54:11', NULL, 1, 1),
 (186, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (187, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (188, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (189, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(190, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(191, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(190, '2025-12-13 17:54:11', NULL, 1, 1),
+(191, '2025-12-13 17:54:11', NULL, 1, 1),
 (192, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(193, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(194, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(195, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(196, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(197, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(193, '2025-12-13 17:54:11', NULL, 1, 1),
+(194, '2025-12-13 17:54:11', NULL, 1, 1),
+(195, '2025-12-13 17:54:11', NULL, 1, 1),
+(196, '2025-12-13 17:54:11', NULL, 1, 1),
+(197, '2025-12-13 17:54:11', NULL, 1, 1),
 (198, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(199, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(199, '2025-12-13 17:54:11', NULL, 1, 1),
 (200, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (201, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (202, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
@@ -5712,24 +5760,24 @@ INSERT INTO `jobfile` (`Id`, `DateOpen`, `DateClose`, `ShippingLineId`, `Positio
 (206, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (207, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (208, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(209, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(209, '2025-12-13 17:54:11', NULL, 1, 1),
 (210, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(211, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(211, '2025-12-13 17:54:11', NULL, 1, 1),
 (212, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (213, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(214, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(214, '2025-12-13 17:54:11', NULL, 1, 1),
 (215, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (216, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(217, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(218, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(219, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(217, '2025-12-13 17:54:11', NULL, 1, 1),
+(218, '2025-12-13 17:54:11', NULL, 1, 1),
+(219, '2025-12-13 17:54:11', NULL, 1, 1),
 (220, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(221, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(221, '2025-12-13 17:54:11', NULL, 1, 1),
 (222, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (223, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (224, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (225, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
-(226, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(226, '2025-12-13 17:54:11', NULL, 1, 1),
 (227, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (228, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
 (229, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
@@ -5743,14 +5791,14 @@ INSERT INTO `jobfile` (`Id`, `DateOpen`, `DateClose`, `ShippingLineId`, `Positio
 
 DROP TABLE IF EXISTS `payment`;
 CREATE TABLE IF NOT EXISTS `payment` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Number` int DEFAULT NULL,
   `Value` decimal(10,0) DEFAULT NULL,
   `PaymentDate` datetime DEFAULT NULL,
-  `PaymentTypeId` int DEFAULT NULL,
+  `PaymentTypeId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_Payment_PaymentType` (`PaymentTypeId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `payment`
@@ -5770,10 +5818,10 @@ INSERT INTO `payment` (`Id`, `Number`, `Value`, `PaymentDate`, `PaymentTypeId`) 
 
 DROP TABLE IF EXISTS `paymenttype`;
 CREATE TABLE IF NOT EXISTS `paymenttype` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Label` varchar(256) DEFAULT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `paymenttype`
@@ -5794,8 +5842,8 @@ INSERT INTO `paymenttype` (`Id`, `Label`) VALUES
 
 DROP TABLE IF EXISTS `payment_invoice`;
 CREATE TABLE IF NOT EXISTS `payment_invoice` (
-  `Payment_Id` int NOT NULL,
-  `Invoice_Id` int NOT NULL,
+  `Payment_Id` int UNSIGNED NOT NULL,
+  `Invoice_Id` int UNSIGNED NOT NULL,
   PRIMARY KEY (`Payment_Id`,`Invoice_Id`),
   KEY `FK_Payment_Invoice_Invoice` (`Invoice_Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
@@ -5818,13 +5866,13 @@ INSERT INTO `payment_invoice` (`Payment_Id`, `Invoice_Id`) VALUES
 
 DROP TABLE IF EXISTS `position`;
 CREATE TABLE IF NOT EXISTS `position` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Label` varchar(100) DEFAULT NULL,
   `Number` int DEFAULT NULL,
-  `RowId` int DEFAULT NULL,
+  `RowId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_Position_Row` (`RowId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `position`
@@ -5846,21 +5894,23 @@ INSERT INTO `position` (`Id`, `Label`, `Number`, `RowId`) VALUES
 
 DROP TABLE IF EXISTS `rate`;
 CREATE TABLE IF NOT EXISTS `rate` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Code` varchar(50) DEFAULT NULL,
   `Label` varchar(256) DEFAULT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `rate`
 --
 
 INSERT INTO `rate` (`Id`, `Code`, `Label`) VALUES
-(0, 'MAG_CONTAINER_IMP', 'Magasinnage Conteneur Import'),
 (1, 'RATE001', 'Taux standard'),
 (2, 'RATE002', 'Taux réduit'),
-(3, 'RATE003', 'Taux premium');
+(3, 'RATE003', 'Taux premium'),
+(4, 'RACCONAGECONTENEURPLEIN', 'Acconage Conteneur Plein (Marchandises diverses)'),
+(5, 'RRELEVAGECONTENEURPLEIN', 'Relevage Conteneur Plein (Marchandises diverses)'),
+(6, 'RSTATIONNEMENTCONTENEURPLEIN', 'Stationnement Conteneur Plein');
 
 -- --------------------------------------------------------
 
@@ -5870,12 +5920,12 @@ INSERT INTO `rate` (`Id`, `Code`, `Label`) VALUES
 
 DROP TABLE IF EXISTS `rateperiod`;
 CREATE TABLE IF NOT EXISTS `rateperiod` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `ToDate` datetime DEFAULT NULL,
-  `RateId` int DEFAULT NULL,
+  `RateId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_RatePeriod_Rate` (`RateId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `rateperiod`
@@ -5884,7 +5934,10 @@ CREATE TABLE IF NOT EXISTS `rateperiod` (
 INSERT INTO `rateperiod` (`Id`, `ToDate`, `RateId`) VALUES
 (1, '2026-12-31 00:00:00', 1),
 (2, '2026-12-31 00:00:00', 2),
-(3, '2026-12-31 00:00:00', 3);
+(3, '2026-12-31 00:00:00', 3),
+(4, '2099-12-31 23:59:59', 4),
+(5, '2099-12-31 23:59:59', 5),
+(6, '2099-12-31 23:59:59', 6);
 
 -- --------------------------------------------------------
 
@@ -5894,14 +5947,14 @@ INSERT INTO `rateperiod` (`Id`, `ToDate`, `RateId`) VALUES
 
 DROP TABLE IF EXISTS `raterangeperiod`;
 CREATE TABLE IF NOT EXISTS `raterangeperiod` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `StartValue` int DEFAULT NULL,
   `EndValue` int DEFAULT NULL,
   `Rate` decimal(10,0) DEFAULT NULL,
-  `RatePeriodId` int DEFAULT NULL,
+  `RatePeriodId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_RateRangePeriod_RatePeriod` (`RatePeriodId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `raterangeperiod`
@@ -5911,7 +5964,12 @@ INSERT INTO `raterangeperiod` (`Id`, `StartValue`, `EndValue`, `Rate`, `RatePeri
 (1, 1, 350, '0', 11),
 (2, 351, 360, '500000', 11),
 (3, 361, 365, '500000', 11),
-(4, 366, 99999, '528111', 11);
+(4, 366, 99999, '528111', 11),
+(5, 1, 999999, '100000', 4),
+(6, 1, 999999, '75000', 5),
+(7, 1, 5, '0', 6),
+(8, 6, 10, '30000', 6),
+(9, 11, 99999, '15000', 6);
 
 -- --------------------------------------------------------
 
@@ -5921,14 +5979,14 @@ INSERT INTO `raterangeperiod` (`Id`, `StartValue`, `EndValue`, `Rate`, `RatePeri
 
 DROP TABLE IF EXISTS `raterangeperiod_backup_renumber`;
 CREATE TABLE IF NOT EXISTS `raterangeperiod_backup_renumber` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `StartValue` int DEFAULT NULL,
   `EndValue` int DEFAULT NULL,
   `Rate` decimal(10,0) DEFAULT NULL,
-  `RatePeriodId` int DEFAULT NULL,
+  `RatePeriodId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_RateRangePeriod_RatePeriod` (`RatePeriodId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=117 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `raterangeperiod_backup_renumber`
@@ -5948,12 +6006,12 @@ INSERT INTO `raterangeperiod_backup_renumber` (`Id`, `StartValue`, `EndValue`, `
 
 DROP TABLE IF EXISTS `row`;
 CREATE TABLE IF NOT EXISTS `row` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Code` varchar(100) DEFAULT NULL,
-  `AreaId` int DEFAULT NULL,
+  `AreaId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_Row_Area` (`AreaId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `row`
@@ -5973,19 +6031,19 @@ INSERT INTO `row` (`Id`, `Code`, `AreaId`) VALUES
 
 DROP TABLE IF EXISTS `subscription`;
 CREATE TABLE IF NOT EXISTS `subscription` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Code` varchar(50) DEFAULT NULL,
   `FromDate` datetime DEFAULT NULL,
   `Todate` datetime DEFAULT NULL,
   `AppliesTo` varchar(2) DEFAULT NULL,
-  `ThirdPartyId` int DEFAULT NULL,
-  `RateId` int DEFAULT NULL,
-  `ContractId` int DEFAULT NULL,
+  `ThirdPartyId` int UNSIGNED DEFAULT NULL,
+  `RateId` int UNSIGNED DEFAULT NULL,
+  `ContractId` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `FK_Subscription_Contract` (`ContractId`),
   KEY `FK_Subscription_Rate` (`RateId`),
   KEY `FK_Subscription_ThirdParty` (`ThirdPartyId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `subscription`
@@ -6013,12 +6071,12 @@ INSERT INTO `subscription` (`Id`, `Code`, `FromDate`, `Todate`, `AppliesTo`, `Th
 
 DROP TABLE IF EXISTS `taxcodes`;
 CREATE TABLE IF NOT EXISTS `taxcodes` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Code` varchar(50) DEFAULT NULL,
   `Label` varchar(100) DEFAULT NULL,
   `TaxValue` decimal(10,0) DEFAULT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `taxcodes`
@@ -6037,11 +6095,11 @@ INSERT INTO `taxcodes` (`Id`, `Code`, `Label`, `TaxValue`) VALUES
 
 DROP TABLE IF EXISTS `terminal`;
 CREATE TABLE IF NOT EXISTS `terminal` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Code` varchar(1000) DEFAULT NULL,
   `Label` varchar(1000) DEFAULT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `terminal`
@@ -6058,18 +6116,17 @@ INSERT INTO `terminal` (`Id`, `Code`, `Label`) VALUES
 
 DROP TABLE IF EXISTS `thirdparty`;
 CREATE TABLE IF NOT EXISTS `thirdparty` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `code` varchar(50) DEFAULT NULL,
   `Label` varchar(200) DEFAULT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=108 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `thirdparty`
 --
 
 INSERT INTO `thirdparty` (`Id`, `code`, `Label`) VALUES
-(0, 'MSC', 'Mediterranean Shipping Company'),
 (1, 'MSC', 'Mediterranean Shipping Company'),
 (2, 'MAERSK', 'Maersk Line'),
 (3, 'CMA', 'CMA CGM'),
@@ -6085,18 +6142,10 @@ INSERT INTO `thirdparty` (`Id`, `code`, `Label`) VALUES
 (13, 'COM002', 'CUSTOMS BROKER PLUS'),
 (14, 'AGE001', 'AGENCE MARITIME PORT'),
 (15, 'AGE002', 'SHIPPING AGENCY INT'),
-(16, 'MSC', 'Mediterranean Shipping Company'),
-(17, 'MAERSK', 'Maersk Line'),
-(18, 'CMA', 'CMA CGM'),
-(19, 'HAPAG', 'Hapag-Lloyd'),
 (20, 'EVERGREEN', 'Evergreen Marine'),
 (21, 'ONE', 'Ocean Network Express'),
 (22, 'COSCO', 'COSCO Shipping'),
 (23, 'ZIM', 'Zim Integrated Shipping'),
-(100, 'MSC', 'Mediterranean Shipping Company'),
-(101, 'MAERSK', 'Maersk Line'),
-(102, 'CMA', 'CMA CGM'),
-(103, 'HAPAG', 'Hapag-Lloyd'),
 (104, 'OOCL', 'Orient Overseas Container Line'),
 (105, 'EVERGREEN', 'Evergreen Line'),
 (106, 'COSCO', 'China Ocean Shipping Company'),
@@ -6110,10 +6159,10 @@ INSERT INTO `thirdparty` (`Id`, `code`, `Label`) VALUES
 
 DROP TABLE IF EXISTS `thirdpartytype`;
 CREATE TABLE IF NOT EXISTS `thirdpartytype` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Label` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `thirdpartytype`
@@ -6135,11 +6184,11 @@ INSERT INTO `thirdpartytype` (`Id`, `Label`) VALUES
 
 DROP TABLE IF EXISTS `thirdparty_backup_renumber`;
 CREATE TABLE IF NOT EXISTS `thirdparty_backup_renumber` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `code` varchar(50) DEFAULT NULL,
   `Label` varchar(200) DEFAULT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `thirdparty_backup_renumber`
@@ -6170,8 +6219,8 @@ INSERT INTO `thirdparty_backup_renumber` (`Id`, `code`, `Label`) VALUES
 
 DROP TABLE IF EXISTS `thirdparty_thirdpartytype`;
 CREATE TABLE IF NOT EXISTS `thirdparty_thirdpartytype` (
-  `ThirdParty_Id` int NOT NULL,
-  `ThirdPartyType_Id` int NOT NULL,
+  `ThirdParty_Id` int UNSIGNED NOT NULL,
+  `ThirdPartyType_Id` int UNSIGNED NOT NULL,
   PRIMARY KEY (`ThirdParty_Id`,`ThirdPartyType_Id`),
   KEY `ThirdPartyType_Id` (`ThirdPartyType_Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
@@ -6185,10 +6234,6 @@ INSERT INTO `thirdparty_thirdpartytype` (`ThirdParty_Id`, `ThirdPartyType_Id`) V
 (2, 1),
 (3, 1),
 (4, 1),
-(100, 1),
-(101, 1),
-(102, 1),
-(103, 1),
 (104, 1),
 (105, 1),
 (106, 1),
@@ -6213,11 +6258,11 @@ INSERT INTO `thirdparty_thirdpartytype` (`ThirdParty_Id`, `ThirdPartyType_Id`) V
 
 DROP TABLE IF EXISTS `yarditemcode`;
 CREATE TABLE IF NOT EXISTS `yarditemcode` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Label` varchar(200) DEFAULT NULL,
-  `YardItemCodeId` int NOT NULL,
+  `YardItemCodeId` int UNSIGNED NOT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=342 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `yarditemcode`
@@ -6574,11 +6619,11 @@ INSERT INTO `yarditemcode` (`Id`, `Label`, `YardItemCodeId`) VALUES
 
 DROP TABLE IF EXISTS `yarditemcode_backup_renumber`;
 CREATE TABLE IF NOT EXISTS `yarditemcode_backup_renumber` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Label` varchar(200) DEFAULT NULL,
-  `YardItemCodeId` int NOT NULL,
+  `YardItemCodeId` int UNSIGNED NOT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=604 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `yarditemcode_backup_renumber`
@@ -6935,10 +6980,10 @@ INSERT INTO `yarditemcode_backup_renumber` (`Id`, `Label`, `YardItemCodeId`) VAL
 
 DROP TABLE IF EXISTS `yarditemtype`;
 CREATE TABLE IF NOT EXISTS `yarditemtype` (
-  `Id` int NOT NULL,
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `Label` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Déchargement des données de la table `yarditemtype`
@@ -6955,12 +7000,246 @@ INSERT INTO `yarditemtype` (`Id`, `Label`) VALUES
 --
 
 --
+-- Contraintes pour la table `area`
+--
+ALTER TABLE `area`
+  ADD CONSTRAINT `FK_area_19d4d` FOREIGN KEY (`TerminalId`) REFERENCES `terminal` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_area_TerminalId` FOREIGN KEY (`TerminalId`) REFERENCES `terminal` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `bl`
+--
+ALTER TABLE `bl`
+  ADD CONSTRAINT `FK_bl_89e87` FOREIGN KEY (`ConsigneeId`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_bl_93b5c` FOREIGN KEY (`RelatedCustomerId`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_bl_a82b1` FOREIGN KEY (`CallId`) REFERENCES `call` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_bl_CallId` FOREIGN KEY (`CallId`) REFERENCES `call` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_bl_ConsigneeId` FOREIGN KEY (`ConsigneeId`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_bl_RelatedCusto` FOREIGN KEY (`RelatedCustomerId`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `blitem`
+--
+ALTER TABLE `blitem`
+  ADD CONSTRAINT `FK_blitem_94784` FOREIGN KEY (`ItemTypeId`) REFERENCES `yarditemtype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_blitem_a43ce` FOREIGN KEY (`BlId`) REFERENCES `bl` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_blitem_acb10` FOREIGN KEY (`ItemCodeId`) REFERENCES `yarditemcode` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_blitem_BlId` FOREIGN KEY (`BlId`) REFERENCES `bl` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_blitem_ItemCodeId` FOREIGN KEY (`ItemCodeId`) REFERENCES `yarditemcode` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_blitem_ItemTypeId` FOREIGN KEY (`ItemTypeId`) REFERENCES `yarditemtype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `blitem_jobfile`
+--
+ALTER TABLE `blitem_jobfile`
+  ADD CONSTRAINT `FK_blitem_job_09109` FOREIGN KEY (`JobFile_Id`) REFERENCES `jobfile` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_blitem_job_cea63` FOREIGN KEY (`BLItem_Id`) REFERENCES `blitem` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_blitem_jobfi_BLItemId` FOREIGN KEY (`BLItem_Id`) REFERENCES `blitem` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_blitem_jobfi_JobFileId` FOREIGN KEY (`JobFile_Id`) REFERENCES `jobfile` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `call`
+--
+ALTER TABLE `call`
+  ADD CONSTRAINT `FK_call_b00c7` FOREIGN KEY (`ThirdPartyId`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_call_ThirdPartyId` FOREIGN KEY (`ThirdPartyId`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `cart`
+--
+ALTER TABLE `cart`
+  ADD CONSTRAINT `FK_cart_CustomerUser` FOREIGN KEY (`CustomerUserId`) REFERENCES `customerusers` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_cart_d0451` FOREIGN KEY (`CustomerUserId`) REFERENCES `customerusers` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
 -- Contraintes pour la table `cartitem`
 --
 ALTER TABLE `cartitem`
-  ADD CONSTRAINT `FK_CartItem_CartId` FOREIGN KEY (`CartId`) REFERENCES `cart` (`Id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `FK_CartItem_CartId` FOREIGN KEY (`CartId`) REFERENCES `cart` (`Id`),
+  ADD CONSTRAINT `FK_cartitem_InvoiceId` FOREIGN KEY (`InvoiceId`) REFERENCES `invoice` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `commodityitem`
+--
+ALTER TABLE `commodityitem`
+  ADD CONSTRAINT `FK_commodityite_CommodityId` FOREIGN KEY (`CommodityId`) REFERENCES `commodity` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `contract`
+--
+ALTER TABLE `contract`
+  ADD CONSTRAINT `FK_contract_bd89c` FOREIGN KEY (`TaxCodeId`) REFERENCES `taxcodes` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_contract_TaxCodeId` FOREIGN KEY (`TaxCodeId`) REFERENCES `taxcodes` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `contract_eventtype`
+--
+ALTER TABLE `contract_eventtype`
+  ADD CONSTRAINT `FK_contract_e_43122` FOREIGN KEY (`EventType_Id`) REFERENCES `eventtype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_contract_e_b186f` FOREIGN KEY (`Contract_Id`) REFERENCES `contract` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_contract_eve_ContractId` FOREIGN KEY (`Contract_Id`) REFERENCES `contract` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_contract_eve_EventTypeId` FOREIGN KEY (`EventType_Id`) REFERENCES `eventtype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `customeruserblsearchhistory`
+--
+ALTER TABLE `customeruserblsearchhistory`
+  ADD CONSTRAINT `customeruserblsearchhistory_ibfk_1` FOREIGN KEY (`UserId`) REFERENCES `customerusers` (`Id`) ON DELETE SET NULL;
+
+--
+-- Contraintes pour la table `customerusers`
+--
+ALTER TABLE `customerusers`
+  ADD CONSTRAINT `FK_customer_Customer_232c02` FOREIGN KEY (`CustomerUsersTypeId`) REFERENCES `customeruserstype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_customerus_1df79` FOREIGN KEY (`CustomerUsersTypeId`) REFERENCES `customeruserstype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_customerus_4aa8b` FOREIGN KEY (`CustomerUsersStatusId`) REFERENCES `customerusersstatus` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_customeruser_CustomerUser` FOREIGN KEY (`CustomerUsersStatusId`) REFERENCES `customerusersstatus` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `customerusers_thirdparty`
+--
+ALTER TABLE `customerusers_thirdparty`
+  ADD CONSTRAINT `FK_customer_Customer_8e1bbf` FOREIGN KEY (`CustomerUsers_Id`) REFERENCES `customerusers` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_customer_ThirdPar_970666` FOREIGN KEY (`ThirdParty_Id`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_customerus_5b102` FOREIGN KEY (`CustomerUsers_Id`) REFERENCES `customerusers` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_customerus_cf0ff` FOREIGN KEY (`ThirdParty_Id`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `document`
+--
+ALTER TABLE `document`
+  ADD CONSTRAINT `FK_document_314f1` FOREIGN KEY (`JobFileId`) REFERENCES `jobfile` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_document_BlId` FOREIGN KEY (`BlId`) REFERENCES `bl` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_document_ce180` FOREIGN KEY (`BlId`) REFERENCES `bl` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_document_Document_821540` FOREIGN KEY (`DocumentTypeId`) REFERENCES `documenttype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_document_eb227` FOREIGN KEY (`DocumentTypeId`) REFERENCES `documenttype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_document_JobFileI_1aee7a` FOREIGN KEY (`JobFileId`) REFERENCES `jobfile` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `event`
+--
+ALTER TABLE `event`
+  ADD CONSTRAINT `FK_event_e3048` FOREIGN KEY (`JobFileId`) REFERENCES `jobfile` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_event_EventTyp_e8aec0` FOREIGN KEY (`EventTypeId`) REFERENCES `eventtype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_event_f13c7` FOREIGN KEY (`EventTypeId`) REFERENCES `eventtype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_event_JobFileI_f8211e` FOREIGN KEY (`JobFileId`) REFERENCES `jobfile` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `eventtype`
+--
+ALTER TABLE `eventtype`
+  ADD CONSTRAINT `FK_eventtype_f9a98` FOREIGN KEY (`FamilyId`) REFERENCES `family` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_eventtype_FamilyId` FOREIGN KEY (`FamilyId`) REFERENCES `family` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `invoiceitem`
+--
+ALTER TABLE `invoiceitem`
+  ADD CONSTRAINT `FK_invoiceite_205c6` FOREIGN KEY (`InvoiceId`) REFERENCES `invoice` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_invoiceite_84f07` FOREIGN KEY (`SubscriptionId`) REFERENCES `subscription` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_invoiceite_ab637` FOREIGN KEY (`EventId`) REFERENCES `event` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_invoiceitem_EventId` FOREIGN KEY (`EventId`) REFERENCES `event` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_invoiceitem_InvoiceId` FOREIGN KEY (`InvoiceId`) REFERENCES `invoice` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_invoiceitem_Subscription` FOREIGN KEY (`SubscriptionId`) REFERENCES `subscription` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `jobfile`
+--
+ALTER TABLE `jobfile`
+  ADD CONSTRAINT `FK_jobfile_24f38` FOREIGN KEY (`PositionId`) REFERENCES `position` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_jobfile_PositionId` FOREIGN KEY (`PositionId`) REFERENCES `position` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `payment`
+--
+ALTER TABLE `payment`
+  ADD CONSTRAINT `FK_payment_2216b` FOREIGN KEY (`PaymentTypeId`) REFERENCES `paymenttype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_payment_4d397` FOREIGN KEY (`PaymentTypeId`) REFERENCES `paymenttype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `position`
+--
+ALTER TABLE `position`
+  ADD CONSTRAINT `FK_position_69f0e` FOREIGN KEY (`RowId`) REFERENCES `row` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_position_RowId` FOREIGN KEY (`RowId`) REFERENCES `row` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `rateperiod`
+--
+ALTER TABLE `rateperiod`
+  ADD CONSTRAINT `FK_rateperiod_8c65c` FOREIGN KEY (`RateId`) REFERENCES `rate` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_rateperiod_RateId` FOREIGN KEY (`RateId`) REFERENCES `rate` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `raterangeperiod`
+--
+ALTER TABLE `raterangeperiod`
+  ADD CONSTRAINT `FK_raterangep_2787f` FOREIGN KEY (`RatePeriodId`) REFERENCES `rateperiod` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_raterangep_64b7c` FOREIGN KEY (`RatePeriodId`) REFERENCES `rateperiod` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `row`
+--
+ALTER TABLE `row`
+  ADD CONSTRAINT `FK_row_AreaId` FOREIGN KEY (`AreaId`) REFERENCES `area` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_row_f5dc7` FOREIGN KEY (`AreaId`) REFERENCES `area` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `subscription`
+--
+ALTER TABLE `subscription`
+  ADD CONSTRAINT `FK_subscripti_06c84` FOREIGN KEY (`RateId`) REFERENCES `rate` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_subscripti_59ff3` FOREIGN KEY (`ContractId`) REFERENCES `contract` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_subscription_ContractId` FOREIGN KEY (`ContractId`) REFERENCES `contract` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_subscription_RateId` FOREIGN KEY (`RateId`) REFERENCES `rate` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `thirdparty_thirdpartytype`
+--
+ALTER TABLE `thirdparty_thirdpartytype`
+  ADD CONSTRAINT `FK_thirdparty_36f09` FOREIGN KEY (`ThirdParty_Id`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_thirdparty_3fb70` FOREIGN KEY (`ThirdPartyType_Id`) REFERENCES `thirdpartytype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_thirdparty_427f4` FOREIGN KEY (`ThirdParty_Id`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_thirdparty_61539` FOREIGN KEY (`ThirdPartyType_Id`) REFERENCES `thirdpartytype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+-- ============================================
+-- Stored Procedures for Event Families and Types
+-- ============================================
+
+-- Drop existing procedures if they exist
+DROP PROCEDURE IF EXISTS `GetAllEventFamilies`$$
+DROP PROCEDURE IF EXISTS `GetAllEventTypes`$$
+
+-- ============================================
+-- GetAllEventFamilies: Retrieve all event families
+-- Returns: Id, Label
+-- ============================================
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllEventFamilies` ()  
+BEGIN
+    SELECT 
+        f.`Id`,
+        f.`Label`
+    FROM `family` f
+    ORDER BY f.`Label` ASC;
+END$$
+
+-- ============================================
+-- GetAllEventTypes: Retrieve all event types
+-- Returns: Id, Code, Label, FamilyId
+-- ============================================
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllEventTypes` ()  
+BEGIN
+    SELECT 
+        et.`Id`,
+        et.`Code`,
+        et.`Label`,
+        et.`FamilyId`
+    FROM `eventtype` et
+    ORDER BY et.`Label` ASC;
+END$$
+
+DELIMITER ;

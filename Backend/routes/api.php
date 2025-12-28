@@ -34,9 +34,10 @@ Route::post('UpdateMultipleInvoiceStatus', [GlobalController::class, 'UpdateMult
 Route::post('DeleteInvoice', [GlobalController::class, 'DeleteInvoice']);
 Route::post('ValidatePayment', [GlobalController::class, 'ValidatePayment']);
 Route::post('Login', [GlobalController::class, 'Login']);
-Route::post('CreateProforma', [GlobalController::class, 'CreateProforma']);
-Route::post('GenerateProformaWithBillingDate', [GlobalController::class, 'CreateProforma']);
+Route::post('GenerateProforma', [GlobalController::class, 'GenerateProforma']);
 Route::post('AddYardItemEvent', [GlobalController::class, 'AddYardItemEvent']);
+Route::post('GetEventFamilies', [GlobalController::class, 'GetEventFamilies']);
+Route::post('GetEventTypes', [GlobalController::class, 'GetEventTypes']);
 Route::post('GetAllCustomUsers', [GlobalController::class, 'GetAllCustomUsers']);
 Route::post('GetAllConsigneesWithBLs', [GlobalController::class, 'GetAllConsigneesWithBLs']);
 Route::post('UpdateCustomUserStatus', [GlobalController::class, 'UpdateCustomUserStatus']);
