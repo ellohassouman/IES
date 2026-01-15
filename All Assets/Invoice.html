@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facture Abidjan Terminal - 251083041</title>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+128&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 40px;
+            font-size: 11px;
+            color: #000;
+            line-height: 1.2;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: auto;
+            position: relative;
+        }
+
+        /* Header & Logo */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+        .logo-section {
+            width: 220px; /* Ajusté pour correspondre à la proportion du logo */
+        }
+        .logo-img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .facture-title {
+            text-align: center;
+            flex-grow: 1;
+        }
+        .facture-title h1 {
+            font-size: 18px;
+            margin: 0;
+        }
+        .facture-title p {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        /* Barcode */
+        .barcode-section {
+            width: 150px;
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        .barcode-font {
+            font-family: 'Libre Barcode 128', sans-serif;
+            font-size: 42px;
+            line-height: 1;
+            margin: 0;
+            padding: 0;
+            transform: scaleX(0.75);
+            transform-origin: right;
+        }
+        .barcode-label {
+            font-size: 10px;
+            margin-top: -2px;
+            padding-right: 15px;
+            letter-spacing: 1px;
+        }
+
+        /* Info Grids */
+        .info-grid, .details-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 40px;
+            margin-bottom: 20px;
+        }
+        .info-col p {
+            margin: 2px 0;
+        }
+        
+        /* Largeur fixée à 150px pour éviter le décalage de la date de départ */
+        .label {
+            display: inline-block;
+            width: 150px; 
+            font-weight: bold;
+        }
+        .val {
+            display: inline-block;
+        }
+
+        .comments {
+            margin: 15px 0 5px 0;
+            font-weight: bold;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 4px;
+            text-align: center;
+        }
+        th {
+            background-color: #fff;
+            height: 25px;
+            font-weight: bold;
+        }
+
+        .table-rubriques {
+            margin-top: 15px; 
+        }
+        .table-rubriques td {
+            border-bottom: none;
+            border-top: none;
+        }
+        .row-item {
+            height: 110px;
+            vertical-align: top;
+        }
+
+        /* Totals Section */
+        .totals-container {
+            border-top: 1px solid black;
+        }
+        .total-row {
+            display: flex;
+            justify-content: flex-end;
+            border-left: 1px solid black;
+            border-right: 1px solid black;
+            /* Pas de border-bottom ici pour supprimer les traits entre HT, TVA et Total */
+        }
+        .total-row.last-row {
+            border-bottom: 1px solid black; /* Ligne de fermeture après le montant à payer */
+        }
+        .total-label {
+            width: 250px;
+            text-align: right;
+            padding: 4px 10px;
+            font-weight: bold;
+        }
+        .total-val {
+            width: 120px;
+            text-align: right;
+            padding: 4px 10px;
+            font-weight: bold;
+        }
+
+        .amount-words {
+            border-left: 1px solid black;
+            border-right: 1px solid black;
+            padding: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .euro-conv {
+            border-left: 1px solid black;
+            border-right: 1px solid black;
+            border-bottom: 1px solid black;
+            padding: 5px 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .containers-info {
+            margin-top: 5px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 120px;
+            text-align: center;
+            font-size: 9px;
+            color: #333;
+            line-height: 1.4;
+        }
+        .footer-disclaimer {
+            margin-top: 20px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="logo-section">
+            <img src="./ATL_logo.png" alt="Logo Abidjan Terminal" class="logo-img">
+        </div>
+        <div class="facture-title">
+            <h1>Facture N° 251083041</h1>
+            <p>Duplicata</p>
+        </div>
+        <div class="barcode-section">
+            <div class="barcode-font">468f4b94</div>
+            <div class="barcode-label">468f4b94</div>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-col">
+            <p><span class="label">Imprimé à Abidjan le :</span> <span class="val">18/11/2025 à 21:29</span></p>
+            <p><span class="label">Facturier :</span> <span class="val">ipakiservice</span></p>
+            <p><span class="label">Trafic :</span> <span class="val">Export</span></p>
+        </div>
+        <div class="info-col">
+            <p><span class="label">Client :</span> <span class="val">KARIMEX TRANSIT</span></p>
+            <p><span class="label">Adresse :</span> <span class="val">12 BP 1137 ABIDJAN</span></p>
+            <p><span class="label">Compte :</span> <span class="val">NZ083876</span></p>
+            <p><span class="label">Client Secondaire :</span> <span class="val">SOCIETE IVOIRIENNE DE PARFUMERIE</span></p>
+        </div>
+    </div>
+
+    <div class="details-grid">
+        <div class="info-col">
+            <p><span class="label">Date d'arrivée du navire :</span> <span class="val">10/11/2025</span></p>
+            <p><span class="label">Date de départ du navire :</span> <span class="val">11/11/2025</span></p>
+            <p><span class="label">Chantier :</span> <span class="val">2095987 - CMA CGM SLOTTEUR</span></p>
+            <br>
+            <p><span class="label">Déclaration Douane :</span> <span class="val">2025 CIABT R20195/20196/2022/20226</span></p>
+        </div>
+        <div class="info-col">
+            <p><span class="label">Termes de paiement :</span> <span class="val">Cash payment</span></p>
+            <p><span class="label">Date d'enlèvement :</span> <span class="val">18/11/2025</span></p>
+            <p><span class="label">Date de validation :</span> <span class="val">18/11/2025</span></p>
+            <p><span class="label">Date d'échéance :</span> <span class="val">18/11/2025</span></p>
+        </div>
+    </div>
+
+    <div class="comments">Commentaires :</div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 15%;">Escale</th>
+                <th style="width: 15%;">Navire</th>
+                <th style="width: 10%;">Voyage</th>
+                <th style="width: 12%;">Port de Charg.</th>
+                <th style="width: 12%;">Port de Décharg.</th>
+                <th style="width: 12%;">Manifeste</th>
+                <th style="width: 15%;">BL Number</th>
+                <th style="width: 9%;">Poids</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>2511CMAMALTO MYFKN</td>
+                <td>CMA CGM MALTA</td>
+                <td>0MYFKN1MA</td>
+                <td>Abidjan</td>
+                <td>Malabo</td>
+                <td></td>
+                <td>AEV0239463</td>
+                <td>4.737</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="table-rubriques">
+        <thead>
+            <tr>
+                <th style="width: 50%;">Rubriques</th>
+                <th style="width: 25%;">Montant</th>
+                <th style="width: 25%;">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="row-item">
+                <td style="padding: 10px; text-align: left;">
+                    <strong>Exp Local - Acconage Plein 20' (Marchandises diverses)</strong><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Unité(s)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;96 500 CFA<br><br>
+                    <strong>Exp Local - Relevage Plein 20' (Marchandises diverses)</strong><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Unité(s)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;30 000 CFA
+                </td>
+                <td style="padding-top: 10px; text-align: right; padding-right: 20px; vertical-align: top;">
+                    96 500 &nbsp; CFA<br><br><br>30 000 &nbsp; CFA
+                </td>
+                <td style="padding-top: 10px; text-align: right; padding-right: 20px; vertical-align: top;">
+                    96 500 &nbsp; CFA<br><br><br>30 000 &nbsp; CFA
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="totals-container">
+        <div class="total-row">
+            <div class="total-label">Montant Total Hors Taxes Prestations :</div>
+            <div class="total-val">126 500 CFA</div>
+        </div>
+        <div class="total-row">
+            <div class="total-label">Montant Total TVA :</div>
+            <div class="total-val">0 CFA</div>
+        </div>
+        <div class="total-row last-row">
+            <div class="total-label">Montant Total à Payer :</div>
+            <div class="total-val">126 500 CFA</div>
+        </div>
+        <div class="amount-words">
+            CENT VINGT-SIX MILLE CINQ CENT
+        </div>
+        <div class="euro-conv">
+            <div>Pour information, la contrepartie en EUROs est de :</div>
+            <div style="font-weight: bold;">192.85 EUR</div>
+        </div>
+    </div>
+
+    <div class="containers-info">
+        Référence(s) Conteneur(s): &nbsp; TLLU2088717(22G1, CAT 3, E3 - Autres produits non recensés)
+    </div>
+
+    <div class="footer">
+        <div>Société Anonyme avec Conseil d'Administration au capital de 4.000.000.000 Francs CFA</div>
+        <div>Siège Social Abidjan (R.C.I) - Immeuble du port, Terminal à Conteneur de Vridi - Boulevard de Vridi</div>
+        <div>05 BP 3352 Abidjan 05 Côte d'Ivoire RCCM CI ABJ - 03 B - 2036 CC 04 07 298 J</div>
+        <div>TEL : 21-21-77-77 FAX : 21-21-77-98</div>
+        
+        <div class="footer-disclaimer">
+            Le Client reconnaît expressément avoir pris connaissance et accepter les conditions générales du Prestataire reproduites au verso du présent document
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

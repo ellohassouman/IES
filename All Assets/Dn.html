@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bon à Délivrer - Abidjan Terminal</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 40px;
+            font-size: 11px;
+            color: #000;
+            line-height: 1.3;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        .logo-section {
+            width: 180px;
+        }
+        .logo-img {
+            width: 100%;
+            height: auto;
+        }
+        .title-section {
+            text-align: center;
+            flex-grow: 1;
+            margin-right: 50px;
+        }
+        .title-section h1 {
+            font-size: 24px;
+            margin: 0;
+            font-weight: normal;
+        }
+        .title-section p {
+            font-size: 10px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        /* Grille d'informations */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .info-col p {
+            margin: 3px 0;
+        }
+        .label {
+            display: inline-block;
+            width: 130px;
+            font-weight: bold;
+        }
+        .val {
+            display: inline-block;
+        }
+
+        /* Bloc ATL / Validité */
+        .validity-block {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            border-top: 1px solid transparent; /* Pour l'espacement */
+        }
+        .atl-number {
+            font-size: 18px;
+            font-weight: bold;
+            width: 40%;
+        }
+        .validity-center {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+        .validity-date {
+            font-size: 18px;
+            font-weight: bold;
+            width: 30%;
+            text-align: right;
+        }
+
+        /* Tableaux */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 3px 5px;
+            text-align: center;
+            font-size: 9px;
+        }
+        th {
+            font-weight: bold;
+            background-color: #fff;
+        }
+
+        .items-count {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        /* Zone d'observation */
+        .observation-box {
+            border: 1px solid black;
+            width: 100%;
+            min-height: 200px;
+            margin-top: 5px;
+        }
+        .observation-header {
+            border-bottom: 1px solid black;
+            padding: 5px;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 9px;
+            line-height: 1.4;
+        }
+        .footer-legal {
+            margin-bottom: 15px;
+        }
+        .footer-disclaimer {
+            font-size: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="logo-section">
+            <img src="image_78fbe4.png" alt="Logo Abidjan Terminal" class="logo-img">
+        </div>
+        <div class="title-section">
+            <h1>Bon à Délivrer</h1>
+            <p>DELI (Livraison normale)</p>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-col">
+            <p><span class="label">Imprimé le :</span> <span class="val">1/15/2026 12:20:15 PM</span></p>
+            <p><span class="label">Emis par :</span> <span class="val">XWM320</span></p>
+            <p><span class="label">ATL Numéro de facture :</span> <span class="val">261002839</span></p>
+        </div>
+        <div class="info-col">
+            <p><span class="label">Client Secondaire :</span> <span class="val">ETABLISSEMENT MULTI SERVICES NAPAONGO</span></p>
+            <p><span class="label">Client :</span> <span class="val">ISOLDE TRANSIT</span></p>
+            <p><span class="label">Date de Validité Facture :</span> <span class="val">18/01/2026</span></p>
+        </div>
+    </div>
+
+    <div class="info-grid" style="margin-top: -10px;">
+        <div class="info-col">
+            <p><span class="label">COREOR :</span> <span class="val">NGRI50932800</span></p>
+            <p><span class="label">Déclaration Douane :</span> <span class="val">C 2977</span></p>
+            <p><span class="label">Mode de livraison :</span> <span class="val">DELI</span></p>
+        </div>
+        <div class="info-col">
+            <p><span class="label">Date de Validité BAD Shipping :</span> <span class="val">23/01/2026</span></p>
+        </div>
+    </div>
+
+    <div class="validity-block">
+        <div class="atl-number">ATL Nr: 1064697/1250223/138<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4025</div>
+        <div class="validity-center">BADT valide<br>Jusqu'au:</div>
+        <div class="validity-date">18/01/2026</div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 15%;">Escale</th>
+                <th style="width: 15%;">Navire</th>
+                <th style="width: 10%;">Voyage</th>
+                <th style="width: 20%;">Numéro de B/L</th>
+                <th style="width: 20%;">Client Final</th>
+                <th style="width: 20%;">Armateur BL</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>2601KOTAOCE0015E</td>
+                <td>KOTA OCEAN</td>
+                <td>0015E</td>
+                <td>NGRI50932800</td>
+                <td>ISOLDE TRANSIT</td>
+                <td>PACIFIC INTERNATIONAL LINES</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Conteneur</th>
+                <th>Type ISO</th>
+                <th>Poids</th>
+                <th>N° de Plomb</th>
+                <th>Transporteur</th>
+                <th>Immatriculation</th>
+                <th>Chauffeur</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>PIDU4307596</td>
+                <td>45G1</td>
+                <td>17.96</td>
+                <td>S84ULVGD1M / X</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="items-count">Nombre d'item(s) : 1</div>
+
+    <div class="observation-box">
+        <div class="observation-header">Observation :</div>
+    </div>
+
+    <div class="footer">
+        <div class="footer-legal">
+            Société Anonyme avec Conseil d'Administration au capital de 4.000.000.000 Francs CFA<br>
+            Siège Social Abidjan (R.C.I) - Immeuble du port, Terminal à Conteneur de Vridi - Boulevard de Vridi<br>
+            05 BP 3352 Abidjan 05 Côte d'Ivoire RCCM CI ABJ - 03 B - 2036 CC 04 07 298 J<br>
+            TEL : 21-21-77-77 FAX : 21-21-77-98
+        </div>
+        <div class="footer-disclaimer">
+            Le Client reconnaît expressément avoir pris connaissance et accepter les conditions générales du Prestataire reproduites au verso du présent document
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

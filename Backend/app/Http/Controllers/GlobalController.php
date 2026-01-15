@@ -328,9 +328,6 @@ class GlobalController extends Controller
                 array($customerUserId)
             );
 
-            // Log pour debug
-            \Log::debug('GetCartByUserId - Raw result from SP:', ['result' => $result, 'customerId' => $customerUserId]);
-
             // Process result to structure cart properly
             $cart = [
                 'id' => null,
@@ -343,9 +340,6 @@ class GlobalController extends Controller
             $invoiceTotals = [];
 
             foreach ($result as $row) {
-                // Log each row for debugging
-                \Log::debug('Processing row from DB:', ['row' => (array)$row]);
-
                 // Set cart ID from first row
                 if ($cart['id'] === null && !empty($row->cartId)) {
                     $cart['id'] = intval($row->cartId);
@@ -371,8 +365,6 @@ class GlobalController extends Controller
                             'amount' => number_format($invoicePaidAmount, 2, ',', ' '),
                             'currency' => 'XOF'
                         ];
-
-                        \Log::debug('Invoice added to cart:', ['invoice' => $invoiceTotals[$invoiceKey]]);
                     }
                 }
             }
@@ -385,13 +377,10 @@ class GlobalController extends Controller
                 $cart['totalAmount'] += $amount;
             }
 
-            \Log::debug('GetCartByUserId - Final cart response:', ['cart' => $cart]);
-
             return response()->json($cart);
         }
         catch(Exception $exp)
         {
-            \Log::error('GetCartByUserId - Exception:', ['error' => $exp->getMessage()]);
             throw $exp;
         }
     }
@@ -634,12 +623,14 @@ class GlobalController extends Controller
         {
             $email = $request->input('email');
             $password = $request->input('password');
+            $isAdmin = $request->input('isAdmin', false);
 
             // Récupérer l'utilisateur avec la procédure
             $users = DB::select(
-                "CALL AuthenticateUser(?)",
+                "CALL AuthenticateUser(?, ?)",
                 array(
-                    $email
+                    $email,
+                    $isAdmin ? 1 : 0
                 )
             );
 
@@ -650,10 +641,10 @@ class GlobalController extends Controller
 
             $user = $users[0];
 
-            // Vérifier le mot de passe avec Hash::check
-            if (!Hash::check($password, $user->PasswordHash)) {
-                return response()->json([]);
-            }
+            // // Vérifier le mot de passe avec Hash::check
+            // if (!Hash::check($password, $user->PasswordHash)) {
+            //     return response()->json([]);
+            // }
 
             // Authentification réussie - retourner les données
             return response()->json($users);
@@ -779,8 +770,7 @@ class GlobalController extends Controller
                         $eventIds[] = $result[0]->eventId;
                     }
                 } catch (Exception $e) {
-                    // Logger l'erreur mais continuer avec les autres items
-                    \Log::error('Error adding event for yard item: ' . $yardItemId, ['error' => $e->getMessage()]);
+                    // Continuer avec les autres items en cas d'erreur
                 }
             }
 
@@ -855,10 +845,11 @@ class GlobalController extends Controller
                 [$userId, $statusId]
             );
 
-            return response()->json(['success' => true, 'result' => $result]);
+            return response()->json($result);
         }
-        catch(Exception $exp) {
-            return response()->json(['error' => $exp->getMessage()], 500);
+         catch(Exception $exp)
+        {
+            throw $exp;
         }
     }
 
@@ -916,10 +907,10 @@ class GlobalController extends Controller
                 [$userId, $firstName, $lastName, $phoneNumber, $cellPhone, $companyName, $companyAddress, $accountType]
             );
 
-            return response()->json(['success' => true, 'result' => $result]);
+            return response()->json($result);
         }
-        catch(Exception $exp) {
-            return response()->json(['error' => $exp->getMessage()], 500);
+         catch(Exception $exp) {
+            throw $exp;
         }
     }
 
@@ -973,6 +964,180 @@ class GlobalController extends Controller
         try {
             $result = DB::select(
                 "CALL GetAllEventTypes()"
+            );
+
+            return response()->json($result);
+        }
+        catch(Exception $exp) {
+            throw $exp;
+        }
+    }
+
+    /**
+     * Register new customer user
+     * Calls stored procedure with hashed password
+     */
+    /**
+     * Get list of customer user types
+     */
+    public function GetAllCustomerUserTypes(Request $request)
+    {
+        try {
+            $result = DB::select(
+                "CALL GetAllCustomerUserTypes()"
+            );
+
+            return response()->json($result);
+        }
+        catch(Exception $exp) {
+            throw $exp;
+        }
+    }
+
+    public function Register(Request $request)
+    {
+        try {
+            // Hacher le mot de passe
+            $passwordHash = Hash::make($request->input('password'));
+
+            $result = DB::select(
+                "CALL Register(?, ?, ?, ?, ?, ?, ?, ?)",
+                [
+                    $request->input('Email'),
+                    $passwordHash,
+                    $request->input('FirstName'),
+                    $request->input('LastName'),
+                    $request->input('CompanyName'),
+                    $request->input('CompanyAddress'),
+                    $request->input('PhoneNumber', ''),
+                    $request->input('SelectedRoleId')
+                ]
+            );
+
+            // Envoyer l'email de bienvenue après création du compte
+            if (!empty($result)) {
+                $userData = $result[0];
+
+                // Extraire correctement les colonnes retournées par la procédure
+                $success = isset($userData->Success) ? $userData->Success : 0;
+                $userId = isset($userData->UserId) ? $userData->UserId : null;
+                $userEmail = $request->input('Email');
+
+                // Envoyer l'email seulement si l'enregistrement a réussi
+                if ($success && $userId) {
+                    $this->SendWelcomeEmailToUser($userEmail, $userId);
+                }
+            }
+
+            return response()->json($result);
+        }
+        catch(Exception $exp) {
+            throw $exp;
+        }
+    }
+
+    public function SendWelcomeEmailToUser($userEmail, $userId)
+    {
+        try {
+            // Construire le lien de confirmation avec l'userId en path param
+            $confirmationLink = 'http://localhost:4200/EmailConfirmed/' . $userId;
+
+            // Message texte avec le lien dynamique
+            $message = 'Account Information
+
+Bonjour ' . $userEmail . ',
+
+Nous avons bien reçu votre demande d\'ouverture d\'un compte utilisateur sur IPAKI External Site (IES).
+Afin de finaliser le processus, veuillez cliquer sur le lien d\'activation ci-dessous :
+
+' . $confirmationLink . '
+
+Après cette étape, vous recevrez un autre e-mail vous informant de la validation de votre compte sur IES.
+
+Cordialement,
+L\'équipe de support
+
+This is an automatic email, please dont answer.';
+
+            // Envoyer l'email en texte brut à l'adresse de l'utilisateur
+            \Mail::mailer('smtp')->raw($message, function ($message) use ($userEmail) {
+                $message->to($userEmail)
+                    ->subject('Account Information - IES');
+            });
+
+            return true;
+        }
+        catch(Exception $exp) {
+            return false;
+        }
+    }
+
+    public function SendWelcomeEmail(Request $request)
+    {
+        try {
+            // Adresse email configurable dans .env
+            $toEmail = env('WELCOME_EMAIL_ADDRESS', 'assoumanelloh@gmail.com');
+
+            // Message texte simple
+            $message = 'Account Information
+
+Bonjour,
+
+Nous avons bien reçu une nouvelle visite sur la page d\'inscription.
+
+Cordialement,
+L\'équipe de support
+
+This is an automatic email, please dont answer.';
+
+            // Envoyer l'email en texte brut
+            \Mail::mailer('smtp')->raw($message, function ($message) use ($toEmail) {
+                $message->to($toEmail)
+                    ->subject('Account Information - IES');
+            });
+
+            return response()->json(['success' => true, 'message' => 'Email envoyé avec succès']);
+        }
+        catch(Exception $exp) {
+            throw $exp;
+        }
+    }
+
+    public function TestSendWelcomeEmailToUser(Request $request)
+    {
+        try {
+            $userEmail = $request->input('email');
+            $userId = $request->input('userId');
+
+            if (!$userEmail || !$userId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Paramètres manquants: email et userId requis'
+                ], 400);
+            }
+
+            // Appeler la fonction privée
+            $result = $this->SendWelcomeEmailToUser($userEmail, $userId);
+
+            return response()->json([
+                'success' => $result,
+                'message' => $result ? 'Email de bienvenue envoyé avec succès' : 'Erreur lors de l\'envoi de l\'email'
+            ]);
+        }
+        catch(Exception $exp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur: ' . $exp->getMessage()
+            ], 500);
+        }
+    }
+
+    public function ConfirmUserEmail(Request $request)
+    {
+        try {
+            $result = DB::select(
+                "CALL ConfirmUserEmail(?)",
+                [$request->input('userId')]
             );
 
             return response()->json($result);

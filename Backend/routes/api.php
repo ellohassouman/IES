@@ -44,3 +44,8 @@ Route::post('UpdateCustomUserStatus', [GlobalController::class, 'UpdateCustomUse
 Route::post('UpdateCustomUserThirdPartyCodes', [GlobalController::class, 'UpdateCustomUserThirdPartyCodes']);
 Route::post('UpdateCustomUserInfo', [GlobalController::class, 'UpdateCustomUserInfo']);
 Route::post('DeleteCustomUser', [GlobalController::class, 'DeleteCustomUser']);
+Route::post('GetAllCustomerUserTypes', [GlobalController::class, 'GetAllCustomerUserTypes']);
+Route::post('Register', [GlobalController::class, 'Register']);
+Route::post('SendWelcomeEmail', [GlobalController::class, 'SendWelcomeEmail']);
+Route::post('TestSendWelcomeEmailToUser', [GlobalController::class, 'TestSendWelcomeEmailToUser']);
+Route::post('ConfirmUserEmail', [GlobalController::class, 'ConfirmUserEmail']);

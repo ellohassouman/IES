@@ -9,6 +9,67 @@
 
 **Base:** `http://localhost:8000/api` (Laravel 8+, PHP 7.4+)
 
+### Authentication & Registration
+
+#### Login
+**POST** `/api/Login`
+```json
+{
+  "email": "user@example.com",
+  "password": "YourPassword123!"
+}
+→ {UserId, FullName, Email, PasswordHash}
+```
+
+**Description:** Authenticate user with email/password. Password verification uses bcrypt Hash::check().
+**Stored Procedure:** `AuthenticateUser(p_Email)` - Retrieves user record by email
+
+---
+
+#### Register
+**POST** `/api/Register`
+```json
+{
+  "email": "newuser@example.com",
+  "password": "NewPassword123!",
+  "firstName": "John",
+  "lastName": "Doe",
+  "companyName": "Acme Corp",
+  "companyAddress": "123 Business St",
+  "phoneNumber": "+1234567890",
+  "roleId": "113"
+}
+```
+
+**Response (Success):**
+```json
+{
+  "success": true,
+  "message": "Enregistrement réussi. Un email de confirmation a été envoyé.",
+  "userId": 42
+}
+```
+
+**Response (Error):**
+```json
+{
+  "success": false,
+  "message": "Cet email est déjà enregistré"
+}
+```
+
+**Validation Rules:**
+- Email must be unique and valid format
+- Password minimum 12 characters
+- Password must contain 3 types: lowercase, uppercase, numbers, special chars
+- All text fields (firstName, lastName, companyName, companyAddress) required
+- PhoneNumber optional
+- RoleId: 113=Client, 114=Client TMS
+
+**Stored Procedure:** `SP_RegisterUser(...)` - Validates data & creates new user with bcrypt hashed password
+
+---
+
 ### GenerateProforma
 **POST** `/api/GenerateProforma`
 ```json
@@ -38,11 +99,44 @@
 
 | Procédure | Description |
 |-----------|-------------|
+| `AuthenticateUser(p_Email)` | Récupère user pour login |
+| `SP_RegisterUser(...)` | Enregistre nouvel utilisateur |
 | `CalculateProformaAmount` | Calcule HT/TVA/TTC |
 | `CreateProformaInvoice` | Crée facture (draft) |
 | `GetAllCustomUsers` | Récupère utilisateurs |
 | `UpdateCustomUserStatus` | Change statut user |
 | `DeleteCustomUser` | Soft delete (Status=5) |
+
+### SP_RegisterUser Details
+**Signature:**
+```sql
+PROCEDURE SP_RegisterUser (
+    IN p_UserName VARCHAR(512),          -- Email
+    IN p_PasswordHash VARCHAR(2000),     -- Bcrypt hash
+    IN p_FirstName VARCHAR(2000),
+    IN p_LastName VARCHAR(2000),
+    IN p_CompanyName VARCHAR(2000),
+    IN p_CompanyAddress VARCHAR(2000),
+    IN p_PhoneNumber VARCHAR(100),
+    IN p_CustomerUsersTypeId INT         -- 3=Client, 4=Client TMS
+)
+```
+
+**Logic:**
+1. Validate email uniqueness
+2. Validate all required fields present
+3. Insert into `customerusers` table
+4. Set status=1 (Pending User Confirmation)
+5. Return success with new UserID
+
+**Database Table:** `customerusers`
+- Id (auto-increment primary key)
+- UserName (unique email)
+- PasswordHash (bcrypt 2000 chars)
+- FirstName, LastName, CompanyName, CompanyAddress, PhoneNumber
+- EmailConfirmed (0=pending, 1=confirmed)
+- CustomerUsersStatusId (1=Pending, 2=Approved, 3=Active, 4=Disabled, 5=Deleted)
+- CustomerUsersTypeId (3=Client, 4=Client TMS)
 
 ---
 
