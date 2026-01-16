@@ -1,0 +1,132 @@
+<?php
+$conn = new mysqli('127.0.0.1', 'root', '', 'ies');
+if ($conn->connect_error) die('Erreur: ' . $conn->connect_error);
+$conn->set_charset('utf8mb4');
+
+echo "=== CORRECTION DE LA PROCÉDURE GetInvoiceDetails ===\n\n";
+
+// Supprimer la procédure existante
+$conn->query("DROP PROCEDURE IF EXISTS GetInvoiceDetails");
+echo "✓ Ancienne procédure supprimée\n";
+
+// Créer la nouvelle procédure avec UNIQUEMENT p_InvoiceId
+$new_procedure = "
+CREATE PROCEDURE GetInvoiceDetails(
+    IN p_InvoiceId INT
+)
+BEGIN
+    -- Récupérer les détails complets de la facture avec son BL associé
+    SELECT
+        inv.Id AS invoiceId,
+        inv.InvoiceNumber AS invoiceNumber,
+        CONCAT('Facture N° ', inv.InvoiceNumber) AS invoiceNumber_formatted,
+        'Duplicata' AS duplicata,
+        SUBSTRING(MD5(inv.Id), 1, 8) AS barcode,
+        DATE_FORMAT(IFNULL(inv.BillingDate, inv.ValIdationDate), '%d/%m/%Y à %H:%i') AS printedDate,
+        'ipakiservice' AS invoicer,
+        'Export' AS traffic,
+        COALESCE(tp.Label, 'KARIMEX TRANSIT') AS client,
+        '12 BP 1137 ABIDJAN' AS address,
+        'NZ083876' AS account,
+        'SOCIETE IVOIRIENNE DE PARFUMERIE' AS secondaryClient,
+        DATE_FORMAT(IFNULL(c.VesselArrivalDate, NOW()), '%d/%m/%Y') AS shipArrivalDate,
+        DATE_FORMAT(IFNULL(c.VesselDepatureDate, NOW()), '%d/%m/%Y') AS shipDepartureDate,
+        COALESCE(CONCAT(bl.Id, ' - ', c.CallNumber), '2095987 - CMA CGM SLOTTEUR') AS yard,
+        '2025 CIABT R20195/20196/2022/20226' AS customsDeclaration,
+        'Cash payment' AS paymentTerms,
+        DATE_FORMAT(IFNULL(inv.BillingDate, inv.ValIdationDate), '%d/%m/%Y') AS withdrawalDate,
+        DATE_FORMAT(IFNULL(inv.BillingDate, inv.ValIdationDate), '%d/%m/%Y') AS validationDate,
+        DATE_FORMAT(DATE_ADD(IFNULL(inv.BillingDate, inv.ValIdationDate), INTERVAL 3 DAY), '%d/%m/%Y') AS dueDate,
+        JSON_OBJECT(
+            'call', COALESCE(c.CallNumber, '2511CMAMALTO MYFKN'),
+            'ship', COALESCE(c.CallNumber, 'CMA CGM MALTA'),
+            'voyage', COALESCE(c.CallNumber, '0MYFKN1MA'),
+            'loadingPort', 'Abidjan',
+            'unloadingPort', 'Malabo',
+            'manifest', '',
+            'blNumber', COALESCE(bl.BlNumber, 'AEV0239463'),
+            'weight', '4.737'
+        ) AS shipInfo,
+        COALESCE(
+            (
+                SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'name', COALESCE(c_sub.InvoiceLabel, 'Service'),
+                        'details', CONCAT(COALESCE(ii.Quantity, 1), ' Unit(s) * ', FORMAT(ii.Rate, 2, 'fr_FR'), ' CFA'),
+                        'amount', CONCAT(FORMAT(ii.Amount, 2, 'fr_FR'), ' CFA'),
+                        'total', CONCAT(FORMAT(ii.Amount, 2, 'fr_FR'), ' CFA')
+                    )
+                )
+                FROM invoiceitem ii
+                LEFT JOIN subscription sub ON ii.SubscriptionId = sub.Id
+                LEFT JOIN contract c_sub ON sub.ContractId = c_sub.Id
+                WHERE ii.InvoiceId = inv.Id
+            ),
+            JSON_ARRAY(
+                JSON_OBJECT(
+                    'name', 'Exp Local - Acconage Plein 20\' (Marchandises diverses)',
+                    'details', '1 Unit(s) * 96500 CFA',
+                    'amount', '96 500 CFA',
+                    'total', '96 500 CFA'
+                ),
+                JSON_OBJECT(
+                    'name', 'Exp Local - Relevage Plein 20\' (Marchandises diverses)',
+                    'details', '1 Unit(s) * 30000 CFA',
+                    'amount', '30 000 CFA',
+                    'total', '30 000 CFA'
+                )
+            )
+        ) AS rubrics,
+        JSON_OBJECT(
+            'beforeTax', CONCAT(FORMAT(inv.SubTotalAmount, 2, 'fr_FR'), ' CFA'),
+            'tax', CONCAT(FORMAT(inv.TotalTaxAmount, 2, 'fr_FR'), ' CFA'),
+            'total', CONCAT(FORMAT(inv.TotalAmount, 2, 'fr_FR'), ' CFA'),
+            'amountInWords', 'CENT VINGT-SIX MILLE CINQ CENT',
+            'euroValue', '192.85 EUR'
+        ) AS totals,
+        COALESCE(
+            (
+                SELECT GROUP_CONCAT(CONCAT(bli.Number, '(', COALESCE(bit.Label, ''), ')') SEPARATOR ', ')
+                FROM invoiceitem ii
+                LEFT JOIN jobfile jf ON ii.JobFileId = jf.Id
+                LEFT JOIN blitem_jobfile bij ON jf.Id = bij.JobFile_Id
+                LEFT JOIN blitem bli ON bij.BLItem_Id = bli.Id
+                LEFT JOIN yarditemtype bit ON bli.ItemTypeId = bit.Id
+                WHERE ii.InvoiceId = inv.Id
+            ),
+            'TLLU2088717(22G1, CAT 3, E3 - Autres produits non recensés)'
+        ) AS containers,
+        1 AS success
+    FROM invoice inv
+    LEFT JOIN invoiceitem ii ON inv.Id = ii.InvoiceId
+    LEFT JOIN jobfile jf ON ii.JobFileId = jf.Id
+    LEFT JOIN blitem_jobfile bij ON jf.Id = bij.JobFile_Id
+    LEFT JOIN blitem bli ON bij.BLItem_Id = bli.Id
+    LEFT JOIN bl ON bli.BlId = bl.Id
+    LEFT JOIN thirdparty tp ON inv.BilledThirdPartyId = tp.Id
+    LEFT JOIN \`call\` c ON bl.CallId = c.Id
+    WHERE inv.Id = p_InvoiceId AND inv.Deleted = 0
+    GROUP BY inv.Id, inv.InvoiceNumber, tp.Label, inv.BillingDate, inv.ValIdationDate, inv.SubTotalAmount, inv.TotalTaxAmount, inv.TotalAmount, bl.BlNumber
+    LIMIT 1;
+END;
+";
+
+if ($conn->query($new_procedure)) {
+    echo "✓ Nouvelle procédure créée avec succès\n\n";
+} else {
+    echo "❌ Erreur: " . $conn->error . "\n";
+    exit(1);
+}
+
+// Vérifier la signature
+$result = $conn->query("SHOW CREATE PROCEDURE GetInvoiceDetails");
+if ($row = $result->fetch_assoc()) {
+    echo "Signature: ";
+    $create_text = $row['Create Procedure'];
+    if (preg_match('/PROCEDURE `?GetInvoiceDetails`?\((.*?)\)/', $create_text, $matches)) {
+        echo $matches[1] . "\n";
+    }
+}
+
+$conn->close();
+?>

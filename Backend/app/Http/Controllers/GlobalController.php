@@ -1147,6 +1147,121 @@ This is an automatic email, please dont answer.';
         }
     }
 
+    public function GetInvoiceDetails(Request $request)
+    {
+        try {
+            $invoiceId = $request->input('invoiceId');
+
+            if (!$invoiceId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Paramètre manquant: invoiceId requis'
+                ], 400);
+            }
+
+            $result = DB::select(
+                "CALL GetInvoiceDetails(?)",
+                [$invoiceId]
+            );
+
+            if (!empty($result)) {
+                $invoiceData = $result[0];
+
+                // Décoder les champs JSON s'ils existent
+                if (isset($invoiceData->rubrics) && is_string($invoiceData->rubrics)) {
+                    $invoiceData->rubrics = json_decode($invoiceData->rubrics, true);
+                    if ($invoiceData->rubrics === null) {
+                        $invoiceData->rubrics = [];
+                    }
+                }
+
+                if (isset($invoiceData->shipInfo) && is_string($invoiceData->shipInfo)) {
+                    $invoiceData->shipInfo = json_decode($invoiceData->shipInfo, true);
+                    if ($invoiceData->shipInfo === null) {
+                        $invoiceData->shipInfo = [];
+                    }
+                }
+
+                if (isset($invoiceData->totals) && is_string($invoiceData->totals)) {
+                    $invoiceData->totals = json_decode($invoiceData->totals, true);
+                    if ($invoiceData->totals === null) {
+                        $invoiceData->totals = [];
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'data' => $invoiceData
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Facture non trouvée'
+                ], 404);
+            }
+        }
+        catch(Exception $exp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur: ' . $exp->getMessage()
+            ], 500);
+        }
+    }
+
+    public function GetDnDetails(Request $request)
+    {
+        try {
+            $dnId = $request->input('dnId');
+
+            if (!$dnId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Paramètre manquant: dnId requis'
+                ], 400);
+            }
+
+            $result = DB::select(
+                "CALL GetDnDetails(?)",
+                [$dnId]
+            );
+
+            if (!empty($result)) {
+                $dnData = $result[0];
+
+                // Décoder les champs JSON s'ils existent
+                if (isset($dnData->shipInfo) && is_string($dnData->shipInfo)) {
+                    $dnData->shipInfo = json_decode($dnData->shipInfo, true);
+                    if ($dnData->shipInfo === null) {
+                        $dnData->shipInfo = [];
+                    }
+                }
+
+                if (isset($dnData->containers) && is_string($dnData->containers)) {
+                    $dnData->containers = json_decode($dnData->containers, true);
+                    if ($dnData->containers === null) {
+                        $dnData->containers = [];
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'data' => $dnData
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bon à Délivrer non trouvé'
+                ], 404);
+            }
+        }
+        catch(Exception $exp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur: ' . $exp->getMessage()
+            ], 500);
+        }
+    }
+
 
 
 }

@@ -49,3 +49,5 @@ Route::post('Register', [GlobalController::class, 'Register']);
 Route::post('SendWelcomeEmail', [GlobalController::class, 'SendWelcomeEmail']);
 Route::post('TestSendWelcomeEmailToUser', [GlobalController::class, 'TestSendWelcomeEmailToUser']);
 Route::post('ConfirmUserEmail', [GlobalController::class, 'ConfirmUserEmail']);
+Route::post('GetInvoiceDetails', [GlobalController::class, 'GetInvoiceDetails']);
+Route::post('GetDnDetails', [GlobalController::class, 'GetDnDetails']);

@@ -1,0 +1,9 @@
+Recap des règles de gestion
+1- Un jobfile ne peut avoir qu'un seule In et un seule OUt
+
+2- Le In est toujorus le premier event du cycle en terme de date et le out le derneir, les event intermediaire sont fait par odre chronologique
+
+3- La date open prend la date du In et la dateClose la date du out
+
+4- Les Ins des conteneur doivent impérativemetn être des events dans la table d'association Contract_EventType
+Pas de contrainte pour les véhicules

@@ -1,0 +1,7642 @@
+-- phpMyAdmin SQL Dump
+-- version 5.1.1
+-- https://www.phpmyadmin.net/
+--
+-- Hôte : 127.0.0.1:3306
+-- Généré le : ven. 16 jan. 2026 à 00:15
+-- Version du serveur : 8.0.27
+-- Version de PHP : 7.4.26
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Base de données : `ies`
+--
+
+DELIMITER $$
+--
+-- Procédures
+--
+DROP PROCEDURE IF EXISTS `AddInvoiceToCart`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddInvoiceToCart` (IN `p_CustomerUserId` INT, IN `p_InvoiceId` INT, IN `p_InvoiceNumber` VARCHAR(100), IN `p_InvoicePaidAmount` DECIMAL(18,2))  BEGIN
+    DECLARE v_CartId INT;
+    DECLARE v_ExistingItem INT;
+
+    SELECT Id INTO v_CartId 
+    FROM Cart
+    WHERE CustomerUserId = p_CustomerUserId AND Deleted = 0 AND IsSent = 0
+    LIMIT 1;
+
+    IF v_CartId IS NULL THEN
+        INSERT INTO Cart (CustomerUserId, CreatedDate, Deleted, IsSent)
+        VALUES (p_CustomerUserId, NOW(), 0, 0);
+        SET v_CartId = LAST_INSERT_ID();
+    END IF;
+
+    SELECT COUNT(*) INTO v_ExistingItem
+    FROM CartItem
+    WHERE CartId = v_CartId AND InvoiceId = p_InvoiceId;
+
+    IF v_ExistingItem = 0 THEN
+        INSERT INTO CartItem (
+            CartId, InvoiceId, InvoicePaidAmount, InvoiceNumber, BillingDate
+        ) VALUES (
+            v_CartId, p_InvoiceId, p_InvoicePaidAmount, p_InvoiceNumber, NOW()
+        );
+    END IF;
+
+    SELECT 
+        v_CartId AS cartId,
+        (SELECT COUNT(*) FROM CartItem WHERE CartId = v_CartId) AS itemCount;
+    END$$
+
+DROP PROCEDURE IF EXISTS `AuthenticateUser`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AuthenticateUser` (IN `p_Email` VARCHAR(255), IN `p_IsAdmin` BOOLEAN)  BEGIN
+    IF p_IsAdmin THEN
+        -- Pour les admins, retourner seulement les utilisateurs avec le type = 3
+        SELECT 
+            Id AS UserId, 
+            CONCAT(FirstName, ' ', LastName) AS FullName, 
+            UserName AS Email, 
+            PasswordHash, 
+            CustomerUsersTypeId AS UserType,
+            (CustomerUsersTypeId = 3) AS isAdmin
+        FROM customerusers
+        WHERE UserName = p_Email AND CustomerUsersTypeId = 3
+        LIMIT 1;
+    ELSE
+        -- Pour les utilisateurs normaux, retourner les utilisateurs avec le type != 3
+        SELECT 
+            Id AS UserId, 
+            CONCAT(FirstName, ' ', LastName) AS FullName, 
+            UserName AS Email, 
+            PasswordHash, 
+            CustomerUsersTypeId AS UserType,
+            (CustomerUsersTypeId = 3) AS isAdmin
+        FROM customerusers
+        WHERE UserName = p_Email AND (CustomerUsersTypeId != 3 OR CustomerUsersTypeId IS NULL)
+        and EmailConfirmed=1
+        LIMIT 1;
+    END IF;
+END$$
+
+DROP PROCEDURE IF EXISTS `ConfirmUserEmail`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `ConfirmUserEmail` (IN `p_UserId` INT)  BEGIN
+    UPDATE customerusers 
+    SET EmailConfirmed = 1,CustomerUsersStatusId=2
+    WHERE Id = p_UserId;
+    
+    SELECT ROW_COUNT() as AffectedRows;
+END$$
+
+DROP PROCEDURE IF EXISTS `DeleteCustomUser`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `DeleteCustomUser` (IN `p_UserId` INT)  BEGIN
+    UPDATE `customerusers`
+    SET `CustomerUsersStatusId` = 5
+    WHERE `Id` = p_UserId;
+    
+    SELECT ROW_COUNT() AS `AffectedRows`;
+END$$
+
+DROP PROCEDURE IF EXISTS `DeleteInvoice`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `DeleteInvoice` (IN `p_InvoiceId` INT)  BEGIN
+                UPDATE invoice
+                SET Deleted = 1
+                WHERE Id = p_InvoiceId AND Deleted = 0;
+                
+                SELECT 1 AS Success, 'Facture supprimée avec succès' AS Message;
+            END$$
+
+DROP PROCEDURE IF EXISTS `DeleteYardItemEvent`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `DeleteYardItemEvent` (IN `p_EventTypeCode` VARCHAR(50), IN `p_YardItemNumber` VARCHAR(100), IN `p_EventDateString` DATETIME, IN `p_BillOfLadingNumber` VARCHAR(100))  BEGIN
+    DECLARE v_EventId INT;
+    DECLARE v_YardItemId INT;
+    
+    -- Récupérer l'ID du yard item
+    SELECT bli.`Id` INTO v_YardItemId
+    FROM `blitem` bli
+    LEFT JOIN `bl` bl ON bli.`BlId` = bl.`Id`
+    WHERE bli.`Number` = p_YardItemNumber
+    AND bl.`BlNumber` = p_BillOfLadingNumber
+    LIMIT 1;
+    
+    -- Si le yard item existe, chercher et supprimer l'événement
+    IF v_YardItemId IS NOT NULL THEN
+        SELECT evt.`Id` INTO v_EventId
+        FROM `event` evt
+        LEFT JOIN `eventtype` et ON evt.`EventTypeId` = et.`Id`
+        LEFT JOIN `jobfile` jf ON evt.`JobFileId` = jf.`Id`
+        LEFT JOIN `blitem_jobfile` bij ON jf.`Id` = bij.`JobFile_Id`
+        WHERE bij.`BLItem_Id` = v_YardItemId
+        AND et.`Code` = p_EventTypeCode
+        AND DATE(evt.`Date`) = DATE(p_EventDateString)
+        AND evt.`CreatedByIES` = 1
+        LIMIT 1;
+        
+        -- Supprimer l'événement s'il existe
+        IF v_EventId IS NOT NULL THEN
+            DELETE FROM `event` WHERE `Id` = v_EventId;
+        END IF;
+    END IF;
+END$$
+
+DROP PROCEDURE IF EXISTS `GenerateProforma`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GenerateProforma` (IN `p_JobFileId` INT, IN `p_BillingDate` DATETIME)  BEGIN
+    DECLARE v_InvoiceId INT;
+    DECLARE v_SubTotalAmount DECIMAL(10,2) DEFAULT 0;
+    DECLARE v_TotalTaxAmount DECIMAL(10,2) DEFAULT 0;
+    DECLARE v_TotalAmount DECIMAL(10,2) DEFAULT 0;
+    DECLARE v_BilledThirdPartyId INT;
+    DECLARE v_LineCount INT DEFAULT 0;
+    
+    SELECT COUNT(*)
+    INTO v_LineCount
+    FROM event e
+    INNER JOIN contract_eventtype ce ON ce.EventType_Id = e.EventTypeId
+    INNER JOIN contract c ON c.Id = ce.Contract_Id
+    INNER JOIN subscription s ON s.ContractId = c.Id
+    INNER JOIN rate r ON r.Id = s.RateId
+    INNER JOIN rateperiod rp ON rp.RateId = r.Id AND rp.ToDate > NOW()
+    INNER JOIN raterangeperiod rpr ON rpr.RatePeriodId = rp.Id
+    WHERE e.JobFileId = p_JobFileId
+    AND NOT EXISTS (
+        SELECT 1
+        FROM invoiceitem ii
+        JOIN invoice inv on inv.Id=ii.InvoiceId and inv.Deleted=0
+        WHERE ii.EventId = e.Id
+    );
+    
+    IF v_LineCount > 0 THEN
+        SELECT DISTINCT bl.ConsigneeId
+        INTO v_BilledThirdPartyId
+        FROM blitem_jobfile bjf
+        INNER JOIN blitem bi ON bjf.BLItem_Id = bi.Id
+        INNER JOIN bl ON bi.BLId = bl.Id
+        WHERE bjf.JobFile_Id = p_JobFileId
+        LIMIT 1;
+        
+        INSERT INTO invoice (BilledThirdPartyId, StatusId, BillingDate, Deleted)
+        VALUES (v_BilledThirdPartyId, 1, p_BillingDate, 0);
+        
+        SET v_InvoiceId = LAST_INSERT_ID();
+        
+        INSERT INTO invoiceitem (InvoiceId, JobFileId, EventId, SubscriptionId, RateRangePeriodId, Quantity, Amount, CalculatedTax)
+        SELECT 
+            v_InvoiceId,
+            e.JobFileId,
+            e.Id,
+            s.Id,
+            rpr.Id,
+            DATEDIFF(p_BillingDate, e.EventDate) + 1 as quantity,
+            CASE 
+                WHEN (SELECT COUNT(*) FROM raterangeperiod WHERE RatePeriodId = rp.Id) = 1
+                THEN rpr.Rate
+                ELSE 
+                    CASE 
+                        WHEN (DATEDIFF(p_BillingDate, e.EventDate) + 1) >= rpr.EndValue
+                        THEN (rpr.EndValue - rpr.StartValue + 1) * rpr.Rate
+                        ELSE GREATEST(0, (DATEDIFF(p_BillingDate, e.EventDate) + 1 - rpr.StartValue + 1)) * rpr.Rate
+                    END
+            END as line_amount,
+            ROUND((CASE 
+                WHEN (SELECT COUNT(*) FROM raterangeperiod WHERE RatePeriodId = rp.Id) = 1
+                THEN rpr.Rate
+                ELSE 
+                    CASE 
+                        WHEN (DATEDIFF(p_BillingDate, e.EventDate) + 1) >= rpr.EndValue
+                        THEN (rpr.EndValue - rpr.StartValue + 1) * rpr.Rate
+                        ELSE GREATEST(0, (DATEDIFF(p_BillingDate, e.EventDate) + 1 - rpr.StartValue + 1)) * rpr.Rate
+                    END
+            END) * (COALESCE(tc.TaxValue, 0) / 100), 2) as line_tax
+        FROM event e
+        INNER JOIN contract_eventtype ce ON ce.EventType_Id = e.EventTypeId
+        INNER JOIN contract c ON c.Id = ce.Contract_Id
+        INNER JOIN subscription s ON s.ContractId = c.Id
+        INNER JOIN rate r ON r.Id = s.RateId
+        INNER JOIN rateperiod rp ON rp.RateId = r.Id AND rp.ToDate > NOW()
+        INNER JOIN raterangeperiod rpr ON rpr.RatePeriodId = rp.Id
+        LEFT JOIN taxcodes tc ON c.TaxCodeId = tc.Id
+        WHERE e.JobFileId = p_JobFileId;
+        
+        SELECT 
+            COALESCE(SUM(Amount), 0),
+            COALESCE(SUM(CalculatedTax), 0)
+        INTO v_SubTotalAmount, v_TotalTaxAmount
+        FROM invoiceitem
+        WHERE InvoiceId = v_InvoiceId;
+        
+        SET v_TotalAmount = v_SubTotalAmount + v_TotalTaxAmount;
+        
+        UPDATE invoice
+        SET 
+            SubTotalAmount = v_SubTotalAmount,
+            TotalTaxAmount = v_TotalTaxAmount,
+            TotalAmount = v_TotalAmount
+        WHERE Id = v_InvoiceId;
+        
+        SELECT v_InvoiceId AS InvoiceId, v_SubTotalAmount AS SubTotalAmount, v_TotalTaxAmount AS TotalTaxAmount, v_TotalAmount AS TotalAmount;
+
+    END IF;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetAllConsigneesWithBLs`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllConsigneesWithBLs` ()  SELECT DISTINCT
+        tp.`Id`,
+        tp.`code`,
+        tp.`Label`,
+        COUNT(bl.`Id`) AS `BlCount`
+    FROM `thirdparty` tp
+    INNER JOIN `bl` ON tp.`Id` = bl.`ConsigneeId`
+    GROUP BY tp.`Id`, tp.`code`, tp.`Label`
+    ORDER BY tp.`Label` ASC$$
+
+DROP PROCEDURE IF EXISTS `GetAllCustomerUserTypes`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllCustomerUserTypes` ()  BEGIN
+    SELECT 
+        Id,
+        Label
+    FROM customeruserstype
+    ORDER BY Id;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetAllCustomUsers`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllCustomUsers` ()  BEGIN
+    SELECT 
+        cu.`Id`,
+        cu.`UserName`,
+        cu.`FirstName`,
+        cu.`LastName`,
+        'ATL' AS `Site`,
+        cu.`CompanyName`,
+        cu.`CompanyAddress`,
+        cu.`PhoneNumber`,
+        NULL AS `CellPhone`,
+        cus_type.`Label` AS `AccountType`,
+        cus_status.`Label` AS `Status`,
+        cu.`CustomerUsersStatusId`,
+        cu.`CustomerUsersTypeId`,
+        JSON_ARRAYAGG(tp.`code`) AS `ThirdPartyCodes`
+    FROM `customerusers` cu
+    LEFT JOIN `customeruserstype` cus_type ON cu.`CustomerUsersTypeId` = cus_type.`Id`
+    LEFT JOIN `customerusersstatus` cus_status ON cu.`CustomerUsersStatusId` = cus_status.`Id`
+    LEFT JOIN `customerusers_thirdparty` cut_tp ON cu.`Id` = cut_tp.`CustomerUsers_Id`
+    LEFT JOIN `thirdparty` tp ON cut_tp.`ThirdParty_Id` = tp.`Id`
+    WHERE cu.`UserName` IS NOT NULL 
+    AND cu.`UserName` != ''
+    AND cu.`CustomerUsersStatusId` != 5
+    GROUP BY cu.`Id`, cu.`UserName`, cu.`FirstName`, cu.`LastName`, cu.`CompanyName`, cu.`CompanyAddress`, cu.`PhoneNumber`, cus_type.`Label`, cus_status.`Label`, cu.`CustomerUsersStatusId`, cu.`CustomerUsersTypeId`
+    ORDER BY cu.`UserName` ASC;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetAllEventFamilies`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllEventFamilies` ()  BEGIN
+    SELECT 
+        f.`Id`,
+        f.`Label`
+    FROM `family` f
+    WHERE EXISTS
+    (
+    	SELECT 1
+        from eventtype et
+        where et.FamilyId=f.Id
+    )
+    ORDER BY f.`Label` ASC;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetAllEventTypes`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllEventTypes` ()  BEGIN
+    SELECT 
+        et.`Id`,
+        et.`Code`,
+        et.`Label`,
+        et.`FamilyId`
+    FROM `eventtype` et
+    ORDER BY et.`Label` ASC;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetBillingInfoForProforma`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetBillingInfoForProforma` (IN `p_BLId` INT)  BEGIN
+    SELECT 
+        bl.Id,
+        bl.BlNumber,
+        bl.ConsigneeId,
+        tp.Label AS ShipperName,
+        tp.ContactName,
+        tp.PhoneNumber,
+        bl.VesselArrivalDate,
+        bl.VesselName,
+        bl.VoyageNumber
+    FROM bl
+    LEFT JOIN thirdparty tp ON bl.ConsigneeId = tp.Id
+    WHERE bl.Id = p_BLId;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetBLByNumber`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetBLByNumber` (IN `p_BlNumber` VARCHAR(100), IN `p_UserId` INT)  BEGIN
+    DECLARE v_BlId INT;
+    DECLARE v_ShipName VARCHAR(500);
+    DECLARE v_ArrivalDate DATETIME;
+    DECLARE v_ItemCount INT;
+    DECLARE v_NextId INT;
+
+    -- Récupérer les détails du BL
+    SELECT 
+        bl.`Id`,
+        COALESCE(tp_Shipper.`Label`, '') AS `ShipName`,
+        c.`VesselArrivalDate` AS `ArrivalDate`,
+        COUNT(bli.`Id`) AS `ItemCount`
+    INTO v_BlId, v_ShipName, v_ArrivalDate, v_ItemCount
+    FROM `BL` bl
+    JOIN thirdparty tp on tp.Id=bl.ConsigneeId
+    JOIN customerusers_thirdparty cut on cut.ThirdParty_Id=tp.Id and cut.CustomerUsers_Id=p_UserId
+    LEFT JOIN `Call` c ON bl.`CallId` = c.`Id`
+    LEFT JOIN `ThirdParty` tp_Shipper ON c.ThirdPartyId = tp_Shipper.`Id`
+    LEFT JOIN `BLItem` bli ON bl.`Id` = bli.`BlId`
+    WHERE bl.`BlNumber` = p_BlNumber
+    GROUP BY bl.`Id`, bl.`BlNumber`, tp_Shipper.`Label`, c.`VesselArrivalDate`;
+
+    -- Si le BL n'existe pas, retourner vide
+    IF v_BlId IS NULL THEN
+        SELECT 0 AS found;
+    ELSE
+        -- Obtenir le prochain ID
+        SELECT COALESCE(MAX(`Id`), 0) + 1 INTO v_NextId FROM `customeruserblsearchhistory`;
+
+        -- Insérer dans l'historique de recherche
+        INSERT INTO `customeruserblsearchhistory` (
+            `Id`, `BlNumber`, `ShipName`, `ArrivalDate`, `ItemCount`, `UserId`, `SearchDate`
+        ) VALUES (
+            v_NextId, p_BlNumber, v_ShipName, v_ArrivalDate, v_ItemCount, p_UserId, NOW()
+        );
+
+        -- Retourner les détails du BL
+        SELECT 
+            v_BlId AS `Id`,
+            p_BlNumber AS `BlNumber`,
+            v_ShipName AS `ShipName`,
+            v_ArrivalDate AS `ArrivalDate`,
+            v_ItemCount AS `ItemCount`,
+            1 AS `found`;
+    END IF;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetCartByUserId`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetCartByUserId` (IN `p_CustomerUserId` INT)  BEGIN
+    SELECT 
+        c.Id AS cartId,
+        c.CustomerUserId,
+        c.CreatedDate,
+        c.IsSent,
+        ci.Id AS itemId,
+        ci.InvoiceId,
+        ci.InvoicePaidAmount,
+        ci.InvoiceNumber,
+        ci.BillingDate,
+        COALESCE(bl.BlNumber, '') AS BlNumber
+    FROM Cart c
+    JOIN CartItem ci ON c.Id = ci.CartId
+    JOIN invoice inv ON ci.InvoiceId = inv.Id
+    LEFT JOIN (
+        SELECT DISTINCT 
+            ii.InvoiceId,
+            bl.BlNumber
+        FROM invoiceitem ii
+        JOIN jobfile jf ON ii.JobFileId = jf.Id
+        JOIN blitem_jobfile bij ON jf.Id = bij.JobFile_Id
+        JOIN blitem bli ON bij.BLItem_Id = bli.Id
+        JOIN bl ON bli.BlId = bl.Id
+        LIMIT 1
+    ) bl ON inv.Id = bl.InvoiceId
+    WHERE c.CustomerUserId = p_CustomerUserId
+      AND c.Deleted = 0
+      AND c.IsSent = 0
+      AND inv.StatusId!=4
+    ORDER BY c.CreatedDate DESC, ci.Id ASC
+    ;
+    END$$
+
+DROP PROCEDURE IF EXISTS `GetCurrentUserCartCount`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetCurrentUserCartCount` (IN `p_CustomerUserId` INT)  BEGIN
+    SELECT COUNT(ci.`Id`) as ItemCount
+    FROM `Cart` c
+    LEFT JOIN `CartItem` ci ON c.`Id` = ci.`CartId`
+    WHERE c.`CustomerUserId` = p_CustomerUserId AND c.`Deleted` = 0;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetDetailsPerBLNumber`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetDetailsPerBLNumber` (IN `p_BlNumber` VARCHAR(100))  BEGIN
+    SELECT 
+        bl.`BlNumber` AS `blNumber`,
+        COALESCE(c.`CallNumber`, '') AS `manifest`,
+        'Export' AS `impExp`,
+        'FCL' AS `transportMode`,
+        '' AS `masterBL`,
+        '' AS `incoterm`,
+        'Closed' AS `blStatus`,
+        COALESCE(tp_consignee.`Label`, '') AS `receiver`,
+        '' AS `shipper`,
+        COALESCE(tp_customer.`Label`, '') AS `secondaryClient`,
+        '' AS `transportAgent`,
+        '' AS `forwarder`,
+        '' AS `pickupOrder`,
+        '' AS `pickupDate`,
+        '' AS `deliveryOrder`,
+        '' AS `deliveryDate`,
+        '' AS `agencyName`,
+        '' AS `shipperName`,
+        '' AS `loadingPort`,
+        '' AS `sense`,
+        '' AS `receptionPlace`,
+        '' AS `finalDestination`,
+        '' AS `transshipmentPort`,
+        '' AS `dischargePort`,
+        COALESCE(tp_carrier.`Label`, '') AS `shipName`,
+        c.`CallNumber` AS `voyageNumber`,
+        DATE_FORMAT(c.`VesselArrivalDate`, '%Y-%m-%d') AS `blDate`,
+        c.`CallNumber` AS `callNumber`,
+        DATE_FORMAT(c.`VesselArrivalDate`, '%Y-%m-%d %H:%i:%s') AS `arrivalDate`,
+        DATE_FORMAT(c.`VesselArrivalDate`, '%Y-%m-%d %H:%i:%s') AS `estimatedArrivalDate`,
+        DATE_FORMAT(c.`VesselArrivalDate`, '%Y-%m-%d %H:%i:%s') AS `actualArrivalDate`,
+        DATE_FORMAT(c.`VesselDepatureDate`, '%Y-%m-%d %H:%i:%s') AS `estimatedDepartureDate`,
+        DATE_FORMAT(c.`VesselArrivalDate`, '%Y-%m-%d %H:%i:%s') AS `shipAvailabilityDate`,
+        DATE_FORMAT(c.`VesselDepatureDate`, '%Y-%m-%d %H:%i:%s') AS `lastLineUnsecured`,
+        DATE_FORMAT(c.`VesselDepatureDate`, '%Y-%m-%d %H:%i:%s') AS `shipDepartureDate`,
+        '' AS `stevedore`,
+        'Maritime' AS `transportedBy`,
+        COALESCE(tp_consignee.`Label`, '') AS `callPort`,
+        c.`CallNumber` AS `callReference`,
+        '' AS `grossWeight`,
+        COALESCE(tp_carrier.`Label`, '') AS `shipVoyageName`,
+        c.`CallNumber` AS `incomingVoyage`,
+        c.`CallNumber` AS `outgoingVoyage`,
+        COALESCE(tp_carrier.`code`, '') AS `shipOperator`,
+        '' AS `departureLocation`
+    FROM `BL` bl
+    LEFT JOIN `Call` c ON bl.`CallId` = c.`Id`
+    LEFT JOIN `ThirdParty` tp_consignee ON c.`ThirdPartyId` = tp_consignee.`Id`
+    LEFT JOIN `ThirdParty` tp_customer ON bl.`RelatedCustomerId` = tp_customer.`Id`
+    LEFT JOIN `ThirdParty` tp_carrier ON c.`ThirdPartyId` = tp_carrier.`Id`
+    WHERE bl.`BlNumber` = p_BlNumber
+    LIMIT 1;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetInvoiceDetails`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetInvoiceDetails` (IN `p_InvoiceId` INT, IN `p_InvoiceNumber` INT)  BEGIN
+    -- Récupérer les détails complets de la facture avec son BL associé
+    SELECT
+        inv.Id AS invoiceId,
+        inv.InvoiceNumber AS invoiceNumber,
+        CONCAT('Facture N° ', inv.InvoiceNumber) AS invoiceNumber_formatted,
+        'Duplicata' AS duplicata,
+        SUBSTRING(MD5(inv.Id), 1, 8) AS barcode,
+        DATE_FORMAT(IFNULL(inv.BillingDate, inv.ValIdationDate), '%d/%m/%Y à %H:%i') AS printedDate,
+        'ipakiservice' AS invoicer,
+        'Export' AS traffic,
+        COALESCE(tp.Label, 'KARIMEX TRANSIT') AS client,
+        '12 BP 1137 ABIDJAN' AS address,
+        'NZ083876' AS account,
+        'SOCIETE IVOIRIENNE DE PARFUMERIE' AS secondaryClient,
+        DATE_FORMAT(IFNULL(c.VesselArrivalDate, NOW()), '%d/%m/%Y') AS shipArrivalDate,
+        DATE_FORMAT(IFNULL(c.VesselDepatureDate, NOW()), '%d/%m/%Y') AS shipDepartureDate,
+        COALESCE(CONCAT(bl.Id, ' - ', c.CallNumber), '2095987 - CMA CGM SLOTTEUR') AS yard,
+        '2025 CIABT R20195/20196/2022/20226' AS customsDeclaration,
+        'Cash payment' AS paymentTerms,
+        DATE_FORMAT(IFNULL(inv.BillingDate, inv.ValIdationDate), '%d/%m/%Y') AS withdrawalDate,
+        DATE_FORMAT(IFNULL(inv.BillingDate, inv.ValIdationDate), '%d/%m/%Y') AS validationDate,
+        DATE_FORMAT(DATE_ADD(IFNULL(inv.BillingDate, inv.ValIdationDate), INTERVAL 3 DAY), '%d/%m/%Y') AS dueDate,
+        JSON_OBJECT(
+            'call', COALESCE(c.CallNumber, '2511CMAMALTO MYFKN'),
+            'ship', COALESCE(c.CallNumber, 'CMA CGM MALTA'),
+            'voyage', COALESCE(c.CallNumber, '0MYFKN1MA'),
+            'loadingPort', 'Abidjan',
+            'unloadingPort', 'Malabo',
+            'manifest', '',
+            'blNumber', COALESCE(bl.BlNumber, 'AEV0239463'),
+            'weight', '4.737'
+        ) AS shipInfo,
+        COALESCE(
+            (
+                SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'name', COALESCE(c_sub.InvoiceLabel, 'Service'),
+                        'details', CONCAT(COALESCE(ii.Quantity, 1), ' Unit(s) * ', FORMAT(ii.Rate, 2, 'fr_FR'), ' CFA'),
+                        'amount', CONCAT(FORMAT(ii.Amount, 2, 'fr_FR'), ' CFA'),
+                        'total', CONCAT(FORMAT(ii.Amount, 2, 'fr_FR'), ' CFA')
+                    )
+                )
+                FROM invoiceitem ii
+                LEFT JOIN subscription sub ON ii.SubscriptionId = sub.Id
+                LEFT JOIN contract c_sub ON sub.ContractId = c_sub.Id
+                WHERE ii.InvoiceId = inv.Id
+                LIMIT 1
+            ),
+            JSON_ARRAY(
+                JSON_OBJECT(
+                    'name', 'Exp Local - Acconage Plein 20\' (Marchandises diverses)',
+                    'details', '1 Unit(s) * 96500 CFA',
+                    'amount', '96 500 CFA',
+                    'total', '96 500 CFA'
+                ),
+                JSON_OBJECT(
+                    'name', 'Exp Local - Relevage Plein 20\' (Marchandises diverses)',
+                    'details', '1 Unit(s) * 30000 CFA',
+                    'amount', '30 000 CFA',
+                    'total', '30 000 CFA'
+                )
+            )
+        ) AS rubrics,
+        JSON_OBJECT(
+            'beforeTax', CONCAT(FORMAT(inv.SubTotalAmount, 2, 'fr_FR'), ' CFA'),
+            'tax', CONCAT(FORMAT(inv.TotalTaxAmount, 2, 'fr_FR'), ' CFA'),
+            'total', CONCAT(FORMAT(inv.TotalAmount, 2, 'fr_FR'), ' CFA'),
+            'amountInWords', 'CENT VINGT-SIX MILLE CINQ CENT',
+            'euroValue', '192.85 EUR'
+        ) AS totals,
+        COALESCE(
+            (
+                SELECT GROUP_CONCAT(CONCAT(bli.Number, '(', COALESCE(bit.Label, ''), ')') SEPARATOR ', ')
+                FROM invoiceitem ii
+                LEFT JOIN jobfile jf ON ii.JobFileId = jf.Id
+                LEFT JOIN blitem_jobfile bij ON jf.Id = bij.JobFile_Id
+                LEFT JOIN blitem bli ON bij.BLItem_Id = bli.Id
+                LEFT JOIN yarditemtype bit ON bli.ItemTypeId = bit.Id
+                WHERE ii.InvoiceId = inv.Id
+                LIMIT 1
+            ),
+            'TLLU2088717(22G1, CAT 3, E3 - Autres produits non recensés)'
+        ) AS containers,
+        1 AS success
+    FROM invoice inv
+    LEFT JOIN invoiceitem ii ON inv.Id = ii.InvoiceId
+    LEFT JOIN jobfile jf ON ii.JobFileId = jf.Id
+    LEFT JOIN blitem_jobfile bij ON jf.Id = bij.JobFile_Id
+    LEFT JOIN blitem bli ON bij.BLItem_Id = bli.Id
+    LEFT JOIN bl ON bli.BlId = bl.Id
+    LEFT JOIN thirdparty tp ON inv.BilledThirdPartyId = tp.Id
+    LEFT JOIN `call` c ON bl.CallId = c.Id
+    WHERE inv.Id = p_InvoiceId AND inv.InvoiceNumber = p_InvoiceNumber AND inv.Deleted = 0
+    GROUP BY inv.Id, inv.InvoiceNumber, tp.Label, inv.BillingDate, inv.ValIdationDate, inv.SubTotalAmount, inv.TotalTaxAmount, inv.TotalAmount, bl.BlNumber
+    LIMIT 1;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetInvoicesPerBLNumber`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetInvoicesPerBLNumber` (IN `p_BlNumber` VARCHAR(100), IN `p_CustomerUserId` INT)  BEGIN
+    SELECT 
+        inv.Id AS id,
+        inv.InvoiceNumber AS invoiceNumber,
+        'Invoice' AS invoiceType,
+        COALESCE(tp.Label, '') AS client,
+        DATE_FORMAT(IFNULL(inv.BillingDate, inv.ValIdationDate), '%d/%m/%Y') AS billingDate,
+        DATE_FORMAT(IFNULL(inv.BillingDate, inv.ValIdationDate), '%d/%m/%Y') AS withdrawalDate,
+        CONCAT(FORMAT(inv.TotalAmount, 2), ' XOF') AS total,
+        'XOF' AS currencyCode,
+        inv.Id AS filterId,
+        'STI' AS journalType,
+        bl.BlNumber AS blNumber,
+        bl.Id AS blId,
+        inv.StatusId AS statusId,
+        COALESCE(invs.Label, '') AS statusLabel,
+        CASE 
+            WHEN p_CustomerUserId IS NOT NULL 
+                 AND EXISTS (
+                    SELECT 1 FROM Cart c
+                    LEFT JOIN CartItem ci ON c.Id = ci.CartId
+                    WHERE c.CustomerUserId = p_CustomerUserId 
+                      AND c.Deleted = 0
+                      AND ci.InvoiceId = inv.Id
+                 ) THEN 1
+            ELSE 0
+        END AS isInCart,
+        COALESCE(
+            (
+                SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'id', CAST(jf.Id AS CHAR),
+                        'number', COALESCE(bli.Number, ''),
+                        'type', CONCAT('[', COALESCE(bit.Label, ''), ']'),
+                        'description', COALESCE(ci.NumberOfPackages, ''),
+                        'isDraft', FALSE,
+                        'dnPrintable', TRUE
+                    )
+                )
+                FROM (
+                    SELECT DISTINCT
+                        bli.Id,
+                        bli.Number,
+                        bit.Label,
+                        ci.NumberOfPackages
+                    FROM invoiceitem ii
+                    LEFT JOIN jobfile jf ON ii.JobFileId = jf.Id
+                    LEFT JOIN blitem_jobfile bij ON jf.Id = bij.JobFile_Id
+                    LEFT JOIN blitem bli ON bij.BLItem_Id = bli.Id
+                    LEFT JOIN yarditemtype bit ON bli.ItemTypeId = bit.Id
+                    LEFT JOIN commodityitem ci ON bli.Id = ci.BlItemId
+                    WHERE ii.InvoiceId = inv.Id
+                ) sub
+                INNER JOIN blitem bli ON sub.Id = bli.Id
+                LEFT JOIN yarditemtype bit ON bli.ItemTypeId = bit.Id
+                LEFT JOIN commodityitem ci ON bli.Id = ci.BlItemId
+            ),
+            JSON_ARRAY()
+        ) AS yardItems
+    FROM invoice inv
+    LEFT JOIN invoicestatus invs ON inv.StatusId = invs.Id
+    LEFT JOIN thirdparty tp ON inv.BilledThirdPartyId = tp.Id
+    LEFT JOIN invoiceitem ii ON inv.Id = ii.InvoiceId
+    LEFT JOIN jobfile jf ON ii.JobFileId = jf.Id
+    LEFT JOIN blitem_jobfile bij ON jf.Id = bij.JobFile_Id
+    LEFT JOIN blitem bli ON bij.BLItem_Id = bli.Id
+    LEFT JOIN bl ON bli.BlId = bl.Id
+    WHERE bl.BlNumber = p_BlNumber AND inv.Deleted = 0
+    GROUP BY inv.Id, inv.InvoiceNumber, tp.Label, inv.BillingDate, inv.ValIdationDate, inv.TotalAmount, bl.BlNumber, bl.Id, inv.StatusId, invs.Label
+    ORDER BY IFNULL(inv.BillingDate, inv.ValIdationDate) DESC;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetPendingInvoicingItemsPerBLNumber`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetPendingInvoicingItemsPerBLNumber` (IN `p_BlNumber` VARCHAR(100))  BEGIN
+    SELECT DISTINCT
+        CAST(bli.Id AS CHAR) AS id,
+        COALESCE(bli.Number, '') AS number,
+        CONCAT('[', COALESCE(bit.Label, ''), ']') AS type,
+        COALESCE(ci.NumberOfPackages, '') AS description,
+        COALESCE(jf.Id, 0) AS jobFileId,
+        FALSE AS isDraft,
+        FALSE AS dnPrintable
+    FROM blitem bli
+    LEFT JOIN yarditemtype bit ON bli.ItemTypeId = bit.Id
+    LEFT JOIN commodityitem ci ON bli.Id = ci.BlItemId
+    LEFT JOIN bl bl ON bli.BlId = bl.Id
+    LEFT JOIN blitem_jobfile bij ON bli.Id = bij.BLItem_Id
+    LEFT JOIN jobfile jf ON bij.JobFile_Id = jf.Id
+    WHERE bl.BlNumber = p_BlNumber
+    ORDER BY bli.Number;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetProformaPreview`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetProformaPreview` (IN `p_BLId` INT, IN `p_BLNumber` VARCHAR(100))  BEGIN
+    SELECT 
+        p_BLNumber AS BLNumber,
+        bl.Id AS BLId,
+        COUNT(bli.Id) AS ItemCount,
+        tp.Label AS ShipperName,
+        bl.VesselArrivalDate AS ArrivalDate
+    FROM bl
+    LEFT JOIN blitem bli ON bl.Id = bli.BLId
+    LEFT JOIN thirdparty tp ON bl.ConsigneeId = tp.Id
+    WHERE bl.Id = p_BLId
+    GROUP BY bl.Id, bl.VesselArrivalDate, tp.Label;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetUserBLHistory`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetUserBLHistory` (IN `p_UserId` INT)  BEGIN
+    SELECT DISTINCT
+        `BlNumber` AS `blNumber`,
+        `ShipName` AS `shipName`,
+        `ArrivalDate` AS `arrivalDate`,
+        `ItemCount` AS `itemCount`
+    FROM `CustomerUserBLSearchHistory`
+    WHERE `UserId` = p_UserId
+    ORDER BY `SearchDate` DESC;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetYardItemsPerBLNumber`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetYardItemsPerBLNumber` (IN `p_BlNumber` VARCHAR(100))  BEGIN
+    SELECT DISTINCT
+        bli.`Id` AS `id`,
+        COALESCE(bli.`Number`, '') AS `yardItemNumber`,
+        FALSE AS `isDraft`,
+        FALSE AS `isDNPrintable`
+    FROM `blitem` bli
+    LEFT JOIN `bl` bl ON bli.`BlId` = bl.`Id`
+    WHERE bl.`BlNumber` = p_BlNumber
+    ORDER BY bli.`Number`;
+END$$
+
+DROP PROCEDURE IF EXISTS `GetYardItemTrackingMovements`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetYardItemTrackingMovements` (IN `p_YardItemId` INT, IN `p_YardItemNumber` VARCHAR(100), IN `p_BillOfLadingNumber` VARCHAR(100))  BEGIN
+    SELECT
+        evt.EventDate AS Date,
+        et.Label AS EventTypeName,
+        et.Code AS EventTypeCode,
+        'True' AS CreatedByIES,
+        '' AS Position
+    FROM event evt
+    INNER JOIN eventtype et ON evt.EventTypeId = et.Id
+    INNER JOIN jobfile jf ON evt.JobFileId = jf.Id
+    INNER JOIN blitem_jobfile bij ON jf.Id = bij.JobFile_Id
+    INNER JOIN blitem bli ON bij.BLItem_Id = bli.Id
+    INNER JOIN bl ON bli.BlId = bl.Id
+    WHERE bli.Number = p_YardItemNumber
+    AND bl.BlNumber = p_BillOfLadingNumber
+    ORDER BY evt.EventDate DESC;
+END$$
+
+DROP PROCEDURE IF EXISTS `MarkCartAsPaid`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `MarkCartAsPaid` (IN `p_CartId` INT)  BEGIN
+    UPDATE Cart
+    SET IsSent = 1
+    WHERE Id = p_CartId;
+    
+    SELECT ROW_COUNT() AS affectedRows;
+    END$$
+
+DROP PROCEDURE IF EXISTS `Register`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `Register` (IN `p_Email` VARCHAR(255), IN `p_PasswordHash` VARCHAR(255), IN `p_FirstName` VARCHAR(100), IN `p_LastName` VARCHAR(100), IN `p_CompanyName` VARCHAR(255), IN `p_CompanyAddress` VARCHAR(500), IN `p_PhoneNumber` VARCHAR(20), IN `p_RoleId` INT)  BEGIN
+    DECLARE v_UserId INT;
+    DECLARE v_Success INT DEFAULT 0;
+    DECLARE v_Message VARCHAR(500);
+    
+    -- Vérifier si l'email existe déjà
+    IF EXISTS (SELECT 1 FROM customerusers WHERE UserName = p_Email) THEN
+        SET v_Message = 'Cet email est déjà enregistré';
+        SELECT 0 as Success, v_Message as Message, NULL as UserId;
+    ELSE
+        -- Insérer le nouvel utilisateur
+        INSERT INTO customerusers (
+            UserName, 
+            PasswordHash, 
+            FirstName, 
+            LastName, 
+            CompanyName, 
+            CompanyAddress, 
+            PhoneNumber, 
+            CustomerUsersTypeId,
+            CustomerUsersStatusId
+        ) VALUES (
+            p_Email,
+            p_PasswordHash,
+            p_FirstName,
+            p_LastName,
+            p_CompanyName,
+            p_CompanyAddress,
+            p_PhoneNumber,
+            p_RoleId,
+            1
+        );
+        
+        SET v_UserId = LAST_INSERT_ID();
+        SET v_Success = 1;
+        SET v_Message = 'Enregistrement réussi! Un email de confirmation vous a été envoyé.';
+        
+        SELECT v_Success as Success, v_Message as Message, v_UserId as UserId;
+    END IF;
+END$$
+
+DROP PROCEDURE IF EXISTS `RemoveInvoiceFromCart`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `RemoveInvoiceFromCart` (IN `p_CustomerUserId` INT, IN `p_InvoiceId` INT)  BEGIN
+    DECLARE v_CartId INT;
+
+    SELECT Id INTO v_CartId
+    FROM Cart
+    WHERE CustomerUserId = p_CustomerUserId AND Deleted = 0 AND IsSent = 0
+    LIMIT 1;
+
+    IF v_CartId IS NOT NULL THEN
+        DELETE FROM CartItem
+        WHERE CartId = v_CartId AND InvoiceId = p_InvoiceId;
+
+        SELECT 
+            v_CartId AS cartId,
+            (SELECT COUNT(*) FROM CartItem WHERE CartId = v_CartId) AS itemCount;
+    ELSE
+        SELECT 0 AS cartId, 0 AS itemCount;
+    END IF;
+    END$$
+
+DROP PROCEDURE IF EXISTS `UpdateCustomUserInfo`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateCustomUserInfo` (IN `p_UserId` INT, IN `p_FirstName` VARCHAR(2000), IN `p_LastName` VARCHAR(2000), IN `p_PhoneNumber` VARCHAR(100), IN `p_CellPhone` VARCHAR(100), IN `p_CompanyName` VARCHAR(2000), IN `p_CompanyAddress` VARCHAR(2000), IN `p_AccountType` INT)  BEGIN
+	UPDATE `customerusers`
+	SET 
+		`FirstName` = p_FirstName,
+		`LastName` = p_LastName,
+		`PhoneNumber` = p_PhoneNumber,
+		`CompanyName` = p_CompanyName,
+		`CompanyAddress` = p_CompanyAddress,
+		`CustomerUsersTypeId` = p_AccountType
+	WHERE `Id` = p_UserId;
+	
+	SELECT ROW_COUNT() AS `AffectedRows`;
+END$$
+
+DROP PROCEDURE IF EXISTS `UpdateCustomUserStatus`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateCustomUserStatus` (IN `p_UserId` INT, IN `p_StatusId` INT)  BEGIN
+	UPDATE `customerusers`
+	SET `CustomerUsersStatusId` = p_StatusId
+	WHERE `Id` = p_UserId;
+	
+	SELECT ROW_COUNT() AS `AffectedRows`;
+END$$
+
+DROP PROCEDURE IF EXISTS `UpdateCustomUserThirdPartyCodes`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateCustomUserThirdPartyCodes` (IN `p_UserId` INT, IN `p_ThirdPartyCodesJson` JSON)  BEGIN
+	DECLARE v_Index INT DEFAULT 0;
+	DECLARE v_Count INT DEFAULT 0;
+	DECLARE v_ThirdPartyId INT;
+	
+	-- Supprimer les codes tiers existants pour cet utilisateur
+	DELETE FROM `customerusers_thirdparty`
+	WHERE `CustomerUsers_Id` = p_UserId;
+	
+	-- Ajouter les nouveaux codes tiers
+	SET v_Count = JSON_LENGTH(p_ThirdPartyCodesJson);
+	
+	WHILE v_Index < v_Count DO
+		SET v_ThirdPartyId = JSON_EXTRACT(p_ThirdPartyCodesJson, CONCAT('$[', v_Index, ']'));
+		
+		INSERT INTO `customerusers_thirdparty` (`CustomerUsers_Id`, `ThirdParty_Id`)
+		VALUES (p_UserId, v_ThirdPartyId);
+		
+		SET v_Index = v_Index + 1;
+	END WHILE;
+	
+	SELECT 'OK' AS `Result`;
+END$$
+
+DROP PROCEDURE IF EXISTS `UpdateInvoiceStatus`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `UpdateInvoiceStatus` (IN `p_InvoiceId` INT, IN `p_StatusId` INT)  BEGIN
+    DECLARE v_NextInvoiceNumber INT;
+    
+    SELECT COALESCE(MAX(InvoiceNumber), 0) + 1 INTO v_NextInvoiceNumber
+    FROM invoice
+    WHERE Deleted = 0;
+    
+    UPDATE invoice 
+    SET StatusId = p_StatusId,
+        ValIdationDate = NOW(),
+        InvoiceNumber = v_NextInvoiceNumber
+    WHERE Id = p_InvoiceId AND Deleted = 0;
+    
+    -- Si le statut est 4 (Paid), mettre à jour IsSent pour les paniers avec toutes factures payées
+        UPDATE Cart c
+        SET c.IsSent = 1
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM CartItem ci
+            LEFT JOIN invoice inv ON ci.InvoiceId = inv.Id
+            WHERE ci.CartId = c.Id
+            AND inv.StatusId = 3
+        );
+   
+    END$$
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `area`
+--
+
+DROP TABLE IF EXISTS `area`;
+CREATE TABLE IF NOT EXISTS `area` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Code` varchar(100) DEFAULT NULL,
+  `TerminalId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_Area_Terminal` (`TerminalId`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `area`
+--
+
+INSERT INTO `area` (`Id`, `Code`, `TerminalId`) VALUES
+(1, 'BLOCK A', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `bl`
+--
+
+DROP TABLE IF EXISTS `bl`;
+CREATE TABLE IF NOT EXISTS `bl` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `BlNumber` varchar(100) DEFAULT NULL,
+  `ConsigneeId` int UNSIGNED DEFAULT NULL,
+  `RelatedCustomerId` int UNSIGNED DEFAULT NULL,
+  `CallId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_BL_Consignee` (`ConsigneeId`),
+  KEY `FK_BL_RelatedCustomer` (`RelatedCustomerId`),
+  KEY `FK_BL_Call` (`CallId`)
+) ENGINE=InnoDB AUTO_INCREMENT=57 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `bl`
+--
+
+INSERT INTO `bl` (`Id`, `BlNumber`, `ConsigneeId`, `RelatedCustomerId`, `CallId`) VALUES
+(2, 'AEV61087218', 5, 3, 2),
+(3, 'MEDU54857008', 6, 4, 3),
+(4, 'HAPG59434443', 7, 5, 4),
+(5, 'OOCL41075590', 8, 6, 5),
+(6, 'EVER64557303', 9, 7, 6),
+(7, 'COSC96520163', 10, 8, 7),
+(8, 'YMLN85266502', 11, 9, 8),
+(9, 'EBKG69895473', 12, 10, 9),
+(10, 'AEV53640107', 13, 11, 10),
+(11, 'MEDU65294359', 14, 12, 11),
+(12, 'HAPG53204800', 15, 13, 12),
+(13, 'OOCL55188258', 20, 14, 13),
+(14, 'EVER69977921', 21, 15, 14),
+(15, 'COSC28451360', 22, 16, 15),
+(16, 'YMLN97947302', 23, 17, 16),
+(17, 'EBKG54098502', 5, 18, 17),
+(18, 'AEV45987466', 6, 19, 18),
+(19, 'MEDU68854563', 7, 20, 19),
+(20, 'HAPG48681627', 8, 2, 20),
+(21, 'OOCL29837741', 9, 3, 21),
+(22, 'EVER41303193', 10, 4, 22),
+(23, 'COSC84782369', 11, 5, 23),
+(24, 'YMLN77749504', 12, 6, 24),
+(25, 'EBKG90487082', 13, 7, 25),
+(26, 'AEV52196302', 14, 8, 26),
+(27, 'MEDU57713276', 15, 9, 27),
+(28, 'HAPG43795044', 20, 10, 28),
+(29, 'OOCL97811313', 21, 11, 29),
+(30, 'EVER45814409', 22, 12, 30),
+(31, 'COSC55205452', 23, 13, 31),
+(32, 'YMLN30662769', 5, 14, 32),
+(33, 'EBKG49124230', 6, 15, 33),
+(34, 'AEV73687587', 7, 16, 34),
+(36, 'HAPG31864521', 8, 18, 36),
+(37, 'OOCL86507212', 9, 19, 37),
+(38, 'EVER92686375', 10, 20, 38),
+(39, 'COSC66084921', 11, 2, 39),
+(40, 'YMLN39158494', 12, 3, 40),
+(41, 'EBKG43625368', 13, 4, 41),
+(42, 'AEV74117863', 14, 5, 42),
+(43, 'MEDU52493795', 15, 6, 43),
+(44, 'HAPG54434068', 20, 7, 44),
+(45, 'OOCL48156911', 21, 8, 45),
+(46, 'EVER69194775', 22, 9, 46),
+(47, 'COSC53554945', 23, 10, 47),
+(48, 'YMLN37437956', 5, 11, 48),
+(49, 'EBKG54528093', 6, 12, 49),
+(50, 'AEV63324556', 7, 13, 50),
+(56, 'AEV63324999-Elloh', 5, 13, 45);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `blitem`
+--
+
+DROP TABLE IF EXISTS `blitem`;
+CREATE TABLE IF NOT EXISTS `blitem` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Number` varchar(100) DEFAULT NULL,
+  `Weight` decimal(10,0) DEFAULT NULL,
+  `Volume` decimal(10,0) DEFAULT NULL,
+  `BlId` int UNSIGNED DEFAULT NULL,
+  `ItemTypeId` int UNSIGNED DEFAULT NULL,
+  `ItemCodeId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_BLItem_BL` (`BlId`),
+  KEY `FK_BLItem_ItemCode` (`ItemCodeId`),
+  KEY `FK_BLItem_ItemType` (`ItemTypeId`)
+) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `blitem`
+--
+
+INSERT INTO `blitem` (`Id`, `Number`, `Weight`, `Volume`, `BlId`, `ItemTypeId`, `ItemCodeId`) VALUES
+(1, 'OOCL1111222', NULL, NULL, 1, 1, NULL),
+(2, 'VIN222222222222222B', NULL, NULL, 2, 2, NULL),
+(3, 'AEVX7777888', NULL, NULL, 3, 1, NULL),
+(4, 'VIN444444444444444D', NULL, NULL, 4, 2, NULL),
+(5, 'MSCU9876543', NULL, NULL, 5, 1, NULL),
+(6, 'VIN222222222222222B', NULL, NULL, 6, 2, NULL),
+(7, 'TEMU5678901', NULL, NULL, 7, 1, NULL),
+(8, 'VIN111111111111111A', NULL, NULL, 8, 2, NULL),
+(9, 'TEMU5678901', NULL, NULL, 9, 1, NULL),
+(10, 'VIN123456789ABCDEF0', NULL, NULL, 10, 2, NULL),
+(11, 'YML3333444', NULL, NULL, 11, 1, NULL),
+(12, 'VIN222222222222222B', NULL, NULL, 12, 2, NULL),
+(13, 'HAPAG999000', NULL, NULL, 13, 1, NULL),
+(14, 'VIN987654321FEDCBA0', NULL, NULL, 14, 2, NULL),
+(15, 'HAPAG999000', NULL, NULL, 15, 1, NULL),
+(16, 'VIN987654321FEDCBA0', NULL, NULL, 16, 2, NULL),
+(17, 'OOCL1111222', NULL, NULL, 17, 1, NULL),
+(18, 'VIN111111111111111A', NULL, NULL, 18, 2, NULL),
+(19, 'MEDU1234567', NULL, NULL, 19, 1, NULL),
+(20, 'VIN111111111111111A', NULL, NULL, 20, 2, NULL),
+(21, 'MEDU1234567', NULL, NULL, 21, 1, NULL),
+(22, 'VIN123456789ABCDEF0', NULL, NULL, 22, 2, NULL),
+(23, 'MEDU1234567', NULL, NULL, 23, 1, NULL),
+(24, 'VIN333333333333333C', NULL, NULL, 24, 2, NULL),
+(25, 'MAEU1122334', NULL, NULL, 25, 1, NULL),
+(26, 'VIN123456789ABCDEF0', NULL, NULL, 26, 2, NULL),
+(27, 'MSCU9876543', NULL, NULL, 27, 1, NULL),
+(28, 'VIN123456789ABCDEF0', NULL, NULL, 28, 2, NULL),
+(29, 'MSCU9876543', NULL, NULL, 29, 1, NULL),
+(30, 'VIN333333333333333C', NULL, NULL, 30, 2, NULL),
+(31, 'MEDU1234567', NULL, NULL, 31, 1, NULL),
+(32, 'VIN222222222222222B', NULL, NULL, 32, 2, NULL),
+(33, 'EVERF777888', NULL, NULL, 33, 1, NULL),
+(34, 'VIN444444444444444D', NULL, NULL, 34, 2, NULL),
+(35, 'MAEU1122334', NULL, NULL, 35, 1, NULL),
+(36, 'VIN333333333333333C', NULL, NULL, 36, 2, NULL),
+(37, 'MSCU9876543', NULL, NULL, 37, 1, NULL),
+(38, 'VIN123456789ABCDEF0', NULL, NULL, 38, 2, NULL),
+(39, 'MAEU1122334', NULL, NULL, 39, 1, NULL),
+(40, 'VIN123456789ABCDEF0', NULL, NULL, 40, 2, NULL),
+(41, 'HAPAG999000', NULL, NULL, 41, 1, NULL),
+(42, 'VIN987654321FEDCBA0', NULL, NULL, 42, 2, NULL),
+(43, 'EVERF777888', NULL, NULL, 43, 1, NULL),
+(44, 'VIN111111111111111A', NULL, NULL, 44, 2, NULL),
+(45, 'MAEU1122334', NULL, NULL, 45, 1, NULL),
+(46, 'VIN444444444444444D', NULL, NULL, 46, 2, NULL),
+(47, 'TCLU2345678', NULL, NULL, 47, 1, NULL),
+(48, 'VIN333333333333333C', NULL, NULL, 48, 2, NULL),
+(49, 'EBKU5555666', NULL, NULL, 49, 1, NULL),
+(50, 'VIN123456789ABCDEF0', NULL, NULL, 50, 2, NULL),
+(51, 'TCLU2345699', '1500', NULL, 56, 1, 120);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `blitem_jobfile`
+--
+
+DROP TABLE IF EXISTS `blitem_jobfile`;
+CREATE TABLE IF NOT EXISTS `blitem_jobfile` (
+  `BLItem_Id` int UNSIGNED NOT NULL,
+  `JobFile_Id` int UNSIGNED NOT NULL,
+  PRIMARY KEY (`BLItem_Id`,`JobFile_Id`),
+  KEY `FK_BLItem_JobFile_JobFile` (`JobFile_Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `blitem_jobfile`
+--
+
+INSERT INTO `blitem_jobfile` (`BLItem_Id`, `JobFile_Id`) VALUES
+(1, 1),
+(2, 1),
+(3, 1),
+(6, 1),
+(8, 1),
+(9, 1),
+(10, 1),
+(11, 1),
+(12, 1),
+(15, 1),
+(16, 1),
+(17, 1),
+(18, 1),
+(19, 1),
+(21, 1),
+(22, 1),
+(23, 1),
+(25, 1),
+(26, 1),
+(27, 1),
+(29, 1),
+(30, 1),
+(31, 1),
+(32, 1),
+(33, 1),
+(36, 1),
+(37, 1),
+(38, 1),
+(40, 1),
+(43, 1),
+(45, 1),
+(47, 1),
+(48, 1),
+(50, 1),
+(4, 57),
+(5, 65),
+(7, 73),
+(13, 90),
+(14, 97),
+(20, 114),
+(24, 127),
+(28, 140),
+(34, 157),
+(35, 164),
+(39, 177),
+(41, 186),
+(42, 198),
+(44, 202),
+(46, 212),
+(49, 222),
+(51, 231);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `call`
+--
+
+DROP TABLE IF EXISTS `call`;
+CREATE TABLE IF NOT EXISTS `call` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `CallNumber` varchar(40) DEFAULT NULL,
+  `VesselArrivalDate` datetime DEFAULT NULL,
+  `VesselDepatureDate` datetime DEFAULT NULL,
+  `ThirdPartyId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_Call_ThirdParty` (`ThirdPartyId`)
+) ENGINE=InnoDB AUTO_INCREMENT=77 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `call`
+--
+
+INSERT INTO `call` (`Id`, `CallNumber`, `VesselArrivalDate`, `VesselDepatureDate`, `ThirdPartyId`) VALUES
+(1, 'CALL_2025_001', '2025-11-10 08:00:00', '2025-11-25 18:00:00', 1),
+(2, 'CALL_2025_002', '2025-11-15 10:30:00', '2025-11-30 20:00:00', 2),
+(3, 'CALL_2025_003', '2025-11-18 14:00:00', '2025-12-05 22:00:00', 3),
+(4, 'CALL_2025_0421', '2025-06-27 00:00:00', '2025-07-07 00:00:00', 1),
+(5, 'CALL_2025_0352', '2025-01-12 00:00:00', '2025-01-22 00:00:00', 1),
+(6, 'CALL_2025_0903', '2025-05-28 00:00:00', '2025-06-07 00:00:00', 1),
+(7, 'CALL_2025_0525', '2025-05-08 00:00:00', '2025-05-18 00:00:00', 1),
+(8, 'CALL_2025_0179', '2025-07-21 00:00:00', '2025-07-31 00:00:00', 1),
+(9, 'CALL_2025_0789', '2025-07-26 00:00:00', '2025-08-05 00:00:00', 2),
+(10, 'CALL_2025_0838', '2025-08-18 00:00:00', '2025-08-28 00:00:00', 2),
+(11, 'CALL_2025_0108', '2025-10-18 00:00:00', '2025-10-28 00:00:00', 2),
+(12, 'CALL_2025_0831', '2025-07-11 00:00:00', '2025-07-21 00:00:00', 2),
+(13, 'CALL_2025_0367', '2025-09-12 00:00:00', '2025-09-22 00:00:00', 3),
+(14, 'CALL_2025_0235', '2025-09-07 00:00:00', '2025-09-17 00:00:00', 3),
+(15, 'CALL_2025_0777', '2025-09-29 00:00:00', '2025-10-09 00:00:00', 3),
+(16, 'CALL_2025_0008', '2025-05-03 00:00:00', '2025-05-13 00:00:00', 3),
+(17, 'CALL_2025_0171', '2025-07-14 00:00:00', '2025-07-24 00:00:00', 4),
+(18, 'CALL_2025_0761', '2025-03-28 00:00:00', '2025-04-07 00:00:00', 4),
+(19, 'CALL_2025_0963', '2025-01-20 00:00:00', '2025-01-30 00:00:00', 4),
+(20, 'CALL_2025_0468', '2025-08-10 00:00:00', '2025-08-20 00:00:00', 2),
+(21, 'CALL_2025_0925', '2025-03-11 00:00:00', '2025-03-21 00:00:00', 3),
+(22, 'CALL_2025_0041', '2025-06-29 00:00:00', '2025-07-09 00:00:00', 4),
+(23, 'CALL_2025_0908', '2025-03-02 00:00:00', '2025-03-12 00:00:00', 1),
+(24, 'CALL_2025_0099', '2025-01-05 00:00:00', '2025-01-15 00:00:00', 2),
+(25, 'CALL_2025_0072', '2025-06-29 00:00:00', '2025-07-09 00:00:00', 3),
+(26, 'CALL_2025_0690', '2025-08-04 00:00:00', '2025-08-14 00:00:00', 4),
+(27, 'CALL_2025_0772', '2025-06-09 00:00:00', '2025-06-19 00:00:00', 104),
+(28, 'CALL_2025_0210', '2025-01-13 00:00:00', '2025-01-23 00:00:00', 105),
+(29, 'CALL_2025_0827', '2025-06-28 00:00:00', '2025-07-08 00:00:00', 106),
+(30, 'CALL_2025_0022', '2025-05-08 00:00:00', '2025-05-18 00:00:00', 107),
+(31, 'CALL_2025_0982', '2025-06-17 00:00:00', '2025-06-27 00:00:00', 1),
+(32, 'CALL_2025_0594', '2025-02-15 00:00:00', '2025-02-25 00:00:00', 2),
+(33, 'CALL_2025_0365', '2025-09-26 00:00:00', '2025-10-06 00:00:00', 3),
+(34, 'CALL_2025_0090', '2025-02-22 00:00:00', '2025-03-04 00:00:00', 4),
+(35, 'CALL_2025_0767', '2025-09-22 00:00:00', '2025-10-02 00:00:00', 1),
+(36, 'CALL_2025_0066', '2025-03-08 00:00:00', '2025-03-18 00:00:00', 2),
+(37, 'CALL_2025_0981', '2025-07-29 00:00:00', '2025-08-08 00:00:00', 3),
+(38, 'CALL_2025_0880', '2025-05-28 00:00:00', '2025-06-07 00:00:00', 4),
+(39, 'CALL_2025_0701', '2025-01-04 00:00:00', '2025-01-14 00:00:00', 104),
+(40, 'CALL_2025_0752', '2025-05-27 00:00:00', '2025-06-06 00:00:00', 105),
+(41, 'CALL_2025_0527', '2025-04-15 00:00:00', '2025-04-25 00:00:00', 106),
+(42, 'CALL_2025_0358', '2025-07-18 00:00:00', '2025-07-28 00:00:00', 107),
+(43, 'CALL_2025_0147', '2025-02-18 00:00:00', '2025-02-28 00:00:00', 1),
+(44, 'CALL_2025_0146', '2025-02-16 00:00:00', '2025-02-26 00:00:00', 2),
+(45, 'CALL/2025/00045', '2025-05-03 00:00:00', '2025-05-05 00:00:00', 1),
+(46, 'CALL/2025/00046', '2025-11-24 00:00:00', '2025-12-01 00:00:00', 2),
+(47, 'CALL/2025/00047', '2025-01-28 00:00:00', '2025-02-02 00:00:00', 3),
+(48, 'CALL/2025/00048', '2025-05-11 00:00:00', '2025-05-13 00:00:00', 4),
+(49, 'CALL/2025/00049', '2025-10-13 00:00:00', '2025-10-15 00:00:00', 104),
+(50, 'CALL/2025/00050', '2025-06-21 00:00:00', '2025-06-26 00:00:00', 105),
+(51, 'CALL/2025/00051', '2025-08-03 00:00:00', '2025-08-10 00:00:00', 106),
+(52, 'CALL/2025/00052', '2025-06-28 00:00:00', '2025-07-02 00:00:00', 107),
+(53, 'CALL/2025/00053', '2025-05-13 00:00:00', '2025-05-16 00:00:00', 1),
+(54, 'CALL/2025/00054', '2025-01-30 00:00:00', '2025-02-01 00:00:00', 2),
+(55, 'CALL/2025/00055', '2025-06-09 00:00:00', '2025-06-14 00:00:00', 3),
+(56, 'CALL/2025/00056', '2025-04-11 00:00:00', '2025-04-18 00:00:00', 4),
+(57, 'CALL/2025/00057', '2025-05-29 00:00:00', '2025-06-02 00:00:00', 104),
+(58, 'CALL/2025/00058', '2025-05-13 00:00:00', '2025-05-16 00:00:00', 105),
+(59, 'CALL/2025/00059', '2025-03-22 00:00:00', '2025-03-28 00:00:00', 106),
+(60, 'CALL/2025/00060', '2025-05-03 00:00:00', '2025-05-08 00:00:00', 107),
+(61, 'CALL/2025/00061', '2025-04-12 00:00:00', '2025-04-18 00:00:00', 1),
+(62, 'CALL/2025/00062', '2025-07-26 00:00:00', '2025-07-30 00:00:00', 2),
+(63, 'CALL/2025/00063', '2025-08-15 00:00:00', '2025-08-18 00:00:00', 3),
+(64, 'CALL/2025/00064', '2025-10-09 00:00:00', '2025-10-12 00:00:00', 4),
+(65, 'CALL/2025/00065', '2025-11-03 00:00:00', '2025-11-09 00:00:00', 104),
+(66, 'CALL/2025/00066', '2025-09-11 00:00:00', '2025-09-13 00:00:00', 105),
+(67, 'CALL/2025/00067', '2025-11-14 00:00:00', '2025-11-17 00:00:00', 106),
+(68, 'CALL/2025/00068', '2025-01-20 00:00:00', '2025-01-22 00:00:00', 107),
+(69, 'CALL/2025/00069', '2025-07-06 00:00:00', '2025-07-12 00:00:00', 1),
+(70, 'CALL/2025/00070', '2025-08-10 00:00:00', '2025-08-13 00:00:00', 2),
+(71, 'CALL/2025/00071', '2025-05-18 00:00:00', '2025-05-21 00:00:00', 3),
+(72, 'CALL/2025/00072', '2025-03-02 00:00:00', '2025-03-08 00:00:00', 4),
+(73, 'CALL/2025/00073', '2025-03-06 00:00:00', '2025-03-13 00:00:00', 104),
+(74, 'CALL/2025/00074', '2025-01-15 00:00:00', '2025-01-17 00:00:00', 105),
+(75, 'CALL/2025/00075', '2025-10-26 00:00:00', '2025-10-31 00:00:00', 106),
+(76, 'CALL/2025/00076', '2025-11-01 00:00:00', '2025-11-08 00:00:00', 107);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `cart`
+--
+
+DROP TABLE IF EXISTS `cart`;
+CREATE TABLE IF NOT EXISTS `cart` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `CustomerUserId` int UNSIGNED DEFAULT NULL,
+  `IsSent` bit(1) NOT NULL DEFAULT b'0',
+  `CreatedDate` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Deleted` bit(1) NOT NULL DEFAULT b'0',
+  PRIMARY KEY (`Id`),
+  KEY `FK_Cart_CustomerUserId` (`CustomerUserId`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `cart`
+--
+
+INSERT INTO `cart` (`Id`, `CustomerUserId`, `IsSent`, `CreatedDate`, `Deleted`) VALUES
+(2, 1, b'1', '2025-12-06 17:58:18', b'0'),
+(7, 22, b'1', '2026-01-15 01:44:15', b'0'),
+(8, 22, b'0', '2026-01-15 02:06:39', b'0');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `cartitem`
+--
+
+DROP TABLE IF EXISTS `cartitem`;
+CREATE TABLE IF NOT EXISTS `cartitem` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `InvoicePaidAmount` decimal(18,2) NOT NULL DEFAULT '0.00',
+  `InvoiceNumber` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `BillingDate` datetime DEFAULT NULL,
+  `CartId` int UNSIGNED DEFAULT NULL,
+  `InvoiceId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_CartItem_CartId` (`CartId`),
+  KEY `FK_CartItem_InvoiceId` (`InvoiceId`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `cartitem`
+--
+
+INSERT INTO `cartitem` (`Id`, `InvoicePaidAmount`, `InvoiceNumber`, `BillingDate`, `CartId`, `InvoiceId`) VALUES
+(1, '8.90', '251000001', '2025-12-20 14:08:56', 0, 1),
+(4, '6.00', '251018767', '2025-12-06 18:27:57', 2, 1),
+(14, '7.00', '251000197', '2026-01-15 01:44:15', 7, 4),
+(15, '6.69', '251000191', '2026-01-15 02:06:39', 8, 2);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `commodity`
+--
+
+DROP TABLE IF EXISTS `commodity`;
+CREATE TABLE IF NOT EXISTS `commodity` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Label` varchar(500) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1119 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `commodity`
+--
+
+INSERT INTO `commodity` (`Id`, `Label`) VALUES
+(1, 'Marchandise Importer'),
+(2, 'I1 - Autres Produits Poissonniers'),
+(3, 'I1 - Poisson Congelé'),
+(4, 'I1 - Riz'),
+(5, 'I1 - Thon Congelé'),
+(6, 'I1 - Tomates Concentrées'),
+(7, 'I1 - Viande Congelée'),
+(8, 'I2 - Ail'),
+(9, 'I2 - Amidon Alimentaire'),
+(10, 'I2 - Autres Aliments Pour Animaux'),
+(11, 'I2 - Autres Céréales'),
+(12, 'I2 - Autres Crustacés et Fruits de mer'),
+(13, 'I2 - Autres Engrais'),
+(14, 'I2 - Autres Fruits et Légumes'),
+(15, 'I2 - Autres Insecticides Agricoles'),
+(16, 'I2 - Autres Produits Alimentaires'),
+(17, 'I2 - Autres Produits Laitiers, Œufs'),
+(18, 'I2 - Autres semences'),
+(19, 'I2 - Blé'),
+(20, 'I2 - Carottes'),
+(21, 'I2 - Céréales'),
+(22, 'I2 - Farine'),
+(23, 'I2 - Farine Lactée'),
+(24, 'I2 - Glucose'),
+(25, 'I2 - Insecticides Agricoles'),
+(26, 'I2 - Lait en Poudre'),
+(27, 'I2 - Légumes frais'),
+(28, 'I2 - Levure'),
+(29, 'I2 - Maïs'),
+(30, 'I2 - Malt'),
+(31, 'I2 - Oignons'),
+(32, 'I2 - Pommes'),
+(33, 'I2 - Pommes de terre'),
+(34, 'I2 - Préparation Alimentaire'),
+(35, 'I2 - Produits Alimentaires de Base'),
+(36, 'I2 - Produits Laitiers'),
+(37, 'I2 - Sel'),
+(38, 'I2 - Semoule'),
+(39, 'I2 - Sésame'),
+(40, 'I2 - Sirops Sucre/Glucose'),
+(41, 'I2 - Sucre'),
+(42, 'I2 - Sucre/Sel'),
+(43, 'I2 - Thé'),
+(44, 'I2 - Tomates Pelées'),
+(45, 'I3 - Alcool Pharmaceutique'),
+(46, 'I3 - Aluminium en rouleaux pour construction'),
+(47, 'I3 - Appareils Sanitaires'),
+(48, 'I3 - Articles de Librairie'),
+(49, 'I3 - Autres Matériaux de construction'),
+(50, 'I3 - Briques pour construction'),
+(51, 'I3 - Carreaux'),
+(52, 'I3 - Ciment'),
+(53, 'I3 - Ciment Blanc'),
+(54, 'I3 - Coton Hydrophile Pharmacie'),
+(55, 'I3 - Effets Personnels'),
+(56, 'I3 - Fer à béton'),
+(57, 'I3 - Fer blanc'),
+(58, 'I3 - Fibro ciment'),
+(59, 'I3 - Instruments médicaux'),
+(60, 'I3 - Marbres'),
+(61, 'I3 - Matériel de laboratoire'),
+(62, 'I3 - Médicaments'),
+(63, 'I3 - Pansements'),
+(64, 'I3 - Placages et contre-plaques'),
+(65, 'I3 - Plâtre'),
+(66, 'I3 - Produits pharmaceutiques'),
+(67, 'I3 - Robinetterie'),
+(68, 'I3 - Savons médicinaux'),
+(69, 'I3 - Tôles'),
+(70, 'I3 - Tôles profilées'),
+(71, 'I3 - Tuiles'),
+(72, 'I3 - Tuyaux en fonte'),
+(73, 'I3 - Tuyaux plastique'),
+(74, 'I4 - Accessoires de véhicules'),
+(75, 'I4 - Acier'),
+(76, 'I4 - Albums photographie'),
+(77, 'I4 - Alcool Imco'),
+(78, 'I4 - Aluminium and articles Thereof'),
+(79, 'I4 - Ameublement'),
+(80, 'I4 - Ampoules électriques'),
+(81, 'I4 - Appareil photographique'),
+(82, 'I4 - Appareils de climatisation'),
+(83, 'I4 - Appareils de levage'),
+(84, 'I4 - Appareils électro-ménagers'),
+(85, 'I4 - Aradrap perfore'),
+(86, 'I4 - Argile'),
+(87, 'I4 - Armoires frigorifiques'),
+(88, 'I4 - Articles de bureau'),
+(89, 'I4 - Articles de confection'),
+(90, 'I4 - Articles de mercerie'),
+(91, 'I4 - Articles de mode'),
+(92, 'I4 - Articles de papeterie divers'),
+(93, 'I4 - Articles de pèche'),
+(94, 'I4 - Articles de publicité'),
+(95, 'I4 - Articles de sport'),
+(96, 'I4 - Articles religieux'),
+(97, 'I4 - Assiettes'),
+(98, 'I4 - Autres Aciers'),
+(99, 'I4 - Autres Articles à base de papier'),
+(100, 'I4 - Autres articles d\'ameublement'),
+(101, 'I4 - Autres articles de voyage maroquinerie'),
+(102, 'I4 - Autres boissons alcoolisées'),
+(103, 'I4 - Autres conserves alimentaires'),
+(104, 'I4 - Autres cycles et motocycles'),
+(105, 'I4 - Autres dérivés de cacao'),
+(106, 'I4 - Autres dérivés de café'),
+(107, 'I4 - Autres emballage'),
+(108, 'I4 - Autres fil de cuivre'),
+(109, 'I4 - Autres gaz'),
+(110, 'I4 - Autres gommes et résines'),
+(111, 'I4 - Autres huiles'),
+(112, 'I4 - Autres insecticides'),
+(113, 'I4 - Autres insecticides agricoles'),
+(114, 'I4 - Autres matériels ferroviaires'),
+(115, 'I4 - Autres matériels engins agricoles et travaux publics'),
+(116, 'I4 - Autres matières brutes animales'),
+(117, 'I4 - Autres matières végétales'),
+(118, 'I4 - Autres ouvrages en bois'),
+(119, 'I4 - Autres produits chimiques'),
+(120, 'I4 - Autres produits à base de tabac'),
+(121, 'I4 - Autres produits d\'entretien'),
+(122, 'I4 - Autres produits fare, cosmétique, toilette'),
+(123, 'I4 - Autres produits manufactures divers'),
+(124, 'I4 - Autres produits pétroliers'),
+(125, 'I4 - Bâches'),
+(126, 'I4 - Bateaux'),
+(127, 'I4 - Batteries électriques'),
+(128, 'I4 - Bijouterie'),
+(129, 'I4 - Bitume étanche en rouleaux'),
+(130, 'I3 - Bobines de tôles'),
+(131, 'I4 - Bois à usage divers'),
+(132, 'I4 - Bois débités'),
+(133, 'I4 - Bois en grumes'),
+(134, 'I4 - Boissons alcoolisées'),
+(135, 'I4 - Botes mastic polyester Duck'),
+(136, 'I4 - Bouchons unis or'),
+(137, 'I4 - Bouteilles de gaz vides'),
+(138, 'I4 - Bouteilles vides'),
+(139, 'I4 - Brosses'),
+(140, 'I4 - Câbles de matériel naval'),
+(141, 'I4 - Câbles électriques'),
+(142, 'I4 - Câbles téléphoniques'),
+(143, 'I4 - Cacao fèves'),
+(144, 'I4 - Cacao en poudre'),
+(145, 'I4 - cacao en grains'),
+(146, 'I4 - Café soluble'),
+(147, 'I4 - Cantine métalliques vides'),
+(148, 'I4 - Caoutchouc'),
+(149, 'I4 - Capsules de bouteilles'),
+(150, 'I4 - Cartons of ajinomoto monosodium'),
+(151, 'I4 - Cassettes'),
+(152, 'I4 - Cercueils'),
+(153, 'I4 - Chalk'),
+(154, 'I4 - Chariots'),
+(155, 'I4 - Charpentes'),
+(156, 'I4 - Chaussures'),
+(157, 'I4 - Chaux'),
+(158, 'I4 - Cigarettes'),
+(159, 'I4 - Citernes métalliques'),
+(160, 'I4 - Colles'),
+(161, 'I4 - Colorants'),
+(162, 'I4 - Compresseurs'),
+(163, 'I4 - Compresseurs'),
+(164, 'I4 - Compteurs et pièces détachées'),
+(165, 'I4 - Conserve de thon'),
+(166, 'I4 - Construction métallique'),
+(167, 'I4 - cordages'),
+(168, 'I4 - Cosmétiques'),
+(169, 'I4 - Coton Egrené'),
+(170, 'I4 - Couteaux pour industrie'),
+(171, 'I4 - Couverts'),
+(172, 'I4 - Couvertures'),
+(173, 'I4 - Craie en poudre'),
+(174, 'I4 - Cuir brut'),
+(175, 'I4 - Cuir synthétique pour chaussures'),
+(176, 'I4 - Cuisinière a gaz'),
+(177, 'I4 - Cycles'),
+(178, 'I4 - Cyclohexanone'),
+(179, 'I4 - Déchets de caoutchouc'),
+(180, 'I4 - Déchets divers pour fabrication emballage'),
+(181, 'I4 - Dentifrice'),
+(182, 'I4 - Dextrose monohydrate'),
+(183, 'I4 - Diesel Genrator set'),
+(184, 'I4 - Diluants peintures dangereux'),
+(185, 'I4 - Disques aluminium'),
+(186, 'I4 - Divers non recenses'),
+(187, 'I4 - Divers pièces détachées'),
+(188, 'I4 - Eaux minérales'),
+(189, 'I4 - Effets personnels'),
+(190, 'I4 - Electrodes'),
+(191, 'I4 - Electrolytes'),
+(192, 'I4 - Electroménagers'),
+(193, 'I4 - Emballages imprimes'),
+(194, 'I4 - Emballages métalliques'),
+(195, 'I4 - Encres d\'imprimerie'),
+(196, 'I4 - Engins travaux publics'),
+(197, 'I4 - Equipement électrique'),
+(198, 'I4 - Etiquettes'),
+(199, 'I4 - Ferraille'),
+(200, 'I4 - Fertilisants'),
+(201, 'I4 - Feuillards rouleaux'),
+(202, 'I4 - Fibres Synthétiques'),
+(203, 'I4 - Fibres de jute'),
+(204, 'I4 - Fil acier en rouleaux'),
+(205, 'I4 - Fil de cuivre matière première pour industrie'),
+(206, 'I4 - Fil écru coton'),
+(207, 'I4 - Fil synthétique'),
+(208, 'I4 - Filets de pêche'),
+(209, 'I4 - Films pour photo'),
+(210, 'I4 - Fils de fer en rouleaux'),
+(211, 'I4 - Fil de jute ou desisal'),
+(212, 'I4 - Fils machine'),
+(213, 'I4 - Flacons de verres vides'),
+(214, 'I4 - Fleurs artificielles'),
+(215, 'I4 - Fonds corps boites en fer blanc'),
+(216, 'I4 - Footwear, gaiters and the like'),
+(217, 'I4 - Fourniture métallique'),
+(218, 'I4 - Friperie'),
+(219, 'I4 - Gants article de mode'),
+(220, 'I4 - Gants de toilette'),
+(221, 'I4 - Gants pour industrie'),
+(222, 'I4 - Gel anti moustique'),
+(223, 'I4 - Glycérine'),
+(224, 'I4 - Graviers'),
+(225, 'I4 - Grillages métalliques'),
+(226, 'I4 - Habillement'),
+(227, 'I4 - Harmless'),
+(228, 'I4 - Horlogerie et pièces'),
+(229, 'I4 - Houseware'),
+(230, 'I4 - Huile'),
+(231, 'I4 - Huile minérale'),
+(232, 'I4 - Huiles essentielles'),
+(233, 'I4 - Huiles lubrifiantes'),
+(234, 'I4 - Insecticides'),
+(235, 'I4 - Instruments de musique'),
+(236, 'I4 - Jouets'),
+(237, 'I4 - Jus de fruits'),
+(238, 'I4 - Laine de verre'),
+(239, 'I4 - Lames de rasoir'),
+(240, 'I4 - Lampes'),
+(241, 'I4 - Latex'),
+(242, 'I4 - Lits'),
+(243, 'I4 - Lubrifiants'),
+(244, 'I4 - Machine à coudre électrique'),
+(245, 'I4 - Machines à écrire'),
+(246, 'I4 - Machines électromécaniques'),
+(247, 'I4 - Machines électroniques'),
+(248, 'I4 - Machines industrielles'),
+(249, 'I4 - Machines outils'),
+(250, 'I4 - Masques de soudure'),
+(251, 'I4 - Matériaux isolants'),
+(252, 'I4 - Matériel de cinéma'),
+(253, 'I4 - Matériel de construction pour installation'),
+(254, 'I4 - Matériel de décoration'),
+(255, 'I4 - Matériel de forage'),
+(256, 'I4 - Matériel de mesure'),
+(257, 'I4 - Matériel de photo'),
+(258, 'I4 - Matériel de station service'),
+(259, 'I4 - Matériel électrique'),
+(260, 'I4 - Matériel naval'),
+(261, 'I4 - Matériel radio et pièces détachées'),
+(262, 'I4 - Matériel téléphonique et pièces détachées'),
+(263, 'I4 - Matériel télévision et pièces détachées'),
+(264, 'I4 - Matériels d\'empotage'),
+(265, 'I4 - Matières plastiques'),
+(266, 'I4 - Matières plastiques synthétiques'),
+(267, 'I4 - Matières premières pour fabrication engrais'),
+(268, 'I4 - Menuiserie en acier'),
+(269, 'I4 - Menuiserie en aluminium'),
+(270, 'I4 - Menuiserie en bois'),
+(271, 'I4 - Mercerie'),
+(272, 'I4 - Métaux non ferreux'),
+(273, 'I4 - Meubles'),
+(274, 'I4 - Minerais'),
+(275, 'I4 - Miroirs'),
+(276, 'I4 - Moquettes'),
+(277, 'I4 - Moteurs électriques'),
+(278, 'I4 - Moteurs engins travaux publics'),
+(279, 'I4 - Motocycles'),
+(280, 'I4 - Mouchons'),
+(281, 'I4 - Moustiquaire'),
+(282, 'I4 - Munition'),
+(283, 'I4 - Noix de cajou'),
+(284, 'I4 - Ouate de cellulose'),
+(285, 'I4 - Outillage à  main'),
+(286, 'I4 - Palmistes'),
+(287, 'I4 - Panneaux stratifiées'),
+(288, 'I4 - Papier board'),
+(289, 'I4 - Papiers'),
+(290, 'I4 - Papiers d\'emballage'),
+(291, 'I4 - Paraffine'),
+(292, 'I4 - Parfumerie'),
+(293, 'I4 - Peintures'),
+(294, 'I4 - Pétrole brut'),
+(295, 'I4 - Pièces de rechange pour tracteurs'),
+(296, 'I4 - Pièces détachées pour machines électroniques'),
+(297, 'I4 - Pièces détaillées machines à outil'),
+(298, 'I4 - Pièces détachées matériel naval'),
+(299, 'I4 - Pièces détachées neuves'),
+(300, 'I4 - Pièces détachées pour climatisation'),
+(301, 'I4 - Pièces détachées pour locomotive'),
+(302, 'I4 - Pièces détachées pour pulvérisateur solo'),
+(303, 'I4 - Pièces détachées pour véhicules'),
+(304, 'I4 - Pièces détachées téléphone'),
+(305, 'I4 - Pièces détachées véhicules'),
+(306, 'I4 - Pierres brutes pour construction'),
+(307, 'I4 - Piles électriques'),
+(308, 'I4 - Plaque caoutchouc synthétique pour chaussures'),
+(309, 'I4 - Pneumatique'),
+(310, 'I4 - Polymère'),
+(311, 'I4 - Pompes électriques'),
+(312, 'I4 - Produits auxiliaires pour peinture'),
+(313, 'I4 - Produits chimiques'),
+(314, 'I4 - Produits de beauté'),
+(315, 'I4 - Produits dietiques'),
+(316, 'I4 - Produits industriels'),
+(317, 'I4 - Produits manufactures divers'),
+(318, 'I4 - Produits manufactures divers dangereux'),
+(319, 'I4 - Produits Pétroliers'),
+(320, 'I4 - Produits pharmaceutiques dangereux'),
+(321, 'I4 - Quincaillerie'),
+(322, 'I4 - Rayonnages'),
+(323, 'I4 - Reproduction plastic roll'),
+(324, 'I4 - Résine'),
+(325, 'I4 - Résine synthétique'),
+(326, 'I4 - Résines synthétique dangereux'),
+(327, 'I4 - Résines synthétique dangereux'),
+(328, 'I4 - Revêtements de sol'),
+(329, 'I4 - Rouleaux de papier Kraft'),
+(330, 'I4 - Sardines en conserve'),
+(331, 'I4 - Satellite dishantenna'),
+(332, 'I4 - Savons'),
+(333, 'I4 - Semence'),
+(334, 'I4 - Serpillères'),
+(335, 'I4 - Serrures'),
+(336, 'I4 - Serviettes de table'),
+(337, 'I4 - Serviettes de toilettes'),
+(338, 'I4 - Sulfate de soude'),
+(339, 'I4 - Tabacs'),
+(340, 'I4 - Talc industriel'),
+(341, 'I4 - Tapisserie'),
+(342, 'I4 - Textiles'),
+(343, 'I4 - Tissu écru'),
+(344, 'I4 - Tissu écru 100% coton carde'),
+(345, 'I4 - Tissus'),
+(346, 'I4 - Tissus enduits'),
+(347, 'I4 - Titanium oxydés'),
+(348, 'I4 - Tôles aciers à l\'export'),
+(349, 'I4 - Tôles aciers + ferrons'),
+(350, 'I4 - Tourets de câbles aciers machine outils'),
+(351, 'I4 - Tourteaux'),
+(352, 'I4 - tracteurs'),
+(353, 'I4 - Tubes en matières plastiques'),
+(354, 'I4 - Ustensiles de cuisine'),
+(355, 'I4 - Vaisselle'),
+(356, 'I4 - Vaisselle en argent'),
+(357, 'I4 - Valises'),
+(358, 'I4 - Vaseline'),
+(359, 'I4 - Vaseline Merkur'),
+(360, 'I4 - Véhicules'),
+(361, 'I4 - Véhicules d\'occasion'),
+(362, 'I4 - Véhicules neufs'),
+(363, 'I4 - Ventilateurs électriques'),
+(364, 'I4 - Verrerie'),
+(365, 'I4 - Verres vitres'),
+(366, 'I4 - Vins'),
+(367, 'I4 - Yellow popcorn'),
+(368, 'E1 - Autres dérives de cacao'),
+(369, 'E1 - Autres dérives de Café'),
+(370, 'E1 - Autres fruits et légumes'),
+(371, 'E1 - Beurre de cacao'),
+(372, 'E1 - Cacao en fèves'),
+(373, 'E1 - Cacao en poudre'),
+(374, 'E1 - Café en grains'),
+(375, 'E1 - Conserve de thon'),
+(376, 'E1 - Coton égrené'),
+(377, 'E1 - Déchets de coton'),
+(378, 'E1 - Graines de coton'),
+(379, 'E1 - Longe de thon'),
+(380, 'E1 - Masse de cacao'),
+(381, 'E1 - Mousse de cacao'),
+(382, 'E1 - Noix de coco'),
+(383, 'E1 - Œufs de thons'),
+(384, 'E1 - Pate de cacao'),
+(385, 'E1 - Thon congelé'),
+(386, 'E1 - Tourteaux de cacao'),
+(387, 'E1 - Tourteaux de coton'),
+(388, 'E1 - Ananas frais'),
+(389, 'E2 - Autres huiles'),
+(390, 'E2 - Autres Mat végétales'),
+(391, 'E2 - Autres Oléagineux'),
+(392, 'E2 - Autres ouvrages en bois'),
+(393, 'E1 - Banane fraîche'),
+(394, 'E2 - Beurre de karité'),
+(395, 'E2 - Café soluble'),
+(396, 'E2 - Caoutchouc'),
+(397, 'E2 - Coco Râpé'),
+(398, 'E2 - Coprah'),
+(399, 'E2 - Farine'),
+(400, 'E2 - Huile'),
+(401, 'E2 - Huile de coprah brute'),
+(402, 'E2 - Ignames frais'),
+(403, 'E2 - Noix de cajou'),
+(404, 'E2 - Palmistes'),
+(405, 'E2 - Sésame'),
+(406, 'E2 - Sucre'),
+(407, 'E2 - Semences'),
+(408, 'E2 - Semoule'),
+(409, 'E2 - Textiles'),
+(410, 'E2 - Tourteaux de Coprah'),
+(411, 'E2 - Thé'),
+(412, 'E3 - Acier'),
+(413, 'E3 - Aliments pour animaux'),
+(414, 'E3 - Aliments pour poisson'),
+(415, 'E3 - Allumettes dangereux'),
+(416, 'E3 - Aluminium'),
+(417, 'E3 - Amidon alimentaire'),
+(418, 'E3 - Appareils électro-ménagers'),
+(419, 'E3 - Articles d\'ameublement'),
+(420, 'E3 - Articles de librairie'),
+(421, 'E3 - Articles de mode'),
+(422, 'E3 - Articles de papeterie divers'),
+(423, 'E3 - Articles de pêche'),
+(424, 'E3 - Articles de publicité'),
+(425, 'E3 - Autres Aciers'),
+(426, 'E3 - Autres cycles et motocycles'),
+(427, 'E3 - Autres emballages'),
+(428, 'E2 - Autres engrais'),
+(429, 'E3 - Autres fil de cuivre'),
+(430, 'E3 - Autres fruits de mer'),
+(431, 'E3 - Autres gaz'),
+(432, 'E3 - Autres matières brutes végétales'),
+(433, 'E3 - Autres produits alimentaires de base'),
+(434, 'E3 - Autres produits laitiers, œufs'),
+(435, 'E3 - Bitume étanche en rouleaux'),
+(436, 'E3 - Bobines de tôles'),
+(437, 'E3 - Bois de chauffage'),
+(438, 'E3 - Bois débités'),
+(439, 'E3 - Bois en grumes'),
+(440, 'E3 - Boissons alcoolisées'),
+(441, 'E3 - Bouteilles de gaz vides'),
+(442, 'E3 - Bouteilles vides'),
+(443, 'E3 - Câbles électriques'),
+(444, 'E3 - Cantines métalliques vides'),
+(445, 'E3 - Capsules de bouteilles'),
+(446, 'E3 - Cassettes'),
+(447, 'E3 - Charbon de bois'),
+(448, 'E3 - Chariots'),
+(449, 'E3 - Charpentes'),
+(450, 'E3 - Chaussures'),
+(451, 'E3 - Chewing gum + bonbons'),
+(452, 'E3 - Cigarette'),
+(453, 'E3 - Ciment'),
+(454, 'E3 - Conteneurs vides'),
+(455, 'E3 - Citernes métalliques'),
+(456, 'E3 - Colis diplomatiques'),
+(457, 'E3 - Colles'),
+(458, 'E3 - Colorant Encre Laque color (DGX)'),
+(459, 'E3 - Colorants'),
+(460, 'E3 - Compresseurs'),
+(461, 'E3 - Cosmétiques'),
+(462, 'E3 - Cuir brut'),
+(463, 'E3 - Déchets pour fabrication emballage'),
+(464, 'E3 - Déchets de caoutchouc'),
+(465, 'E3 - Dentifrices'),
+(466, 'E3 - Diluants peinture'),
+(467, 'E3 - Eaux minérales'),
+(468, 'E3 - Effets personnels'),
+(469, 'E3 - Engins travaux publics'),
+(470, 'E3 - Fer a béton'),
+(471, 'E3 - Fer blanc en fardeaux'),
+(472, 'E3 - Ferraille'),
+(473, 'E3 - Feuillards rouleaux'),
+(474, 'E3 - Feuilles contreplaque'),
+(475, 'E3 - Fibre synthétique'),
+(476, 'E3 - Fil acier en rouleaux'),
+(477, 'E3 - Filets de pêche'),
+(478, 'E3 - Fils machine'),
+(479, 'E3 - Fleurs artificielles'),
+(480, 'E3 - Friperie'),
+(481, 'E3 - Gomme arabique'),
+(482, 'E2 - Graines de roucoux'),
+(483, 'E3 - Habillement'),
+(484, 'E3 - Instruments de musique'),
+(485, 'E3 - Instruments médicaux'),
+(486, 'E3 - Iso tank CO2 Vrac DGX'),
+(487, 'E3 - Iso tank vides DGX'),
+(488, 'E3 - Jus de fruits'),
+(489, 'E3 - Lait en poudre'),
+(490, 'E3 - Lubrifiants en futs'),
+(491, 'E3 - Machines Électromécaniques'),
+(492, 'E3 - Machines Electroniques'),
+(493, 'E3 - Machines Outils'),
+(494, 'E3 - Maniguettes'),
+(495, 'E3 - Matériaux de construction'),
+(496, 'E3 - Matériel de forage'),
+(497, 'E3 - Matériel électrique'),
+(498, 'E3 - Matériels d\'empotage'),
+(499, 'E3 - Matériels plastiques'),
+(500, 'E3 - Matériels plastiques synthétiques'),
+(501, 'E3 - Médicaments'),
+(502, 'E3 - Menuiserie en acier ou fer'),
+(503, 'E3 - Menuiserie en bois'),
+(504, 'E3 - Métaux non ferreux'),
+(505, 'E3 - Métaux précieux'),
+(506, 'E3 - Meubles'),
+(507, 'E3 - Minerais'),
+(508, 'E3 - Moteurs électriques'),
+(509, 'E3 - Motocycles'),
+(510, 'E3 - Mouchoirs'),
+(511, 'E3 - Ouate de cellulose'),
+(512, 'E3 - Outillage à main'),
+(513, 'E3 - Panneaux stratifiés'),
+(514, 'E3 - Papiers d\'emballage'),
+(515, 'E3 - Parquets et assemblages'),
+(516, 'E3 - Peaux brutes'),
+(517, 'E3 - Peintures'),
+(518, 'E3 - Pièces détachées'),
+(519, 'E3 - Placages et contre-plaques'),
+(520, 'E3 - Plantes diverses'),
+(521, 'E3 - Plaque caoutchouc synthétique'),
+(522, 'E3 - Pneumatiques'),
+(523, 'E3 - Poissons congelés'),
+(524, 'E3 - Préparation alimentaire Produits de sidérurgie'),
+(525, 'E3 - Produits chimiques'),
+(526, 'E3 - Produits de beauté'),
+(527, 'E3 - Produits laitiers'),
+(528, 'E3 - Produits pharmaceutiques'),
+(529, 'E3 - Quincaillerie'),
+(530, 'E3 - Résine'),
+(531, 'E3 - Savons'),
+(532, 'E3 - Savons médicaux'),
+(533, 'E3 - Serpillères'),
+(534, 'E3 - Statues Tanks vides'),
+(535, 'E3 - Textiles et tissus'),
+(536, 'E3 - Tôles'),
+(537, 'E3 - Tourets de câble aciers'),
+(538, 'E3 - Tracteurs'),
+(539, 'E3 - Tubes PVC'),
+(540, 'E3 - Tuiles'),
+(541, 'E3 - Tuyaux plastique'),
+(542, 'E3 - Ustensiles de cuisine'),
+(543, 'E3 - Véhicules d\'occasion'),
+(544, 'E3 - Vernis'),
+(545, 'E3 - Autres produits non recenses'),
+(546, 'E3 - Tuyaux en fonte'),
+(547, 'E3 - Nattes'),
+(548, 'E3 - Tubes en matières plastiques'),
+(549, 'T5 - Autres Produits Poissonniers'),
+(550, 'T5 - Poisson Congelé'),
+(551, 'T5 - Riz'),
+(552, 'T5 - Thon Congelé'),
+(553, 'T5 - Tomates Concentrées'),
+(554, 'T5 - Viande Congelée'),
+(555, 'T5 - Ail'),
+(556, 'T5 - Amidon Alimentaire'),
+(557, 'T5 - Autres Aliments Pour Animaux'),
+(558, 'T5 - Autres Céréales'),
+(559, 'T5 - Autres Crustacés et Fruits de mer'),
+(560, 'T5 - Autres Engrais'),
+(561, 'T5 - Autres Fruits et Légumes'),
+(562, 'T5 - Autres Insecticides Agricoles'),
+(563, 'T5 - Autres Produits Alimentaires'),
+(564, 'T5 - Autres Produits Laitiers, Œufs'),
+(565, 'T5 - Autres semences'),
+(566, 'T5 - Blé'),
+(567, 'T5 - Carottes'),
+(568, 'T5 - Céréales'),
+(569, 'T5 - Farine'),
+(570, 'T5 - Farine Lactée'),
+(571, 'T5 - Glucose'),
+(572, 'T5 - Insecticides Agricoles'),
+(573, 'T5 - Lait en Poudre'),
+(574, 'T5 - Légumes frais'),
+(575, 'T5 - Levure'),
+(576, 'T5 - Maïs'),
+(577, 'T5 - Malt'),
+(578, 'T5 - Oignons'),
+(579, 'T5 - Pommes'),
+(580, 'T5 - Pommes de terre'),
+(581, 'T5 - Préparation Alimentaire'),
+(582, 'T5 - Produits Alimentaires de Base'),
+(583, 'T5 - Produits Laitiers'),
+(584, 'T5 - Sel'),
+(585, 'T5 - Semoule'),
+(586, 'T5 - Sésame'),
+(587, 'T5 - Sirops Sucre/Glucose'),
+(588, 'T5 - Sucre'),
+(589, 'T5 - Sucre/Sel'),
+(590, 'T5 - Thé'),
+(591, 'T5 - Tomates Pelées'),
+(592, 'T5 - Alcool Pharmaceutique'),
+(593, 'T5 - Aluminium en rouleaux pour construction'),
+(594, 'T5 - Appareils Sanitaires'),
+(595, 'T5 - Articles de Librairie'),
+(596, 'T5 - Autres Matériaux de construction'),
+(597, 'T5 - Briques pour construction'),
+(598, 'T5 - Carreaux'),
+(599, 'T5 - Ciment'),
+(600, 'T5 - Ciment Blanc'),
+(601, 'T5 - Coton Hydrophile Pharmacie'),
+(602, 'T5 - Effets Personnels'),
+(603, 'T5 - Fer à béton'),
+(604, 'T5 - Fer blanc'),
+(605, 'T5 - Fibro ciment'),
+(606, 'T5 - Instruments médicaux'),
+(607, 'T5 - Marbres'),
+(608, 'T5 - Matériel de laboratoire'),
+(609, 'T5 - Médicaments'),
+(610, 'T5 - Pansements'),
+(611, 'T5 - Placages et contre-plaques'),
+(612, 'T5 - Plâtre'),
+(613, 'T5 - Produits pharmaceutiques'),
+(614, 'T5 - Robinetterie'),
+(615, 'T5 - Savons médicinaux'),
+(616, 'T5 - Tôles'),
+(617, 'T5 - Tôles profilées'),
+(618, 'T5 - Tuiles'),
+(619, 'T5 - Tuyaux en fonte'),
+(620, 'T5 - Tuyaux plastique'),
+(621, 'T5 - Accessoires de véhicules'),
+(622, 'T5 - Acier'),
+(623, 'T5 - Albums photographie'),
+(624, 'T5 - Alcool Imco'),
+(625, 'T5 - Aluminium and articles Thereof'),
+(626, 'T5 - Ameublement'),
+(627, 'T5 - Ampoules électriques'),
+(628, 'T5 - Appareil photographique'),
+(629, 'T5 - Appareils de climatisation'),
+(630, 'T5 - Appareils de levage'),
+(631, 'T5 - Appareils électro-ménagers'),
+(632, 'T5 - Aradrap perfore'),
+(633, 'T5 - Argile'),
+(634, 'T5 - Armoires frigorifiques'),
+(635, 'T5 - Articles de bureau'),
+(636, 'T5 - Articles de confection'),
+(637, 'T5 - Articles de mercerie'),
+(638, 'T5 - Articles de mode'),
+(639, 'T5 - Articles de papeterie divers'),
+(640, 'T5 - Articles de pèche'),
+(641, 'T5 - Articles de publicité'),
+(642, 'T5 - Articles de sport'),
+(643, 'T5 - Articles religieux'),
+(644, 'T5 - Assiettes'),
+(645, 'T5 - Autres Aciers'),
+(646, 'T5 - Autres Articles à base de papier'),
+(647, 'T5 - Autres articles d\'ameublement'),
+(648, 'T5 - Autres articles de voyage maroquinerie'),
+(649, 'T5 - Autres boissons alcoolisées'),
+(650, 'T5 - Autres conserves alimentaires'),
+(651, 'T5 - Autres cycles et motocycles'),
+(652, 'T5 - Autres dérivés de cacao'),
+(653, 'T5 - Autres dérivés de café'),
+(654, 'T5 - Autres emballage'),
+(655, 'T5 - Autres fil de cuivre'),
+(656, 'T5 - Autres gaz'),
+(657, 'T5 - Autres gommes et résines'),
+(658, 'T5 - Autres huiles'),
+(659, 'T5 - Autres insecticides'),
+(660, 'T5 - Autres insecticides agricoles'),
+(661, 'T5 - Autres matériels ferroviaires'),
+(662, 'T5 - Autres matériels engins agricoles et travaux publics'),
+(663, 'T5 - Autres matières brutes animales'),
+(664, 'T5 - Autres matières végétales'),
+(665, 'T5 - Autres ouvrages en bois'),
+(666, 'T5 - Autres produits chimiques'),
+(667, 'T5 - Autres produits à base de tabac'),
+(668, 'T5 - Autres produits d\'entretien'),
+(669, 'T5 - Autres produits fare, cosmétique, toilette'),
+(670, 'T5 - Autres produits manufactures divers'),
+(671, 'T5 - Autres produits pétroliers'),
+(672, 'T5 - Bâches'),
+(673, 'T5 - Bateaux'),
+(674, 'T5 - Batteries électriques'),
+(675, 'T5 - Bijouterie'),
+(676, 'T5 - Bitume étanche en rouleaux'),
+(677, 'T5 - Bobines de tôles'),
+(678, 'T5 - Bois à usage divers'),
+(679, 'T5 - Bois débités'),
+(680, 'T5 - Bois en grumes'),
+(681, 'T5 - Boissons alcoolisées'),
+(682, 'T5 - Botes mastic polyester Duck'),
+(683, 'T5 - Bouchons unis or'),
+(684, 'T5 - Bouteilles de gaz vides'),
+(685, 'T5 - Bouteilles vides'),
+(686, 'T5 - Brosses'),
+(687, 'T5 - Câbles de matériel naval'),
+(688, 'T5 - Câbles électriques'),
+(689, 'T5 - Câbles téléphoniques'),
+(690, 'T5 - Cacao fèves'),
+(691, 'T5 - Cacao en poudre'),
+(692, 'T5 - cacao en grains'),
+(693, 'T5 - Café soluble'),
+(694, 'T5 - Cantine métalliques vides'),
+(695, 'T5 - Caoutchouc'),
+(696, 'T5 - Capsules de bouteilles'),
+(697, 'T5 - Cartons of ajinomoto monosodium'),
+(698, 'T5 - Cassettes'),
+(699, 'T5 - Cercueils'),
+(700, 'T5 - Chalk'),
+(701, 'T5 - Chariots'),
+(702, 'T5 - Charpentes'),
+(703, 'T5 - Chaussures'),
+(704, 'T5 - Chaux'),
+(705, 'T5 - Cigarettes'),
+(706, 'T5 - Citernes métalliques'),
+(707, 'T5 - Colles'),
+(708, 'T5 - Colorants'),
+(709, 'T5 - Compresseurs'),
+(710, 'T5 - Compresseurs'),
+(711, 'T5 - Compteurs et pièces détachées'),
+(712, 'T5 - Conserve de thon'),
+(713, 'T5 - Construction métallique'),
+(714, 'T5 - cordages'),
+(715, 'T5 - Cosmétiques'),
+(716, 'T5 - Coton Egrené'),
+(717, 'T5 - Couteaux pour industrie'),
+(718, 'T5 - Couverts'),
+(719, 'T5 - Couvertures'),
+(720, 'T5 - Craie en poudre'),
+(721, 'T5 - Cuir brut'),
+(722, 'T5 - Cuir synthétique pour chaussures'),
+(723, 'T5 - Cuisinière a gaz'),
+(724, 'T5 - Cycles'),
+(725, 'T5 - Cyclohexanone'),
+(726, 'T5 - Déchets de caoutchouc'),
+(727, 'T5 - Déchets divers pour fabrication emballage'),
+(728, 'T5 - Dentifrice'),
+(729, 'T5 - Dextrose monohydrate'),
+(730, 'T5 - Diesel Genrator set'),
+(731, 'T5 - Diluants peintures dangereux'),
+(732, 'T5 - Disques aluminium'),
+(733, 'T5 - Divers non recenses'),
+(734, 'T5 - Divers pièces détachées'),
+(735, 'T5 - Eaux minérales'),
+(736, 'T5 - Effets personnels'),
+(737, 'T5 - Electrodes'),
+(738, 'T5 - Electrolytes'),
+(739, 'T5 - Electroménagers'),
+(740, 'T5 - Emballages imprimes'),
+(741, 'T5 - Emballages métalliques'),
+(742, 'T5 - Encres d\'imprimerie'),
+(743, 'T5 - Engins travaux publics'),
+(744, 'T5 - Equipement électrique'),
+(745, 'T5 - Etiquettes'),
+(746, 'T5 - Ferraille'),
+(747, 'T5 - Fertilisants'),
+(748, 'T5 - Feuillards rouleaux'),
+(749, 'T5 - Fibres Synthétiques'),
+(750, 'T5 - Fibres de jute'),
+(751, 'T5 - Fil acier en rouleaux'),
+(752, 'T5 - Fil de cuivre matière première pour industrie'),
+(753, 'T5 - Fil écru coton'),
+(754, 'T5 - Fil synthétique'),
+(755, 'T5 - Filets de pêche'),
+(756, 'T5 - Films pour photo'),
+(757, 'T5 - Fils de fer en rouleaux'),
+(758, 'T5 - Fil de jute ou desisal'),
+(759, 'T5 - Fils machine'),
+(760, 'T5 - Flacons de verres vides'),
+(761, 'T5 - Fleurs artificielles'),
+(762, 'T5 - Fonds corps boites en fer blanc'),
+(763, 'T5 - Footwear, gaiters and the like'),
+(764, 'T5 - Fourniture métallique'),
+(765, 'T5 - Friperie'),
+(766, 'T5 - Gants article de mode'),
+(767, 'T5 - Gants de toilette'),
+(768, 'T5 - Gants pour industrie'),
+(769, 'T5 - Gel anti moustique'),
+(770, 'T5 - Glycérine'),
+(771, 'T5 - Graviers'),
+(772, 'T5 - Grillades métalliques'),
+(773, 'T5 - Habillement'),
+(774, 'T5 - Harmless'),
+(775, 'T5 - Horlogerie et pièces'),
+(776, 'T5 - Houseware'),
+(777, 'T5 - Huile'),
+(778, 'T5 - Huile minérale'),
+(779, 'T5 - Huiles essentielles'),
+(780, 'T5 - Huiles lubrifiantes'),
+(781, 'T5 - Insecticides'),
+(782, 'T5 - Instruments de musique'),
+(783, 'T5 - Jouets'),
+(784, 'T5 - Jus de fruits'),
+(785, 'T5 - Laine de verre'),
+(786, 'T5 - Lames de rasoir'),
+(787, 'T5 - Lampes'),
+(788, 'T5 - Latex'),
+(789, 'T5 - Lits'),
+(790, 'T5 - Lubrifiants'),
+(791, 'T5 - Machine à coudre électrique'),
+(792, 'T5 - Machines à écrire'),
+(793, 'T5 - Machines électromécaniques'),
+(794, 'T5 - Machines électroniques'),
+(795, 'T5 - Machines industrielles'),
+(796, 'T5 - Machines outils'),
+(797, 'T5 - Masques de soudure'),
+(798, 'T5 - Matériaux isolants'),
+(799, 'T5 - Matériel de cinéma'),
+(800, 'T5 - Matériel de construction pour installation'),
+(801, 'T5 - Matériel de décoration'),
+(802, 'T5 - Matériel de forage'),
+(803, 'T5 - Matériel de mesure'),
+(804, 'T5 - Matériel de photo'),
+(805, 'T5 - Matériel de station service'),
+(806, 'T5 - Matériel électrique'),
+(807, 'T5 - Matériel naval'),
+(808, 'T5 - Matériel radio et pièces détachées'),
+(809, 'T5 - Matériel téléphonique et pièces détachées'),
+(810, 'T5 - Matériel télévision et pièces détachées'),
+(811, 'T5 - Matériels d\'empotage'),
+(812, 'T5 - Matières plastiques'),
+(813, 'T5 - Matières plastiques synthétiques'),
+(814, 'T5 - Matières premières pour fabrication engrais'),
+(815, 'T5 - Menuiserie en acier'),
+(816, 'T5 - Menuiserie en aluminium'),
+(817, 'T5 - Menuiserie en bois'),
+(818, 'T5 - Mercerie'),
+(819, 'T5 - Métaux non ferreux'),
+(820, 'T5 - Meubles'),
+(821, 'T5 - Minerais'),
+(822, 'T5 - Miroirs'),
+(823, 'T5 - Moquettes'),
+(824, 'T5 - Moteurs électriques'),
+(825, 'T5 - Moteurs engins travaux publics'),
+(826, 'T5 - Motocycles'),
+(827, 'T5 - Mouchons'),
+(828, 'T5 - Moustiquaire'),
+(829, 'T5 - Munition'),
+(830, 'T5 - Noix de cajou'),
+(831, 'T5 - Ouate de cellulose'),
+(832, 'T5 - Outillage à  main'),
+(833, 'T5 - Palmistes'),
+(834, 'T5 - Panneaux stratifiées'),
+(835, 'T5 - Papier board'),
+(836, 'T5 - Papiers'),
+(837, 'T5 - Papiers d\'emballage'),
+(838, 'T5 - Paraffine'),
+(839, 'T5 - Parfumerie'),
+(840, 'T5 - Peintures'),
+(841, 'T5 - Pétrole brut'),
+(842, 'T5 - Pièces de rechange pour tracteurs'),
+(843, 'T5 - Pièces détachées pour machines électroniques'),
+(844, 'T5 - Pièces détaillées machines à outil'),
+(845, 'T5 - Pièces détachées matériel naval'),
+(846, 'T5 - Pièces détachées neuves'),
+(847, 'T5 - Pièces détachées pour climatisation'),
+(848, 'T5 - Pièces détachées pour locomotive'),
+(849, 'T5 - Pièces détachées pour pulvérisateur solo'),
+(850, 'T5 - Pièces détachées pour véhicules'),
+(851, 'T5 - Pièces détachées téléphone'),
+(852, 'T5 - Pièces détachées véhicules'),
+(853, 'T5 - Pierres brutes pour construction'),
+(854, 'T5 - Piles électriques'),
+(855, 'T5 - Plaque caoutchouc synthétique pour chaussures'),
+(856, 'T5 - Pneumatique'),
+(857, 'T5 - Polymère'),
+(858, 'T5 - Pompes électriques'),
+(859, 'T5 - Produits auxiliaires pour peinture'),
+(860, 'T5 - Produits chimiques'),
+(861, 'T5 - Produits de beauté'),
+(862, 'T5 - Produits dietiques'),
+(863, 'T5 - Produits industriels'),
+(864, 'T5 - Produits manufactures divers'),
+(865, 'T5 - Produits manufactures divers dangereux'),
+(866, 'T5 - Produits Pétroliers'),
+(867, 'T5 - Produits pharmaceutiques dangereux'),
+(868, 'T5 - Quincaillerie'),
+(869, 'T5 - Rayonnages'),
+(870, 'T5 - Reproduction plastic roll'),
+(871, 'T5 - Résine'),
+(872, 'T5 - Résine synthétique'),
+(873, 'T5 - Résines synthétique dangereux'),
+(874, 'T5 - Résines synthétique dangereux'),
+(875, 'T5 - Revêtements de sol'),
+(876, 'T5 - Rouleaux de papier Kraft'),
+(877, 'T5 - Sardines en conserve'),
+(878, 'T5 - Satellite dishantenna'),
+(879, 'T5 - Savons'),
+(880, 'T5 - Semence'),
+(881, 'T5 - Serpillères'),
+(882, 'T5 - Serrures'),
+(883, 'T5 - Serviettes de table'),
+(884, 'T5 - Serviettes de toilettes'),
+(885, 'T5 - Sulfate de soude'),
+(886, 'T5 - Tabacs'),
+(887, 'T5 - Talc industriel'),
+(888, 'T5 - Tapisserie'),
+(889, 'T5 - Textiles'),
+(890, 'T5 - Tissu écru'),
+(891, 'T5 - Tissu écru 100% coton carde'),
+(892, 'T5 - Tissus'),
+(893, 'T5 - Tissus enduits'),
+(894, 'T5 - Titanium oxydés'),
+(895, 'T5 - Tôles aciers à l\'export'),
+(896, 'T5 - Tôles aciers + ferrons'),
+(897, 'T5 - Tourets de câbles aciers machine outils'),
+(898, 'T5 - Tourteaux'),
+(899, 'T5 - tracteurs'),
+(900, 'T5 - Tubes en matières plastiques'),
+(901, 'T5 - Ustensiles de cuisine'),
+(902, 'T5 - Vaisselle'),
+(903, 'T5 - Vaisselle en argent'),
+(904, 'T5 - Valises'),
+(905, 'T5 - Vaseline'),
+(906, 'T5 - Vaseline Merkur'),
+(907, 'T5 - Véhicules'),
+(908, 'T5 - Véhicules d\'occasion'),
+(909, 'T5 - Véhicules neufs'),
+(910, 'T5 - Ventilateurs électriques'),
+(911, 'T5 - Verrerie'),
+(912, 'T5 - Verres vitres'),
+(913, 'T5 - Vins'),
+(914, 'T5 - Yellow popcorn'),
+(915, 'T5 - Autres dérives de cacao'),
+(916, 'T5 - Autres dérives de Café'),
+(917, 'T5 - Autres fruits et légumes'),
+(918, 'T5 - Beurre de cacao'),
+(919, 'T5 - Cacao en fèves'),
+(920, 'T5 - Cacao en poudre'),
+(921, 'T5 - Café en grains'),
+(922, 'T5 - Conserve de thon'),
+(923, 'T5 - Coton égrené'),
+(924, 'T5 - Déchets de coton'),
+(925, 'T5 - Graines de coton'),
+(926, 'T5 - Longe de thon'),
+(927, 'T5 - Masse de cacao'),
+(928, 'T5 - Mousse de cacao'),
+(929, 'T5 - Noix de coco'),
+(930, 'T5 - Œufs de thons'),
+(931, 'T5 - Pate de cacao'),
+(932, 'T5 - Thon congelé'),
+(933, 'T5 - Tourteaux de cacao'),
+(934, 'T5 - Tourteaux de coton'),
+(935, 'T5 - Ananas frais'),
+(936, 'T5 - Autres huiles'),
+(937, 'T5 - Autres Mat végétales'),
+(938, 'T5 - Autres Oléagineux'),
+(939, 'T5 - Autres ouvrages en bois'),
+(940, 'T5 - Banane fraiche'),
+(941, 'T5 - Beurre de karité'),
+(942, 'T5 - Café soluble'),
+(943, 'T5 - Caoutchouc'),
+(944, 'T5 - Coco Râpé'),
+(945, 'T5 - Coprah'),
+(946, 'T5 - Farine'),
+(947, 'T5 - Huile'),
+(948, 'T5 - Huile de coprah brute'),
+(949, 'T5 - Ignames frais'),
+(950, 'T5 - Noix de cajou'),
+(951, 'T5 - Palmistes'),
+(952, 'T5 - Sésame'),
+(953, 'T5 - Sucre'),
+(954, 'T5 - Semences'),
+(955, 'T5 - Semoule'),
+(956, 'T5 - Textiles'),
+(957, 'T5 - Tourteaux de Coprah'),
+(958, 'T5 - Thé'),
+(959, 'T5 - Acier'),
+(960, 'T5 - Aliments pour animaux'),
+(961, 'T5 - Aliments pour poisson'),
+(962, 'T5 - Allumettes dangereux'),
+(963, 'T5 - Aluminium'),
+(964, 'T5 - Amidon alimentaire'),
+(965, 'T5 - Appareils électro-ménagers'),
+(966, 'T5 - Articles d\'ameublement'),
+(967, 'T5 - Articles de librairie'),
+(968, 'T5 - Articles de mode'),
+(969, 'T5 - Articles de papeterie divers'),
+(970, 'T5 - Articles de pêche'),
+(971, 'T5 - Articles de publicité'),
+(972, 'T5 - Autres Aciers'),
+(973, 'T5 - Autres cycles et motocycles'),
+(974, 'T5 - Autres emballages'),
+(975, 'T5 - Autres engrais'),
+(976, 'T5 - Autres fil de cuivre'),
+(977, 'T5 - Autres fruits de mer'),
+(978, 'T5 - Autres gaz'),
+(979, 'T5 - Autres matières brutes végétales'),
+(980, 'T5 - Autres produits alimentaires de base'),
+(981, 'T5 - Autres produits laitiers, œufs'),
+(982, 'T5 - Bitume étanche en rouleaux'),
+(983, 'T5 - Bobines de tôles'),
+(984, 'T5 - Bois de chauffage'),
+(985, 'T5 - Bois débités'),
+(986, 'T5 - Bois en grumes'),
+(987, 'T5 - Boissons non alcoolisées'),
+(988, 'T5 - Bouteilles de gaz vides'),
+(989, 'T5 - Bouteilles vides'),
+(990, 'T5 - Câbles électriques'),
+(991, 'T5 - Cantines métalliques vides'),
+(992, 'T5 - Capsules de bouteilles'),
+(993, 'T5 - Cassettes'),
+(994, 'T5 - Charbon de bois'),
+(995, 'T5 - Chariots'),
+(996, 'T5 - Charpentes'),
+(997, 'T5 - Chaussures'),
+(998, 'T5 - Chewing gum + bonbons'),
+(999, 'T5 - Cigarette'),
+(1000, 'T5 - Ciment'),
+(1001, 'T5 - Conteneurs vides'),
+(1002, 'T5 - Citernes métalliques'),
+(1003, 'T5 - Colis diplomatiques'),
+(1004, 'T5 - Colles'),
+(1005, 'T5 - Colorant Encre Laque color (DGX)'),
+(1006, 'T5 - Colorants'),
+(1007, 'T5 - Compresseurs'),
+(1008, 'T5 - Cosmétiques'),
+(1009, 'T5 - Cuir brut'),
+(1010, 'T5 - Déchets pour fabrication emballage'),
+(1011, 'T5 - Déchets de caoutchouc'),
+(1012, 'T5 - Dentifrices'),
+(1013, 'T5 - Diluants peinture'),
+(1014, 'T5 - Eaux minérales'),
+(1015, 'T5 - Effets personnels'),
+(1016, 'T5 - Engins travaux publics'),
+(1017, 'T5 - Fer a béton'),
+(1018, 'T5 - Fer blanc en fardeaux'),
+(1019, 'T5 - Ferraille'),
+(1020, 'T5 - Feuillards rouleaux'),
+(1021, 'T5 - Feuilles contreplaque'),
+(1022, 'T5 - Fibre synthétique'),
+(1023, 'T5 - Fil acier en rouleaux'),
+(1024, 'T5 - Filets de pêche'),
+(1025, 'T5 - Fils machine'),
+(1026, 'T5 - Fleurs artificielles'),
+(1027, 'T5 - Friperie'),
+(1028, 'T5 - Gomme arabique'),
+(1029, 'T5 - Graines de roucoux'),
+(1030, 'T5 - Habillement'),
+(1031, 'T5 - Instruments de musique'),
+(1032, 'T5 - Instruments médicaux'),
+(1033, 'T5 - Iso tank CO2 Vrac DGX'),
+(1034, 'T5 - Iso tank vides DGX'),
+(1035, 'T5 - Jus de fruits'),
+(1036, 'T5 - Lait en poudre'),
+(1037, 'T5 - Lubrifiants en futs'),
+(1038, 'T5 - Machines Électromécaniques'),
+(1039, 'T5 - Machines Electroniques'),
+(1040, 'T5 - Machines Outils'),
+(1041, 'T5 - Maniguettes'),
+(1042, 'T5 - Matériaux de construction'),
+(1043, 'T5 - Matériel de forage'),
+(1044, 'T5 - Matériel électrique'),
+(1045, 'T5 - Matériels d\'empotage'),
+(1046, 'T5 - Matériels plastiques'),
+(1047, 'T5 - Matériels plastiques synthétiques'),
+(1048, 'T5 - Médicaments'),
+(1049, 'T5 - Menuiserie en acier ou fer'),
+(1050, 'T5 - Menuiserie en bois'),
+(1051, 'T5 - Métaux non ferreux'),
+(1052, 'T5 - Métaux précieux'),
+(1053, 'T5 - Meubles'),
+(1054, 'T5 - Minerais'),
+(1055, 'T5 - Moteurs électriques'),
+(1056, 'T5 - Motocycles'),
+(1057, 'T5 - Mouchoirs'),
+(1058, 'T5 - Ouate de cellulose'),
+(1059, 'T5 - Outillage à main'),
+(1060, 'T5 - Panneaux stratifiés'),
+(1061, 'T5 - Papiers d\'emballage'),
+(1062, 'T5 - Parquets et assemblages'),
+(1063, 'T5 - Peaux brutes'),
+(1064, 'T5 - Peintures'),
+(1065, 'T5 - Pièces détachées'),
+(1066, 'T5 - Placages et contre-plaques'),
+(1067, 'T5 - Plantes diverses'),
+(1068, 'T5 - Plaque caoutchouc synthétique'),
+(1069, 'T5 - Pneumatiques'),
+(1070, 'T5 - Poissons congelés'),
+(1071, 'T5 - Préparation alimentaire Produits de sidérurgie'),
+(1072, 'T5 - Produits chimiques'),
+(1073, 'T5 - Produits de beauté'),
+(1074, 'T5 - Produits laitiers'),
+(1075, 'T5 - Produits pharmaceutiques'),
+(1076, 'T5 - Quincaillerie'),
+(1077, 'T5 - Résine'),
+(1078, 'T5 - Savons'),
+(1079, 'T5 - Savons médicaux'),
+(1080, 'T5 - Serpillères'),
+(1081, 'T5 - Statues Tanks vides'),
+(1082, 'T5 - Textiles et tissus'),
+(1083, 'T5 - Tôles'),
+(1084, 'T5 - Tourets de câble aciers'),
+(1085, 'T5 - Tracteurs'),
+(1086, 'T5 - Tubes PVC'),
+(1087, 'T5 - Tuiles'),
+(1088, 'T5 - Tuyaux plastique'),
+(1089, 'T5 - Ustensiles de cuisine'),
+(1090, 'T5 - Véhicules d\'occasion'),
+(1091, 'T5 - Vernis'),
+(1092, 'T5 - Autres produits non recenses'),
+(1093, 'T5 - Tuyaux en fonte'),
+(1094, 'T5 - Nattes'),
+(1095, 'T5 - Tubes en matières plastiques'),
+(1096, 'CT - Tank Vide'),
+(1097, 'HC - Marchandise Importer'),
+(1098, 'Marchandise Convention Douane'),
+(1099, 'E3 - Riz'),
+(1100, 'E2 - Autres Céréales'),
+(1101, 'E2 - Sel'),
+(1102, 'E2 - Noix de Colas'),
+(1103, 'I3 - Allumettes dangereux'),
+(1104, 'I4 - Boissons non Alcolisées'),
+(1105, 'E3 - Autres boissons alcoolisées'),
+(1106, 'E3 - Boissons non alcoolisées'),
+(1107, 'I4 - Arcticles de Ménage'),
+(1108, 'I4 - Matériel d\'empotage'),
+(1109, 'I4 - Produits Chimiques Dangereux'),
+(1110, 'T5 - Produits Chimiques dangereux'),
+(1111, 'I3 - Carbonate de potassium'),
+(1112, 'I3 - Herbicides'),
+(1113, 'I4 - Matériel informatique'),
+(1114, 'I4 - Polypropylène'),
+(1115, 'E2 - Insecticides Agricoles'),
+(1116, 'I2 - Herbicides Agricoles Dangereux'),
+(1117, 'I4 - Herbicides Agricoles Non DGX'),
+(1118, 'I4 - Eals');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `commodityitem`
+--
+
+DROP TABLE IF EXISTS `commodityitem`;
+CREATE TABLE IF NOT EXISTS `commodityitem` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Weight` decimal(10,0) DEFAULT NULL,
+  `NumberOfPackages` int DEFAULT NULL,
+  `CommodityId` int UNSIGNED DEFAULT NULL,
+  `BlItemId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_CommodityItem_Commodity` (`CommodityId`),
+  KEY `FK_CommodityItem_BLItem` (`BlItemId`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `commodityitem`
+--
+
+INSERT INTO `commodityitem` (`Id`, `Weight`, `NumberOfPackages`, `CommodityId`, `BlItemId`) VALUES
+(1, '18000', 85, 1, 1),
+(2, '16000', 75, 2, 2),
+(3, '15000', 70, 3, 3),
+(4, '8000', 40, 4, 4),
+(5, '2500', 50, 5, 5),
+(6, '3000', 60, 5, 6),
+(7, '12000', 60, 6, 7),
+(8, '500', 250, 1, 8);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `commodity_backup_renumber`
+--
+
+DROP TABLE IF EXISTS `commodity_backup_renumber`;
+CREATE TABLE IF NOT EXISTS `commodity_backup_renumber` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Label` varchar(500) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3313 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `commodity_backup_renumber`
+--
+
+INSERT INTO `commodity_backup_renumber` (`Id`, `Label`) VALUES
+(1, 'Marchandise Importer'),
+(2196, 'I1 - Autres Produits Poissonniers'),
+(2197, 'I1 - Poisson Congelé'),
+(2198, 'I1 - Riz'),
+(2199, 'I1 - Thon Congelé'),
+(2200, 'I1 - Tomates Concentrées'),
+(2201, 'I1 - Viande Congelée'),
+(2202, 'I2 - Ail'),
+(2203, 'I2 - Amidon Alimentaire'),
+(2204, 'I2 - Autres Aliments Pour Animaux'),
+(2205, 'I2 - Autres Céréales'),
+(2206, 'I2 - Autres Crustacés et Fruits de mer'),
+(2207, 'I2 - Autres Engrais'),
+(2208, 'I2 - Autres Fruits et Légumes'),
+(2209, 'I2 - Autres Insecticides Agricoles'),
+(2210, 'I2 - Autres Produits Alimentaires'),
+(2211, 'I2 - Autres Produits Laitiers, Œufs'),
+(2212, 'I2 - Autres semences'),
+(2213, 'I2 - Blé'),
+(2214, 'I2 - Carottes'),
+(2215, 'I2 - Céréales'),
+(2216, 'I2 - Farine'),
+(2217, 'I2 - Farine Lactée'),
+(2218, 'I2 - Glucose'),
+(2219, 'I2 - Insecticides Agricoles'),
+(2220, 'I2 - Lait en Poudre'),
+(2221, 'I2 - Légumes frais'),
+(2222, 'I2 - Levure'),
+(2223, 'I2 - Maïs'),
+(2224, 'I2 - Malt'),
+(2225, 'I2 - Oignons'),
+(2226, 'I2 - Pommes'),
+(2227, 'I2 - Pommes de terre'),
+(2228, 'I2 - Préparation Alimentaire'),
+(2229, 'I2 - Produits Alimentaires de Base'),
+(2230, 'I2 - Produits Laitiers'),
+(2231, 'I2 - Sel'),
+(2232, 'I2 - Semoule'),
+(2233, 'I2 - Sésame'),
+(2234, 'I2 - Sirops Sucre/Glucose'),
+(2235, 'I2 - Sucre'),
+(2236, 'I2 - Sucre/Sel'),
+(2237, 'I2 - Thé'),
+(2238, 'I2 - Tomates Pelées'),
+(2239, 'I3 - Alcool Pharmaceutique'),
+(2240, 'I3 - Aluminium en rouleaux pour construction'),
+(2241, 'I3 - Appareils Sanitaires'),
+(2242, 'I3 - Articles de Librairie'),
+(2243, 'I3 - Autres Matériaux de construction'),
+(2244, 'I3 - Briques pour construction'),
+(2245, 'I3 - Carreaux'),
+(2246, 'I3 - Ciment'),
+(2247, 'I3 - Ciment Blanc'),
+(2248, 'I3 - Coton Hydrophile Pharmacie'),
+(2249, 'I3 - Effets Personnels'),
+(2250, 'I3 - Fer à béton'),
+(2251, 'I3 - Fer blanc'),
+(2252, 'I3 - Fibro ciment'),
+(2253, 'I3 - Instruments médicaux'),
+(2254, 'I3 - Marbres'),
+(2255, 'I3 - Matériel de laboratoire'),
+(2256, 'I3 - Médicaments'),
+(2257, 'I3 - Pansements'),
+(2258, 'I3 - Placages et contre-plaques'),
+(2259, 'I3 - Plâtre'),
+(2260, 'I3 - Produits pharmaceutiques'),
+(2261, 'I3 - Robinetterie'),
+(2262, 'I3 - Savons médicinaux'),
+(2263, 'I3 - Tôles'),
+(2264, 'I3 - Tôles profilées'),
+(2265, 'I3 - Tuiles'),
+(2266, 'I3 - Tuyaux en fonte'),
+(2267, 'I3 - Tuyaux plastique'),
+(2268, 'I4 - Accessoires de véhicules'),
+(2269, 'I4 - Acier'),
+(2270, 'I4 - Albums photographie'),
+(2271, 'I4 - Alcool Imco'),
+(2272, 'I4 - Aluminium and articles Thereof'),
+(2273, 'I4 - Ameublement'),
+(2274, 'I4 - Ampoules électriques'),
+(2275, 'I4 - Appareil photographique'),
+(2276, 'I4 - Appareils de climatisation'),
+(2277, 'I4 - Appareils de levage'),
+(2278, 'I4 - Appareils électro-ménagers'),
+(2279, 'I4 - Aradrap perfore'),
+(2280, 'I4 - Argile'),
+(2281, 'I4 - Armoires frigorifiques'),
+(2282, 'I4 - Articles de bureau'),
+(2283, 'I4 - Articles de confection'),
+(2284, 'I4 - Articles de mercerie'),
+(2285, 'I4 - Articles de mode'),
+(2286, 'I4 - Articles de papeterie divers'),
+(2287, 'I4 - Articles de pèche'),
+(2288, 'I4 - Articles de publicité'),
+(2289, 'I4 - Articles de sport'),
+(2290, 'I4 - Articles religieux'),
+(2291, 'I4 - Assiettes'),
+(2292, 'I4 - Autres Aciers'),
+(2293, 'I4 - Autres Articles à base de papier'),
+(2294, 'I4 - Autres articles d\'ameublement'),
+(2295, 'I4 - Autres articles de voyage maroquinerie'),
+(2296, 'I4 - Autres boissons alcoolisées'),
+(2297, 'I4 - Autres conserves alimentaires'),
+(2298, 'I4 - Autres cycles et motocycles'),
+(2299, 'I4 - Autres dérivés de cacao'),
+(2300, 'I4 - Autres dérivés de café'),
+(2301, 'I4 - Autres emballage'),
+(2302, 'I4 - Autres fil de cuivre'),
+(2303, 'I4 - Autres gaz'),
+(2304, 'I4 - Autres gommes et résines'),
+(2305, 'I4 - Autres huiles'),
+(2306, 'I4 - Autres insecticides'),
+(2307, 'I4 - Autres insecticides agricoles'),
+(2308, 'I4 - Autres matériels ferroviaires'),
+(2309, 'I4 - Autres matériels engins agricoles et travaux publics'),
+(2310, 'I4 - Autres matières brutes animales'),
+(2311, 'I4 - Autres matières végétales'),
+(2312, 'I4 - Autres ouvrages en bois'),
+(2313, 'I4 - Autres produits chimiques'),
+(2314, 'I4 - Autres produits à base de tabac'),
+(2315, 'I4 - Autres produits d\'entretien'),
+(2316, 'I4 - Autres produits fare, cosmétique, toilette'),
+(2317, 'I4 - Autres produits manufactures divers'),
+(2318, 'I4 - Autres produits pétroliers'),
+(2319, 'I4 - Bâches'),
+(2320, 'I4 - Bateaux'),
+(2321, 'I4 - Batteries électriques'),
+(2322, 'I4 - Bijouterie'),
+(2323, 'I4 - Bitume étanche en rouleaux'),
+(2324, 'I3 - Bobines de tôles'),
+(2325, 'I4 - Bois à usage divers'),
+(2326, 'I4 - Bois débités'),
+(2327, 'I4 - Bois en grumes'),
+(2328, 'I4 - Boissons alcoolisées'),
+(2329, 'I4 - Botes mastic polyester Duck'),
+(2330, 'I4 - Bouchons unis or'),
+(2331, 'I4 - Bouteilles de gaz vides'),
+(2332, 'I4 - Bouteilles vides'),
+(2333, 'I4 - Brosses'),
+(2334, 'I4 - Câbles de matériel naval'),
+(2335, 'I4 - Câbles électriques'),
+(2336, 'I4 - Câbles téléphoniques'),
+(2337, 'I4 - Cacao fèves'),
+(2338, 'I4 - Cacao en poudre'),
+(2339, 'I4 - cacao en grains'),
+(2340, 'I4 - Café soluble'),
+(2341, 'I4 - Cantine métalliques vides'),
+(2342, 'I4 - Caoutchouc'),
+(2343, 'I4 - Capsules de bouteilles'),
+(2344, 'I4 - Cartons of ajinomoto monosodium'),
+(2345, 'I4 - Cassettes'),
+(2346, 'I4 - Cercueils'),
+(2347, 'I4 - Chalk'),
+(2348, 'I4 - Chariots'),
+(2349, 'I4 - Charpentes'),
+(2350, 'I4 - Chaussures'),
+(2351, 'I4 - Chaux'),
+(2352, 'I4 - Cigarettes'),
+(2353, 'I4 - Citernes métalliques'),
+(2354, 'I4 - Colles'),
+(2355, 'I4 - Colorants'),
+(2356, 'I4 - Compresseurs'),
+(2357, 'I4 - Compresseurs'),
+(2358, 'I4 - Compteurs et pièces détachées'),
+(2359, 'I4 - Conserve de thon'),
+(2360, 'I4 - Construction métallique'),
+(2361, 'I4 - cordages'),
+(2362, 'I4 - Cosmétiques'),
+(2363, 'I4 - Coton Egrené'),
+(2364, 'I4 - Couteaux pour industrie'),
+(2365, 'I4 - Couverts'),
+(2366, 'I4 - Couvertures'),
+(2367, 'I4 - Craie en poudre'),
+(2368, 'I4 - Cuir brut'),
+(2369, 'I4 - Cuir synthétique pour chaussures'),
+(2370, 'I4 - Cuisinière a gaz'),
+(2371, 'I4 - Cycles'),
+(2372, 'I4 - Cyclohexanone'),
+(2373, 'I4 - Déchets de caoutchouc'),
+(2374, 'I4 - Déchets divers pour fabrication emballage'),
+(2375, 'I4 - Dentifrice'),
+(2376, 'I4 - Dextrose monohydrate'),
+(2377, 'I4 - Diesel Genrator set'),
+(2378, 'I4 - Diluants peintures dangereux'),
+(2379, 'I4 - Disques aluminium'),
+(2380, 'I4 - Divers non recenses'),
+(2381, 'I4 - Divers pièces détachées'),
+(2382, 'I4 - Eaux minérales'),
+(2383, 'I4 - Effets personnels'),
+(2384, 'I4 - Electrodes'),
+(2385, 'I4 - Electrolytes'),
+(2386, 'I4 - Electroménagers'),
+(2387, 'I4 - Emballages imprimes'),
+(2388, 'I4 - Emballages métalliques'),
+(2389, 'I4 - Encres d\'imprimerie'),
+(2390, 'I4 - Engins travaux publics'),
+(2391, 'I4 - Equipement électrique'),
+(2392, 'I4 - Etiquettes'),
+(2393, 'I4 - Ferraille'),
+(2394, 'I4 - Fertilisants'),
+(2395, 'I4 - Feuillards rouleaux'),
+(2396, 'I4 - Fibres Synthétiques'),
+(2397, 'I4 - Fibres de jute'),
+(2398, 'I4 - Fil acier en rouleaux'),
+(2399, 'I4 - Fil de cuivre matière première pour industrie'),
+(2400, 'I4 - Fil écru coton'),
+(2401, 'I4 - Fil synthétique'),
+(2402, 'I4 - Filets de pêche'),
+(2403, 'I4 - Films pour photo'),
+(2404, 'I4 - Fils de fer en rouleaux'),
+(2405, 'I4 - Fil de jute ou desisal'),
+(2406, 'I4 - Fils machine'),
+(2407, 'I4 - Flacons de verres vides'),
+(2408, 'I4 - Fleurs artificielles'),
+(2409, 'I4 - Fonds corps boites en fer blanc'),
+(2410, 'I4 - Footwear, gaiters and the like'),
+(2411, 'I4 - Fourniture métallique'),
+(2412, 'I4 - Friperie'),
+(2413, 'I4 - Gants article de mode'),
+(2414, 'I4 - Gants de toilette'),
+(2415, 'I4 - Gants pour industrie'),
+(2416, 'I4 - Gel anti moustique'),
+(2417, 'I4 - Glycérine'),
+(2418, 'I4 - Graviers'),
+(2419, 'I4 - Grillages métalliques'),
+(2420, 'I4 - Habillement'),
+(2421, 'I4 - Harmless'),
+(2422, 'I4 - Horlogerie et pièces'),
+(2423, 'I4 - Houseware'),
+(2424, 'I4 - Huile'),
+(2425, 'I4 - Huile minérale'),
+(2426, 'I4 - Huiles essentielles'),
+(2427, 'I4 - Huiles lubrifiantes'),
+(2428, 'I4 - Insecticides'),
+(2429, 'I4 - Instruments de musique'),
+(2430, 'I4 - Jouets'),
+(2431, 'I4 - Jus de fruits'),
+(2432, 'I4 - Laine de verre'),
+(2433, 'I4 - Lames de rasoir'),
+(2434, 'I4 - Lampes'),
+(2435, 'I4 - Latex'),
+(2436, 'I4 - Lits'),
+(2437, 'I4 - Lubrifiants'),
+(2438, 'I4 - Machine à coudre électrique'),
+(2439, 'I4 - Machines à écrire'),
+(2440, 'I4 - Machines électromécaniques'),
+(2441, 'I4 - Machines électroniques'),
+(2442, 'I4 - Machines industrielles'),
+(2443, 'I4 - Machines outils'),
+(2444, 'I4 - Masques de soudure'),
+(2445, 'I4 - Matériaux isolants'),
+(2446, 'I4 - Matériel de cinéma'),
+(2447, 'I4 - Matériel de construction pour installation'),
+(2448, 'I4 - Matériel de décoration'),
+(2449, 'I4 - Matériel de forage'),
+(2450, 'I4 - Matériel de mesure'),
+(2451, 'I4 - Matériel de photo'),
+(2452, 'I4 - Matériel de station service'),
+(2453, 'I4 - Matériel électrique'),
+(2454, 'I4 - Matériel naval'),
+(2455, 'I4 - Matériel radio et pièces détachées'),
+(2456, 'I4 - Matériel téléphonique et pièces détachées'),
+(2457, 'I4 - Matériel télévision et pièces détachées'),
+(2458, 'I4 - Matériels d\'empotage'),
+(2459, 'I4 - Matières plastiques'),
+(2460, 'I4 - Matières plastiques synthétiques'),
+(2461, 'I4 - Matières premières pour fabrication engrais'),
+(2462, 'I4 - Menuiserie en acier'),
+(2463, 'I4 - Menuiserie en aluminium'),
+(2464, 'I4 - Menuiserie en bois'),
+(2465, 'I4 - Mercerie'),
+(2466, 'I4 - Métaux non ferreux'),
+(2467, 'I4 - Meubles'),
+(2468, 'I4 - Minerais'),
+(2469, 'I4 - Miroirs'),
+(2470, 'I4 - Moquettes'),
+(2471, 'I4 - Moteurs électriques'),
+(2472, 'I4 - Moteurs engins travaux publics'),
+(2473, 'I4 - Motocycles'),
+(2474, 'I4 - Mouchons'),
+(2475, 'I4 - Moustiquaire'),
+(2476, 'I4 - Munition'),
+(2477, 'I4 - Noix de cajou'),
+(2478, 'I4 - Ouate de cellulose'),
+(2479, 'I4 - Outillage à  main'),
+(2480, 'I4 - Palmistes'),
+(2481, 'I4 - Panneaux stratifiées'),
+(2482, 'I4 - Papier board'),
+(2483, 'I4 - Papiers'),
+(2484, 'I4 - Papiers d\'emballage'),
+(2485, 'I4 - Paraffine'),
+(2486, 'I4 - Parfumerie'),
+(2487, 'I4 - Peintures'),
+(2488, 'I4 - Pétrole brut'),
+(2489, 'I4 - Pièces de rechange pour tracteurs'),
+(2490, 'I4 - Pièces détachées pour machines électroniques'),
+(2491, 'I4 - Pièces détaillées machines à outil'),
+(2492, 'I4 - Pièces détachées matériel naval'),
+(2493, 'I4 - Pièces détachées neuves'),
+(2494, 'I4 - Pièces détachées pour climatisation'),
+(2495, 'I4 - Pièces détachées pour locomotive'),
+(2496, 'I4 - Pièces détachées pour pulvérisateur solo'),
+(2497, 'I4 - Pièces détachées pour véhicules'),
+(2498, 'I4 - Pièces détachées téléphone'),
+(2499, 'I4 - Pièces détachées véhicules'),
+(2500, 'I4 - Pierres brutes pour construction'),
+(2501, 'I4 - Piles électriques'),
+(2502, 'I4 - Plaque caoutchouc synthétique pour chaussures'),
+(2503, 'I4 - Pneumatique'),
+(2504, 'I4 - Polymère'),
+(2505, 'I4 - Pompes électriques'),
+(2506, 'I4 - Produits auxiliaires pour peinture'),
+(2507, 'I4 - Produits chimiques'),
+(2508, 'I4 - Produits de beauté'),
+(2509, 'I4 - Produits dietiques'),
+(2510, 'I4 - Produits industriels'),
+(2511, 'I4 - Produits manufactures divers'),
+(2512, 'I4 - Produits manufactures divers dangereux'),
+(2513, 'I4 - Produits Pétroliers'),
+(2514, 'I4 - Produits pharmaceutiques dangereux'),
+(2515, 'I4 - Quincaillerie'),
+(2516, 'I4 - Rayonnages'),
+(2517, 'I4 - Reproduction plastic roll'),
+(2518, 'I4 - Résine'),
+(2519, 'I4 - Résine synthétique'),
+(2520, 'I4 - Résines synthétique dangereux'),
+(2521, 'I4 - Résines synthétique dangereux'),
+(2522, 'I4 - Revêtements de sol'),
+(2523, 'I4 - Rouleaux de papier Kraft'),
+(2524, 'I4 - Sardines en conserve'),
+(2525, 'I4 - Satellite dishantenna'),
+(2526, 'I4 - Savons'),
+(2527, 'I4 - Semence'),
+(2528, 'I4 - Serpillères'),
+(2529, 'I4 - Serrures'),
+(2530, 'I4 - Serviettes de table'),
+(2531, 'I4 - Serviettes de toilettes'),
+(2532, 'I4 - Sulfate de soude'),
+(2533, 'I4 - Tabacs'),
+(2534, 'I4 - Talc industriel'),
+(2535, 'I4 - Tapisserie'),
+(2536, 'I4 - Textiles'),
+(2537, 'I4 - Tissu écru'),
+(2538, 'I4 - Tissu écru 100% coton carde'),
+(2539, 'I4 - Tissus'),
+(2540, 'I4 - Tissus enduits'),
+(2541, 'I4 - Titanium oxydés'),
+(2542, 'I4 - Tôles aciers à l\'export'),
+(2543, 'I4 - Tôles aciers + ferrons'),
+(2544, 'I4 - Tourets de câbles aciers machine outils'),
+(2545, 'I4 - Tourteaux'),
+(2546, 'I4 - tracteurs'),
+(2547, 'I4 - Tubes en matières plastiques'),
+(2548, 'I4 - Ustensiles de cuisine'),
+(2549, 'I4 - Vaisselle'),
+(2550, 'I4 - Vaisselle en argent'),
+(2551, 'I4 - Valises'),
+(2552, 'I4 - Vaseline'),
+(2553, 'I4 - Vaseline Merkur'),
+(2554, 'I4 - Véhicules'),
+(2555, 'I4 - Véhicules d\'occasion'),
+(2556, 'I4 - Véhicules neufs'),
+(2557, 'I4 - Ventilateurs électriques'),
+(2558, 'I4 - Verrerie'),
+(2559, 'I4 - Verres vitres'),
+(2560, 'I4 - Vins'),
+(2561, 'I4 - Yellow popcorn'),
+(2562, 'E1 - Autres dérives de cacao'),
+(2563, 'E1 - Autres dérives de Café'),
+(2564, 'E1 - Autres fruits et légumes'),
+(2565, 'E1 - Beurre de cacao'),
+(2566, 'E1 - Cacao en fèves'),
+(2567, 'E1 - Cacao en poudre'),
+(2568, 'E1 - Café en grains'),
+(2569, 'E1 - Conserve de thon'),
+(2570, 'E1 - Coton égrené'),
+(2571, 'E1 - Déchets de coton'),
+(2572, 'E1 - Graines de coton'),
+(2573, 'E1 - Longe de thon'),
+(2574, 'E1 - Masse de cacao'),
+(2575, 'E1 - Mousse de cacao'),
+(2576, 'E1 - Noix de coco'),
+(2577, 'E1 - Œufs de thons'),
+(2578, 'E1 - Pate de cacao'),
+(2579, 'E1 - Thon congelé'),
+(2580, 'E1 - Tourteaux de cacao'),
+(2581, 'E1 - Tourteaux de coton'),
+(2582, 'E1 - Ananas frais'),
+(2583, 'E2 - Autres huiles'),
+(2584, 'E2 - Autres Mat végétales'),
+(2585, 'E2 - Autres Oléagineux'),
+(2586, 'E2 - Autres ouvrages en bois'),
+(2587, 'E1 - Banane fraîche'),
+(2588, 'E2 - Beurre de karité'),
+(2589, 'E2 - Café soluble'),
+(2590, 'E2 - Caoutchouc'),
+(2591, 'E2 - Coco Râpé'),
+(2592, 'E2 - Coprah'),
+(2593, 'E2 - Farine'),
+(2594, 'E2 - Huile'),
+(2595, 'E2 - Huile de coprah brute'),
+(2596, 'E2 - Ignames frais'),
+(2597, 'E2 - Noix de cajou'),
+(2598, 'E2 - Palmistes'),
+(2599, 'E2 - Sésame'),
+(2600, 'E2 - Sucre'),
+(2601, 'E2 - Semences'),
+(2602, 'E2 - Semoule'),
+(2603, 'E2 - Textiles'),
+(2604, 'E2 - Tourteaux de Coprah'),
+(2605, 'E2 - Thé'),
+(2606, 'E3 - Acier'),
+(2607, 'E3 - Aliments pour animaux'),
+(2608, 'E3 - Aliments pour poisson'),
+(2609, 'E3 - Allumettes dangereux'),
+(2610, 'E3 - Aluminium'),
+(2611, 'E3 - Amidon alimentaire'),
+(2612, 'E3 - Appareils électro-ménagers'),
+(2613, 'E3 - Articles d\'ameublement'),
+(2614, 'E3 - Articles de librairie'),
+(2615, 'E3 - Articles de mode'),
+(2616, 'E3 - Articles de papeterie divers'),
+(2617, 'E3 - Articles de pêche'),
+(2618, 'E3 - Articles de publicité'),
+(2619, 'E3 - Autres Aciers'),
+(2620, 'E3 - Autres cycles et motocycles'),
+(2621, 'E3 - Autres emballages'),
+(2622, 'E2 - Autres engrais'),
+(2623, 'E3 - Autres fil de cuivre'),
+(2624, 'E3 - Autres fruits de mer'),
+(2625, 'E3 - Autres gaz'),
+(2626, 'E3 - Autres matières brutes végétales'),
+(2627, 'E3 - Autres produits alimentaires de base'),
+(2628, 'E3 - Autres produits laitiers, œufs'),
+(2629, 'E3 - Bitume étanche en rouleaux'),
+(2630, 'E3 - Bobines de tôles'),
+(2631, 'E3 - Bois de chauffage'),
+(2632, 'E3 - Bois débités'),
+(2633, 'E3 - Bois en grumes'),
+(2634, 'E3 - Boissons alcoolisées'),
+(2635, 'E3 - Bouteilles de gaz vides'),
+(2636, 'E3 - Bouteilles vides'),
+(2637, 'E3 - Câbles électriques'),
+(2638, 'E3 - Cantines métalliques vides'),
+(2639, 'E3 - Capsules de bouteilles'),
+(2640, 'E3 - Cassettes'),
+(2641, 'E3 - Charbon de bois'),
+(2642, 'E3 - Chariots'),
+(2643, 'E3 - Charpentes'),
+(2644, 'E3 - Chaussures'),
+(2645, 'E3 - Chewing gum + bonbons'),
+(2646, 'E3 - Cigarette'),
+(2647, 'E3 - Ciment'),
+(2648, 'E3 - Conteneurs vides'),
+(2649, 'E3 - Citernes métalliques'),
+(2650, 'E3 - Colis diplomatiques'),
+(2651, 'E3 - Colles'),
+(2652, 'E3 - Colorant Encre Laque color (DGX)'),
+(2653, 'E3 - Colorants'),
+(2654, 'E3 - Compresseurs'),
+(2655, 'E3 - Cosmétiques'),
+(2656, 'E3 - Cuir brut'),
+(2657, 'E3 - Déchets pour fabrication emballage'),
+(2658, 'E3 - Déchets de caoutchouc'),
+(2659, 'E3 - Dentifrices'),
+(2660, 'E3 - Diluants peinture'),
+(2661, 'E3 - Eaux minérales'),
+(2662, 'E3 - Effets personnels'),
+(2663, 'E3 - Engins travaux publics'),
+(2664, 'E3 - Fer a béton'),
+(2665, 'E3 - Fer blanc en fardeaux'),
+(2666, 'E3 - Ferraille'),
+(2667, 'E3 - Feuillards rouleaux'),
+(2668, 'E3 - Feuilles contreplaque'),
+(2669, 'E3 - Fibre synthétique'),
+(2670, 'E3 - Fil acier en rouleaux'),
+(2671, 'E3 - Filets de pêche'),
+(2672, 'E3 - Fils machine'),
+(2673, 'E3 - Fleurs artificielles'),
+(2674, 'E3 - Friperie'),
+(2675, 'E3 - Gomme arabique'),
+(2676, 'E2 - Graines de roucoux'),
+(2677, 'E3 - Habillement'),
+(2678, 'E3 - Instruments de musique'),
+(2679, 'E3 - Instruments médicaux'),
+(2680, 'E3 - Iso tank CO2 Vrac DGX'),
+(2681, 'E3 - Iso tank vides DGX'),
+(2682, 'E3 - Jus de fruits'),
+(2683, 'E3 - Lait en poudre'),
+(2684, 'E3 - Lubrifiants en futs'),
+(2685, 'E3 - Machines Électromécaniques'),
+(2686, 'E3 - Machines Electroniques'),
+(2687, 'E3 - Machines Outils'),
+(2688, 'E3 - Maniguettes'),
+(2689, 'E3 - Matériaux de construction'),
+(2690, 'E3 - Matériel de forage'),
+(2691, 'E3 - Matériel électrique'),
+(2692, 'E3 - Matériels d\'empotage'),
+(2693, 'E3 - Matériels plastiques'),
+(2694, 'E3 - Matériels plastiques synthétiques'),
+(2695, 'E3 - Médicaments'),
+(2696, 'E3 - Menuiserie en acier ou fer'),
+(2697, 'E3 - Menuiserie en bois'),
+(2698, 'E3 - Métaux non ferreux'),
+(2699, 'E3 - Métaux précieux'),
+(2700, 'E3 - Meubles'),
+(2701, 'E3 - Minerais'),
+(2702, 'E3 - Moteurs électriques'),
+(2703, 'E3 - Motocycles'),
+(2704, 'E3 - Mouchoirs'),
+(2705, 'E3 - Ouate de cellulose'),
+(2706, 'E3 - Outillage à main'),
+(2707, 'E3 - Panneaux stratifiés'),
+(2708, 'E3 - Papiers d\'emballage'),
+(2709, 'E3 - Parquets et assemblages'),
+(2710, 'E3 - Peaux brutes'),
+(2711, 'E3 - Peintures'),
+(2712, 'E3 - Pièces détachées'),
+(2713, 'E3 - Placages et contre-plaques'),
+(2714, 'E3 - Plantes diverses'),
+(2715, 'E3 - Plaque caoutchouc synthétique'),
+(2716, 'E3 - Pneumatiques'),
+(2717, 'E3 - Poissons congelés'),
+(2718, 'E3 - Préparation alimentaire Produits de sidérurgie'),
+(2719, 'E3 - Produits chimiques'),
+(2720, 'E3 - Produits de beauté'),
+(2721, 'E3 - Produits laitiers'),
+(2722, 'E3 - Produits pharmaceutiques'),
+(2723, 'E3 - Quincaillerie'),
+(2724, 'E3 - Résine'),
+(2725, 'E3 - Savons'),
+(2726, 'E3 - Savons médicaux'),
+(2727, 'E3 - Serpillères'),
+(2728, 'E3 - Statues Tanks vides'),
+(2729, 'E3 - Textiles et tissus'),
+(2730, 'E3 - Tôles'),
+(2731, 'E3 - Tourets de câble aciers'),
+(2732, 'E3 - Tracteurs'),
+(2733, 'E3 - Tubes PVC'),
+(2734, 'E3 - Tuiles'),
+(2735, 'E3 - Tuyaux plastique'),
+(2736, 'E3 - Ustensiles de cuisine'),
+(2737, 'E3 - Véhicules d\'occasion'),
+(2738, 'E3 - Vernis'),
+(2739, 'E3 - Autres produits non recenses'),
+(2740, 'E3 - Tuyaux en fonte'),
+(2741, 'E3 - Nattes'),
+(2742, 'E3 - Tubes en matières plastiques'),
+(2743, 'T5 - Autres Produits Poissonniers'),
+(2744, 'T5 - Poisson Congelé'),
+(2745, 'T5 - Riz'),
+(2746, 'T5 - Thon Congelé'),
+(2747, 'T5 - Tomates Concentrées'),
+(2748, 'T5 - Viande Congelée'),
+(2749, 'T5 - Ail'),
+(2750, 'T5 - Amidon Alimentaire'),
+(2751, 'T5 - Autres Aliments Pour Animaux'),
+(2752, 'T5 - Autres Céréales'),
+(2753, 'T5 - Autres Crustacés et Fruits de mer'),
+(2754, 'T5 - Autres Engrais'),
+(2755, 'T5 - Autres Fruits et Légumes'),
+(2756, 'T5 - Autres Insecticides Agricoles'),
+(2757, 'T5 - Autres Produits Alimentaires'),
+(2758, 'T5 - Autres Produits Laitiers, Œufs'),
+(2759, 'T5 - Autres semences'),
+(2760, 'T5 - Blé'),
+(2761, 'T5 - Carottes'),
+(2762, 'T5 - Céréales'),
+(2763, 'T5 - Farine'),
+(2764, 'T5 - Farine Lactée'),
+(2765, 'T5 - Glucose'),
+(2766, 'T5 - Insecticides Agricoles'),
+(2767, 'T5 - Lait en Poudre'),
+(2768, 'T5 - Légumes frais'),
+(2769, 'T5 - Levure'),
+(2770, 'T5 - Maïs'),
+(2771, 'T5 - Malt'),
+(2772, 'T5 - Oignons'),
+(2773, 'T5 - Pommes'),
+(2774, 'T5 - Pommes de terre'),
+(2775, 'T5 - Préparation Alimentaire'),
+(2776, 'T5 - Produits Alimentaires de Base'),
+(2777, 'T5 - Produits Laitiers'),
+(2778, 'T5 - Sel'),
+(2779, 'T5 - Semoule'),
+(2780, 'T5 - Sésame'),
+(2781, 'T5 - Sirops Sucre/Glucose'),
+(2782, 'T5 - Sucre'),
+(2783, 'T5 - Sucre/Sel'),
+(2784, 'T5 - Thé'),
+(2785, 'T5 - Tomates Pelées'),
+(2786, 'T5 - Alcool Pharmaceutique'),
+(2787, 'T5 - Aluminium en rouleaux pour construction'),
+(2788, 'T5 - Appareils Sanitaires'),
+(2789, 'T5 - Articles de Librairie'),
+(2790, 'T5 - Autres Matériaux de construction'),
+(2791, 'T5 - Briques pour construction'),
+(2792, 'T5 - Carreaux'),
+(2793, 'T5 - Ciment'),
+(2794, 'T5 - Ciment Blanc'),
+(2795, 'T5 - Coton Hydrophile Pharmacie'),
+(2796, 'T5 - Effets Personnels'),
+(2797, 'T5 - Fer à béton'),
+(2798, 'T5 - Fer blanc'),
+(2799, 'T5 - Fibro ciment'),
+(2800, 'T5 - Instruments médicaux'),
+(2801, 'T5 - Marbres'),
+(2802, 'T5 - Matériel de laboratoire'),
+(2803, 'T5 - Médicaments'),
+(2804, 'T5 - Pansements'),
+(2805, 'T5 - Placages et contre-plaques'),
+(2806, 'T5 - Plâtre'),
+(2807, 'T5 - Produits pharmaceutiques'),
+(2808, 'T5 - Robinetterie'),
+(2809, 'T5 - Savons médicinaux'),
+(2810, 'T5 - Tôles'),
+(2811, 'T5 - Tôles profilées'),
+(2812, 'T5 - Tuiles'),
+(2813, 'T5 - Tuyaux en fonte'),
+(2814, 'T5 - Tuyaux plastique'),
+(2815, 'T5 - Accessoires de véhicules'),
+(2816, 'T5 - Acier'),
+(2817, 'T5 - Albums photographie'),
+(2818, 'T5 - Alcool Imco'),
+(2819, 'T5 - Aluminium and articles Thereof'),
+(2820, 'T5 - Ameublement'),
+(2821, 'T5 - Ampoules électriques'),
+(2822, 'T5 - Appareil photographique'),
+(2823, 'T5 - Appareils de climatisation'),
+(2824, 'T5 - Appareils de levage'),
+(2825, 'T5 - Appareils électro-ménagers'),
+(2826, 'T5 - Aradrap perfore'),
+(2827, 'T5 - Argile'),
+(2828, 'T5 - Armoires frigorifiques'),
+(2829, 'T5 - Articles de bureau'),
+(2830, 'T5 - Articles de confection'),
+(2831, 'T5 - Articles de mercerie'),
+(2832, 'T5 - Articles de mode'),
+(2833, 'T5 - Articles de papeterie divers'),
+(2834, 'T5 - Articles de pèche'),
+(2835, 'T5 - Articles de publicité'),
+(2836, 'T5 - Articles de sport'),
+(2837, 'T5 - Articles religieux'),
+(2838, 'T5 - Assiettes'),
+(2839, 'T5 - Autres Aciers'),
+(2840, 'T5 - Autres Articles à base de papier'),
+(2841, 'T5 - Autres articles d\'ameublement'),
+(2842, 'T5 - Autres articles de voyage maroquinerie'),
+(2843, 'T5 - Autres boissons alcoolisées'),
+(2844, 'T5 - Autres conserves alimentaires'),
+(2845, 'T5 - Autres cycles et motocycles'),
+(2846, 'T5 - Autres dérivés de cacao'),
+(2847, 'T5 - Autres dérivés de café'),
+(2848, 'T5 - Autres emballage'),
+(2849, 'T5 - Autres fil de cuivre'),
+(2850, 'T5 - Autres gaz'),
+(2851, 'T5 - Autres gommes et résines'),
+(2852, 'T5 - Autres huiles'),
+(2853, 'T5 - Autres insecticides'),
+(2854, 'T5 - Autres insecticides agricoles'),
+(2855, 'T5 - Autres matériels ferroviaires'),
+(2856, 'T5 - Autres matériels engins agricoles et travaux publics'),
+(2857, 'T5 - Autres matières brutes animales'),
+(2858, 'T5 - Autres matières végétales'),
+(2859, 'T5 - Autres ouvrages en bois'),
+(2860, 'T5 - Autres produits chimiques'),
+(2861, 'T5 - Autres produits à base de tabac'),
+(2862, 'T5 - Autres produits d\'entretien'),
+(2863, 'T5 - Autres produits fare, cosmétique, toilette'),
+(2864, 'T5 - Autres produits manufactures divers'),
+(2865, 'T5 - Autres produits pétroliers'),
+(2866, 'T5 - Bâches'),
+(2867, 'T5 - Bateaux'),
+(2868, 'T5 - Batteries électriques'),
+(2869, 'T5 - Bijouterie'),
+(2870, 'T5 - Bitume étanche en rouleaux'),
+(2871, 'T5 - Bobines de tôles'),
+(2872, 'T5 - Bois à usage divers'),
+(2873, 'T5 - Bois débités'),
+(2874, 'T5 - Bois en grumes'),
+(2875, 'T5 - Boissons alcoolisées'),
+(2876, 'T5 - Botes mastic polyester Duck'),
+(2877, 'T5 - Bouchons unis or'),
+(2878, 'T5 - Bouteilles de gaz vides'),
+(2879, 'T5 - Bouteilles vides'),
+(2880, 'T5 - Brosses'),
+(2881, 'T5 - Câbles de matériel naval'),
+(2882, 'T5 - Câbles électriques'),
+(2883, 'T5 - Câbles téléphoniques'),
+(2884, 'T5 - Cacao fèves'),
+(2885, 'T5 - Cacao en poudre'),
+(2886, 'T5 - cacao en grains'),
+(2887, 'T5 - Café soluble'),
+(2888, 'T5 - Cantine métalliques vides'),
+(2889, 'T5 - Caoutchouc'),
+(2890, 'T5 - Capsules de bouteilles'),
+(2891, 'T5 - Cartons of ajinomoto monosodium'),
+(2892, 'T5 - Cassettes'),
+(2893, 'T5 - Cercueils'),
+(2894, 'T5 - Chalk'),
+(2895, 'T5 - Chariots'),
+(2896, 'T5 - Charpentes'),
+(2897, 'T5 - Chaussures'),
+(2898, 'T5 - Chaux'),
+(2899, 'T5 - Cigarettes'),
+(2900, 'T5 - Citernes métalliques'),
+(2901, 'T5 - Colles'),
+(2902, 'T5 - Colorants'),
+(2903, 'T5 - Compresseurs'),
+(2904, 'T5 - Compresseurs'),
+(2905, 'T5 - Compteurs et pièces détachées'),
+(2906, 'T5 - Conserve de thon'),
+(2907, 'T5 - Construction métallique'),
+(2908, 'T5 - cordages'),
+(2909, 'T5 - Cosmétiques'),
+(2910, 'T5 - Coton Egrené'),
+(2911, 'T5 - Couteaux pour industrie'),
+(2912, 'T5 - Couverts'),
+(2913, 'T5 - Couvertures'),
+(2914, 'T5 - Craie en poudre'),
+(2915, 'T5 - Cuir brut'),
+(2916, 'T5 - Cuir synthétique pour chaussures'),
+(2917, 'T5 - Cuisinière a gaz'),
+(2918, 'T5 - Cycles'),
+(2919, 'T5 - Cyclohexanone'),
+(2920, 'T5 - Déchets de caoutchouc'),
+(2921, 'T5 - Déchets divers pour fabrication emballage'),
+(2922, 'T5 - Dentifrice'),
+(2923, 'T5 - Dextrose monohydrate'),
+(2924, 'T5 - Diesel Genrator set'),
+(2925, 'T5 - Diluants peintures dangereux'),
+(2926, 'T5 - Disques aluminium'),
+(2927, 'T5 - Divers non recenses'),
+(2928, 'T5 - Divers pièces détachées'),
+(2929, 'T5 - Eaux minérales'),
+(2930, 'T5 - Effets personnels'),
+(2931, 'T5 - Electrodes'),
+(2932, 'T5 - Electrolytes'),
+(2933, 'T5 - Electroménagers'),
+(2934, 'T5 - Emballages imprimes'),
+(2935, 'T5 - Emballages métalliques'),
+(2936, 'T5 - Encres d\'imprimerie'),
+(2937, 'T5 - Engins travaux publics'),
+(2938, 'T5 - Equipement électrique'),
+(2939, 'T5 - Etiquettes'),
+(2940, 'T5 - Ferraille'),
+(2941, 'T5 - Fertilisants'),
+(2942, 'T5 - Feuillards rouleaux'),
+(2943, 'T5 - Fibres Synthétiques'),
+(2944, 'T5 - Fibres de jute'),
+(2945, 'T5 - Fil acier en rouleaux'),
+(2946, 'T5 - Fil de cuivre matière première pour industrie'),
+(2947, 'T5 - Fil écru coton'),
+(2948, 'T5 - Fil synthétique'),
+(2949, 'T5 - Filets de pêche'),
+(2950, 'T5 - Films pour photo'),
+(2951, 'T5 - Fils de fer en rouleaux'),
+(2952, 'T5 - Fil de jute ou desisal'),
+(2953, 'T5 - Fils machine'),
+(2954, 'T5 - Flacons de verres vides'),
+(2955, 'T5 - Fleurs artificielles'),
+(2956, 'T5 - Fonds corps boites en fer blanc'),
+(2957, 'T5 - Footwear, gaiters and the like'),
+(2958, 'T5 - Fourniture métallique'),
+(2959, 'T5 - Friperie'),
+(2960, 'T5 - Gants article de mode'),
+(2961, 'T5 - Gants de toilette'),
+(2962, 'T5 - Gants pour industrie'),
+(2963, 'T5 - Gel anti moustique'),
+(2964, 'T5 - Glycérine'),
+(2965, 'T5 - Graviers'),
+(2966, 'T5 - Grillades métalliques'),
+(2967, 'T5 - Habillement'),
+(2968, 'T5 - Harmless'),
+(2969, 'T5 - Horlogerie et pièces'),
+(2970, 'T5 - Houseware'),
+(2971, 'T5 - Huile'),
+(2972, 'T5 - Huile minérale'),
+(2973, 'T5 - Huiles essentielles'),
+(2974, 'T5 - Huiles lubrifiantes'),
+(2975, 'T5 - Insecticides'),
+(2976, 'T5 - Instruments de musique'),
+(2977, 'T5 - Jouets'),
+(2978, 'T5 - Jus de fruits'),
+(2979, 'T5 - Laine de verre'),
+(2980, 'T5 - Lames de rasoir'),
+(2981, 'T5 - Lampes'),
+(2982, 'T5 - Latex'),
+(2983, 'T5 - Lits'),
+(2984, 'T5 - Lubrifiants'),
+(2985, 'T5 - Machine à coudre électrique'),
+(2986, 'T5 - Machines à écrire'),
+(2987, 'T5 - Machines électromécaniques'),
+(2988, 'T5 - Machines électroniques'),
+(2989, 'T5 - Machines industrielles'),
+(2990, 'T5 - Machines outils'),
+(2991, 'T5 - Masques de soudure'),
+(2992, 'T5 - Matériaux isolants'),
+(2993, 'T5 - Matériel de cinéma'),
+(2994, 'T5 - Matériel de construction pour installation'),
+(2995, 'T5 - Matériel de décoration'),
+(2996, 'T5 - Matériel de forage'),
+(2997, 'T5 - Matériel de mesure'),
+(2998, 'T5 - Matériel de photo'),
+(2999, 'T5 - Matériel de station service'),
+(3000, 'T5 - Matériel électrique'),
+(3001, 'T5 - Matériel naval'),
+(3002, 'T5 - Matériel radio et pièces détachées'),
+(3003, 'T5 - Matériel téléphonique et pièces détachées'),
+(3004, 'T5 - Matériel télévision et pièces détachées'),
+(3005, 'T5 - Matériels d\'empotage'),
+(3006, 'T5 - Matières plastiques'),
+(3007, 'T5 - Matières plastiques synthétiques'),
+(3008, 'T5 - Matières premières pour fabrication engrais'),
+(3009, 'T5 - Menuiserie en acier'),
+(3010, 'T5 - Menuiserie en aluminium'),
+(3011, 'T5 - Menuiserie en bois'),
+(3012, 'T5 - Mercerie'),
+(3013, 'T5 - Métaux non ferreux'),
+(3014, 'T5 - Meubles'),
+(3015, 'T5 - Minerais'),
+(3016, 'T5 - Miroirs'),
+(3017, 'T5 - Moquettes'),
+(3018, 'T5 - Moteurs électriques'),
+(3019, 'T5 - Moteurs engins travaux publics'),
+(3020, 'T5 - Motocycles'),
+(3021, 'T5 - Mouchons'),
+(3022, 'T5 - Moustiquaire'),
+(3023, 'T5 - Munition'),
+(3024, 'T5 - Noix de cajou'),
+(3025, 'T5 - Ouate de cellulose'),
+(3026, 'T5 - Outillage à  main'),
+(3027, 'T5 - Palmistes'),
+(3028, 'T5 - Panneaux stratifiées'),
+(3029, 'T5 - Papier board'),
+(3030, 'T5 - Papiers'),
+(3031, 'T5 - Papiers d\'emballage'),
+(3032, 'T5 - Paraffine'),
+(3033, 'T5 - Parfumerie'),
+(3034, 'T5 - Peintures'),
+(3035, 'T5 - Pétrole brut'),
+(3036, 'T5 - Pièces de rechange pour tracteurs'),
+(3037, 'T5 - Pièces détachées pour machines électroniques'),
+(3038, 'T5 - Pièces détaillées machines à outil'),
+(3039, 'T5 - Pièces détachées matériel naval'),
+(3040, 'T5 - Pièces détachées neuves'),
+(3041, 'T5 - Pièces détachées pour climatisation'),
+(3042, 'T5 - Pièces détachées pour locomotive'),
+(3043, 'T5 - Pièces détachées pour pulvérisateur solo'),
+(3044, 'T5 - Pièces détachées pour véhicules'),
+(3045, 'T5 - Pièces détachées téléphone'),
+(3046, 'T5 - Pièces détachées véhicules'),
+(3047, 'T5 - Pierres brutes pour construction'),
+(3048, 'T5 - Piles électriques'),
+(3049, 'T5 - Plaque caoutchouc synthétique pour chaussures'),
+(3050, 'T5 - Pneumatique'),
+(3051, 'T5 - Polymère'),
+(3052, 'T5 - Pompes électriques'),
+(3053, 'T5 - Produits auxiliaires pour peinture'),
+(3054, 'T5 - Produits chimiques'),
+(3055, 'T5 - Produits de beauté'),
+(3056, 'T5 - Produits dietiques'),
+(3057, 'T5 - Produits industriels'),
+(3058, 'T5 - Produits manufactures divers'),
+(3059, 'T5 - Produits manufactures divers dangereux'),
+(3060, 'T5 - Produits Pétroliers'),
+(3061, 'T5 - Produits pharmaceutiques dangereux'),
+(3062, 'T5 - Quincaillerie'),
+(3063, 'T5 - Rayonnages'),
+(3064, 'T5 - Reproduction plastic roll'),
+(3065, 'T5 - Résine'),
+(3066, 'T5 - Résine synthétique'),
+(3067, 'T5 - Résines synthétique dangereux'),
+(3068, 'T5 - Résines synthétique dangereux'),
+(3069, 'T5 - Revêtements de sol'),
+(3070, 'T5 - Rouleaux de papier Kraft'),
+(3071, 'T5 - Sardines en conserve'),
+(3072, 'T5 - Satellite dishantenna'),
+(3073, 'T5 - Savons'),
+(3074, 'T5 - Semence'),
+(3075, 'T5 - Serpillères'),
+(3076, 'T5 - Serrures'),
+(3077, 'T5 - Serviettes de table'),
+(3078, 'T5 - Serviettes de toilettes'),
+(3079, 'T5 - Sulfate de soude'),
+(3080, 'T5 - Tabacs'),
+(3081, 'T5 - Talc industriel'),
+(3082, 'T5 - Tapisserie'),
+(3083, 'T5 - Textiles'),
+(3084, 'T5 - Tissu écru'),
+(3085, 'T5 - Tissu écru 100% coton carde'),
+(3086, 'T5 - Tissus'),
+(3087, 'T5 - Tissus enduits'),
+(3088, 'T5 - Titanium oxydés'),
+(3089, 'T5 - Tôles aciers à l\'export'),
+(3090, 'T5 - Tôles aciers + ferrons'),
+(3091, 'T5 - Tourets de câbles aciers machine outils'),
+(3092, 'T5 - Tourteaux'),
+(3093, 'T5 - tracteurs'),
+(3094, 'T5 - Tubes en matières plastiques'),
+(3095, 'T5 - Ustensiles de cuisine'),
+(3096, 'T5 - Vaisselle'),
+(3097, 'T5 - Vaisselle en argent'),
+(3098, 'T5 - Valises'),
+(3099, 'T5 - Vaseline'),
+(3100, 'T5 - Vaseline Merkur'),
+(3101, 'T5 - Véhicules'),
+(3102, 'T5 - Véhicules d\'occasion'),
+(3103, 'T5 - Véhicules neufs'),
+(3104, 'T5 - Ventilateurs électriques'),
+(3105, 'T5 - Verrerie'),
+(3106, 'T5 - Verres vitres'),
+(3107, 'T5 - Vins'),
+(3108, 'T5 - Yellow popcorn'),
+(3109, 'T5 - Autres dérives de cacao'),
+(3110, 'T5 - Autres dérives de Café'),
+(3111, 'T5 - Autres fruits et légumes'),
+(3112, 'T5 - Beurre de cacao'),
+(3113, 'T5 - Cacao en fèves'),
+(3114, 'T5 - Cacao en poudre'),
+(3115, 'T5 - Café en grains'),
+(3116, 'T5 - Conserve de thon'),
+(3117, 'T5 - Coton égrené'),
+(3118, 'T5 - Déchets de coton'),
+(3119, 'T5 - Graines de coton'),
+(3120, 'T5 - Longe de thon'),
+(3121, 'T5 - Masse de cacao'),
+(3122, 'T5 - Mousse de cacao'),
+(3123, 'T5 - Noix de coco'),
+(3124, 'T5 - Œufs de thons'),
+(3125, 'T5 - Pate de cacao'),
+(3126, 'T5 - Thon congelé'),
+(3127, 'T5 - Tourteaux de cacao'),
+(3128, 'T5 - Tourteaux de coton'),
+(3129, 'T5 - Ananas frais'),
+(3130, 'T5 - Autres huiles'),
+(3131, 'T5 - Autres Mat végétales'),
+(3132, 'T5 - Autres Oléagineux'),
+(3133, 'T5 - Autres ouvrages en bois'),
+(3134, 'T5 - Banane fraiche'),
+(3135, 'T5 - Beurre de karité'),
+(3136, 'T5 - Café soluble'),
+(3137, 'T5 - Caoutchouc'),
+(3138, 'T5 - Coco Râpé'),
+(3139, 'T5 - Coprah'),
+(3140, 'T5 - Farine'),
+(3141, 'T5 - Huile'),
+(3142, 'T5 - Huile de coprah brute'),
+(3143, 'T5 - Ignames frais'),
+(3144, 'T5 - Noix de cajou'),
+(3145, 'T5 - Palmistes'),
+(3146, 'T5 - Sésame'),
+(3147, 'T5 - Sucre'),
+(3148, 'T5 - Semences'),
+(3149, 'T5 - Semoule'),
+(3150, 'T5 - Textiles'),
+(3151, 'T5 - Tourteaux de Coprah'),
+(3152, 'T5 - Thé'),
+(3153, 'T5 - Acier'),
+(3154, 'T5 - Aliments pour animaux'),
+(3155, 'T5 - Aliments pour poisson'),
+(3156, 'T5 - Allumettes dangereux'),
+(3157, 'T5 - Aluminium'),
+(3158, 'T5 - Amidon alimentaire'),
+(3159, 'T5 - Appareils électro-ménagers'),
+(3160, 'T5 - Articles d\'ameublement'),
+(3161, 'T5 - Articles de librairie'),
+(3162, 'T5 - Articles de mode'),
+(3163, 'T5 - Articles de papeterie divers'),
+(3164, 'T5 - Articles de pêche'),
+(3165, 'T5 - Articles de publicité'),
+(3166, 'T5 - Autres Aciers'),
+(3167, 'T5 - Autres cycles et motocycles'),
+(3168, 'T5 - Autres emballages'),
+(3169, 'T5 - Autres engrais'),
+(3170, 'T5 - Autres fil de cuivre'),
+(3171, 'T5 - Autres fruits de mer'),
+(3172, 'T5 - Autres gaz'),
+(3173, 'T5 - Autres matières brutes végétales'),
+(3174, 'T5 - Autres produits alimentaires de base'),
+(3175, 'T5 - Autres produits laitiers, œufs'),
+(3176, 'T5 - Bitume étanche en rouleaux'),
+(3177, 'T5 - Bobines de tôles'),
+(3178, 'T5 - Bois de chauffage'),
+(3179, 'T5 - Bois débités'),
+(3180, 'T5 - Bois en grumes'),
+(3181, 'T5 - Boissons non alcoolisées'),
+(3182, 'T5 - Bouteilles de gaz vides'),
+(3183, 'T5 - Bouteilles vides'),
+(3184, 'T5 - Câbles électriques'),
+(3185, 'T5 - Cantines métalliques vides'),
+(3186, 'T5 - Capsules de bouteilles'),
+(3187, 'T5 - Cassettes'),
+(3188, 'T5 - Charbon de bois'),
+(3189, 'T5 - Chariots'),
+(3190, 'T5 - Charpentes'),
+(3191, 'T5 - Chaussures'),
+(3192, 'T5 - Chewing gum + bonbons'),
+(3193, 'T5 - Cigarette'),
+(3194, 'T5 - Ciment'),
+(3195, 'T5 - Conteneurs vides'),
+(3196, 'T5 - Citernes métalliques'),
+(3197, 'T5 - Colis diplomatiques'),
+(3198, 'T5 - Colles'),
+(3199, 'T5 - Colorant Encre Laque color (DGX)'),
+(3200, 'T5 - Colorants'),
+(3201, 'T5 - Compresseurs'),
+(3202, 'T5 - Cosmétiques'),
+(3203, 'T5 - Cuir brut'),
+(3204, 'T5 - Déchets pour fabrication emballage'),
+(3205, 'T5 - Déchets de caoutchouc'),
+(3206, 'T5 - Dentifrices'),
+(3207, 'T5 - Diluants peinture'),
+(3208, 'T5 - Eaux minérales'),
+(3209, 'T5 - Effets personnels'),
+(3210, 'T5 - Engins travaux publics'),
+(3211, 'T5 - Fer a béton'),
+(3212, 'T5 - Fer blanc en fardeaux'),
+(3213, 'T5 - Ferraille'),
+(3214, 'T5 - Feuillards rouleaux'),
+(3215, 'T5 - Feuilles contreplaque'),
+(3216, 'T5 - Fibre synthétique'),
+(3217, 'T5 - Fil acier en rouleaux'),
+(3218, 'T5 - Filets de pêche'),
+(3219, 'T5 - Fils machine'),
+(3220, 'T5 - Fleurs artificielles'),
+(3221, 'T5 - Friperie'),
+(3222, 'T5 - Gomme arabique'),
+(3223, 'T5 - Graines de roucoux'),
+(3224, 'T5 - Habillement'),
+(3225, 'T5 - Instruments de musique'),
+(3226, 'T5 - Instruments médicaux'),
+(3227, 'T5 - Iso tank CO2 Vrac DGX'),
+(3228, 'T5 - Iso tank vides DGX'),
+(3229, 'T5 - Jus de fruits'),
+(3230, 'T5 - Lait en poudre'),
+(3231, 'T5 - Lubrifiants en futs'),
+(3232, 'T5 - Machines Électromécaniques'),
+(3233, 'T5 - Machines Electroniques'),
+(3234, 'T5 - Machines Outils'),
+(3235, 'T5 - Maniguettes'),
+(3236, 'T5 - Matériaux de construction'),
+(3237, 'T5 - Matériel de forage'),
+(3238, 'T5 - Matériel électrique'),
+(3239, 'T5 - Matériels d\'empotage'),
+(3240, 'T5 - Matériels plastiques'),
+(3241, 'T5 - Matériels plastiques synthétiques'),
+(3242, 'T5 - Médicaments'),
+(3243, 'T5 - Menuiserie en acier ou fer'),
+(3244, 'T5 - Menuiserie en bois'),
+(3245, 'T5 - Métaux non ferreux'),
+(3246, 'T5 - Métaux précieux'),
+(3247, 'T5 - Meubles'),
+(3248, 'T5 - Minerais'),
+(3249, 'T5 - Moteurs électriques'),
+(3250, 'T5 - Motocycles'),
+(3251, 'T5 - Mouchoirs'),
+(3252, 'T5 - Ouate de cellulose'),
+(3253, 'T5 - Outillage à main'),
+(3254, 'T5 - Panneaux stratifiés'),
+(3255, 'T5 - Papiers d\'emballage'),
+(3256, 'T5 - Parquets et assemblages'),
+(3257, 'T5 - Peaux brutes'),
+(3258, 'T5 - Peintures'),
+(3259, 'T5 - Pièces détachées'),
+(3260, 'T5 - Placages et contre-plaques'),
+(3261, 'T5 - Plantes diverses'),
+(3262, 'T5 - Plaque caoutchouc synthétique'),
+(3263, 'T5 - Pneumatiques'),
+(3264, 'T5 - Poissons congelés'),
+(3265, 'T5 - Préparation alimentaire Produits de sidérurgie'),
+(3266, 'T5 - Produits chimiques'),
+(3267, 'T5 - Produits de beauté'),
+(3268, 'T5 - Produits laitiers'),
+(3269, 'T5 - Produits pharmaceutiques'),
+(3270, 'T5 - Quincaillerie'),
+(3271, 'T5 - Résine'),
+(3272, 'T5 - Savons'),
+(3273, 'T5 - Savons médicaux'),
+(3274, 'T5 - Serpillères'),
+(3275, 'T5 - Statues Tanks vides'),
+(3276, 'T5 - Textiles et tissus'),
+(3277, 'T5 - Tôles'),
+(3278, 'T5 - Tourets de câble aciers'),
+(3279, 'T5 - Tracteurs'),
+(3280, 'T5 - Tubes PVC'),
+(3281, 'T5 - Tuiles'),
+(3282, 'T5 - Tuyaux plastique'),
+(3283, 'T5 - Ustensiles de cuisine'),
+(3284, 'T5 - Véhicules d\'occasion'),
+(3285, 'T5 - Vernis'),
+(3286, 'T5 - Autres produits non recenses'),
+(3287, 'T5 - Tuyaux en fonte'),
+(3288, 'T5 - Nattes'),
+(3289, 'T5 - Tubes en matières plastiques'),
+(3290, 'CT - Tank Vide'),
+(3291, 'HC - Marchandise Importer'),
+(3292, 'Marchandise Convention Douane'),
+(3293, 'E3 - Riz'),
+(3294, 'E2 - Autres Céréales'),
+(3295, 'E2 - Sel'),
+(3296, 'E2 - Noix de Colas'),
+(3297, 'I3 - Allumettes dangereux'),
+(3298, 'I4 - Boissons non Alcolisées'),
+(3299, 'E3 - Autres boissons alcoolisées'),
+(3300, 'E3 - Boissons non alcoolisées'),
+(3301, 'I4 - Arcticles de Ménage'),
+(3302, 'I4 - Matériel d\'empotage'),
+(3303, 'I4 - Produits Chimiques Dangereux'),
+(3304, 'T5 - Produits Chimiques dangereux'),
+(3305, 'I3 - Carbonate de potassium'),
+(3306, 'I3 - Herbicides'),
+(3307, 'I4 - Matériel informatique'),
+(3308, 'I4 - Polypropylène'),
+(3309, 'E2 - Insecticides Agricoles'),
+(3310, 'I2 - Herbicides Agricoles Dangereux'),
+(3311, 'I4 - Herbicides Agricoles Non DGX'),
+(3312, 'I4 - Eals');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `contract`
+--
+
+DROP TABLE IF EXISTS `contract`;
+CREATE TABLE IF NOT EXISTS `contract` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Code` varchar(50) DEFAULT NULL,
+  `InvoiceLabel` varchar(256) DEFAULT NULL,
+  `TaxCodeId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_Contract_TaxCodes` (`TaxCodeId`)
+) ENGINE=InnoDB AUTO_INCREMENT=699 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `contract`
+--
+
+INSERT INTO `contract` (`Id`, `Code`, `InvoiceLabel`, `TaxCodeId`) VALUES
+(1, 'CEXPESCENTDGXEMPPAA', '', 1),
+(2, 'CEXPESCSORDGXEMPPAA', '', 1),
+(3, 'CSTAEXPATLTAVIDGX1', '', 1),
+(4, 'CSTAEXPATLTAVIDGX2', '', 1),
+(5, 'CFORTRPARCEXT1', '', 2),
+(6, 'CDRLV01IMPTKVID', '', 2),
+(7, 'CDRLV02IMPTKVID', '', 2),
+(8, 'CDRLV02EXPTKVID', '', 1),
+(9, 'CDRLV01EXPTKVID', '', 1),
+(10, 'CSTAIMPPAA01_Terra', '', 2),
+(594, 'CEXPESCENTDGXEMPPAA', NULL, 1),
+(595, 'CEXPESCSORDGXEMPPAA', NULL, 1),
+(596, 'CSTAEXPATLTAVIDGX1', NULL, 1),
+(597, 'CSTAEXPATLTAVIDGX2', NULL, 1),
+(635, 'CFORTRPARCEXT1', NULL, 2),
+(669, 'CDRLV01IMPTKVID', NULL, 2),
+(670, 'CDRLV02IMPTKVID', NULL, 2),
+(671, 'CDRLV02EXPTKVID', NULL, 1),
+(672, 'CDRLV01EXPTKVID', NULL, 1),
+(695, 'CSTAIMPPAA01_Terra', NULL, 2),
+(696, 'CACCONAGECONTENEURPLEIN', 'Acconage Conteneur Plein (Marchandises diverses)', 2),
+(697, 'CRELEVAGECONTENEURPLEIN', 'Relevage Conteneur Plein (Marchandises diverses)', 2),
+(698, 'CSTATIONNEMENTCONTENEURPLEIN', 'Stationnement Conteneur Plein', 2);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `contract_eventtype`
+--
+
+DROP TABLE IF EXISTS `contract_eventtype`;
+CREATE TABLE IF NOT EXISTS `contract_eventtype` (
+  `Contract_Id` int UNSIGNED NOT NULL,
+  `EventType_Id` int UNSIGNED NOT NULL,
+  PRIMARY KEY (`Contract_Id`,`EventType_Id`),
+  KEY `FK_Contract_EventType_EventType` (`EventType_Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `contract_eventtype`
+--
+
+INSERT INTO `contract_eventtype` (`Contract_Id`, `EventType_Id`) VALUES
+(1, 1),
+(2, 1),
+(1, 2),
+(2, 2),
+(3, 2),
+(1, 3),
+(2, 3),
+(3, 3),
+(2, 4),
+(3, 5),
+(3, 6),
+(696, 21),
+(697, 21),
+(698, 21);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `customeruserblsearchhistory`
+--
+
+DROP TABLE IF EXISTS `customeruserblsearchhistory`;
+CREATE TABLE IF NOT EXISTS `customeruserblsearchhistory` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `BlNumber` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ShipName` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ArrivalDate` datetime DEFAULT NULL,
+  `ItemCount` int DEFAULT NULL,
+  `UserId` int UNSIGNED DEFAULT NULL,
+  `SearchDate` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`Id`),
+  KEY `UserId` (`UserId`)
+) ENGINE=InnoDB AUTO_INCREMENT=229 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Déchargement des données de la table `customeruserblsearchhistory`
+--
+
+INSERT INTO `customeruserblsearchhistory` (`Id`, `BlNumber`, `ShipName`, `ArrivalDate`, `ItemCount`, `UserId`, `SearchDate`) VALUES
+(170, 'EVER45814409', 'Yang Ming Marine Transport', '2025-05-08 00:00:00', 1, 1, '2025-12-14 01:34:44'),
+(171, 'YMLN39158494', 'Evergreen Line', '2025-05-27 00:00:00', 1, 1, '2025-12-14 01:34:44'),
+(172, 'AEV74117863', 'Yang Ming Marine Transport', '2025-07-18 00:00:00', 1, 1, '2025-12-14 01:34:44'),
+(173, 'HAPG43795044', 'Evergreen Line', '2025-01-13 00:00:00', 1, 1, '2025-12-14 01:34:44'),
+(174, 'AEV63324556', 'Evergreen Line', '2025-06-21 00:00:00', 1, 1, '2025-12-14 01:34:44'),
+(175, 'AEV74117863', 'Yang Ming Marine Transport', '2025-07-18 00:00:00', 1, 2, '2025-12-14 01:34:44'),
+(176, 'COSC66084921', 'Orient Overseas Container Line', '2025-01-04 00:00:00', 1, 2, '2025-12-14 01:34:44'),
+(177, 'EVER45814409', 'Yang Ming Marine Transport', '2025-05-08 00:00:00', 1, 2, '2025-12-14 01:34:44'),
+(178, 'EBKG43625368', 'China Ocean Shipping Company', '2025-04-15 00:00:00', 1, 2, '2025-12-14 01:34:44'),
+(179, 'OOCL97811313', 'China Ocean Shipping Company', '2025-06-28 00:00:00', 1, 2, '2025-12-14 01:34:44'),
+(180, 'YMLN85266502', 'Mediterranean Shipping Company', '2025-07-21 00:00:00', 1, 3, '2025-12-14 01:34:44'),
+(181, 'COSC84782369', 'Mediterranean Shipping Company', '2025-03-02 00:00:00', 1, 3, '2025-12-14 01:34:44'),
+(182, 'HAPG59434443', 'Mediterranean Shipping Company', '2025-06-27 00:00:00', 1, 3, '2025-12-14 01:34:44'),
+(183, 'COSC66084921', 'Orient Overseas Container Line', '2025-01-04 00:00:00', 1, 3, '2025-12-14 01:34:44'),
+(184, 'COSC55205452', 'Mediterranean Shipping Company', '2025-06-17 00:00:00', 1, 3, '2025-12-14 01:34:44'),
+(185, 'EBKG49124230', 'CMA CGM', '2025-09-26 00:00:00', 1, 4, '2025-12-14 01:34:44'),
+(186, 'YMLN97947302', 'CMA CGM', '2025-05-03 00:00:00', 1, 4, '2025-12-14 01:34:44'),
+(187, 'COSC28451360', 'CMA CGM', '2025-09-29 00:00:00', 1, 4, '2025-12-14 01:34:44'),
+(188, 'OOCL29837741', 'CMA CGM', '2025-03-11 00:00:00', 1, 4, '2025-12-14 01:34:44'),
+(189, 'AEV52196302', 'Hapag-Lloyd', '2025-08-04 00:00:00', 1, 4, '2025-12-14 01:34:44'),
+(190, 'AEV45987466', 'Hapag-Lloyd', '2025-03-28 00:00:00', 1, 5, '2025-12-14 01:34:44'),
+(191, 'EVER64557303', 'Mediterranean Shipping Company', '2025-05-28 00:00:00', 1, 5, '2025-12-14 01:34:44'),
+(192, 'HAPG59434443', 'Mediterranean Shipping Company', '2025-06-27 00:00:00', 1, 5, '2025-12-14 01:34:44'),
+(193, 'EBKG54098502', 'Hapag-Lloyd', '2025-07-14 00:00:00', 1, 5, '2025-12-14 01:34:44'),
+(194, 'OOCL41075590', 'Mediterranean Shipping Company', '2025-01-12 00:00:00', 1, 5, '2025-12-14 01:34:44'),
+(195, 'MEDU52493795', 'Mediterranean Shipping Company', '2025-02-18 00:00:00', 1, 6, '2025-12-14 01:34:44'),
+(196, 'EVER64557303', 'Mediterranean Shipping Company', '2025-05-28 00:00:00', 1, 6, '2025-12-14 01:34:44'),
+(197, 'COSC55205452', 'Mediterranean Shipping Company', '2025-06-17 00:00:00', 1, 6, '2025-12-14 01:34:44'),
+(198, 'COSC84782369', 'Mediterranean Shipping Company', '2025-03-02 00:00:00', 1, 6, '2025-12-14 01:34:44'),
+(199, 'YMLN85266502', 'Mediterranean Shipping Company', '2025-07-21 00:00:00', 1, 6, '2025-12-14 01:34:44'),
+(200, 'EVER69977921', 'CMA CGM', '2025-09-07 00:00:00', 1, 7, '2025-12-14 01:34:44'),
+(201, 'YMLN30662769', 'Maersk Line', '2025-02-15 00:00:00', 1, 7, '2025-12-14 01:34:44'),
+(202, 'OOCL48156911', 'Mediterranean Shipping Company', '2025-05-03 00:00:00', 1, 7, '2025-12-14 01:34:44'),
+(203, 'YMLN97947302', 'CMA CGM', '2025-05-03 00:00:00', 1, 7, '2025-12-14 01:34:44'),
+(204, 'OOCL29837741', 'CMA CGM', '2025-03-11 00:00:00', 1, 7, '2025-12-14 01:34:44'),
+(205, 'AEV53640107', 'Maersk Line', '2025-08-18 00:00:00', 1, 8, '2025-12-14 01:34:44'),
+(206, 'MEDU54857008', 'CMA CGM', '2025-11-18 14:00:00', 1, 8, '2025-12-14 01:34:44'),
+(207, 'OOCL41075590', 'Mediterranean Shipping Company', '2025-01-12 00:00:00', 1, 8, '2025-12-14 01:34:44'),
+(208, 'EBKG69895473', 'Maersk Line', '2025-07-26 00:00:00', 1, 8, '2025-12-14 01:34:44'),
+(209, 'EVER69977921', 'CMA CGM', '2025-09-07 00:00:00', 1, 8, '2025-12-14 01:34:44'),
+(210, 'AEV52196302', 'Hapag-Lloyd', '2025-08-04 00:00:00', 1, 9, '2025-12-14 01:34:44'),
+(211, 'YMLN37437956', 'Hapag-Lloyd', '2025-05-11 00:00:00', 1, 9, '2025-12-14 01:34:44'),
+(212, 'EBKG49124230', 'CMA CGM', '2025-09-26 00:00:00', 1, 9, '2025-12-14 01:34:44'),
+(213, 'YMLN97947302', 'CMA CGM', '2025-05-03 00:00:00', 1, 9, '2025-12-14 01:34:44'),
+(214, 'MEDU54857008', 'CMA CGM', '2025-11-18 14:00:00', 1, 9, '2025-12-14 01:34:44'),
+(215, 'OOCL86507212', 'CMA CGM', '2025-07-29 00:00:00', 1, 10, '2025-12-14 01:34:44'),
+(216, 'COSC66084921', 'Orient Overseas Container Line', '2025-01-04 00:00:00', 1, 10, '2025-12-14 01:34:44'),
+(217, 'YMLN97947302', 'CMA CGM', '2025-05-03 00:00:00', 1, 10, '2025-12-14 01:34:44'),
+(218, 'EBKG54528093', 'Orient Overseas Container Line', '2025-10-13 00:00:00', 1, 10, '2025-12-14 01:34:44'),
+(219, 'OOCL55188258', 'CMA CGM', '2025-09-12 00:00:00', 1, 10, '2025-12-14 01:34:44'),
+(220, 'AEV73687587', 'Hapag-Lloyd', '2025-02-22 00:00:00', 1, 11, '2025-12-14 01:34:44'),
+(221, 'EBKG54098502', 'Hapag-Lloyd', '2025-07-14 00:00:00', 1, 11, '2025-12-14 01:34:44'),
+(222, 'EVER92686375', 'Hapag-Lloyd', '2025-05-28 00:00:00', 1, 11, '2025-12-14 01:34:44'),
+(223, 'AEV63324556', 'Evergreen Line', '2025-06-21 00:00:00', 1, 11, '2025-12-14 01:34:44'),
+(224, 'AEV45987466', 'Hapag-Lloyd', '2025-03-28 00:00:00', 1, 11, '2025-12-14 01:34:44'),
+(225, 'OOCL86507212', 'CMA CGM', '2025-07-29 00:00:00', 1, 10, '2025-12-14 01:42:37'),
+(226, 'OOCL55188258', 'CMA CGM', '2025-09-12 00:00:00', 1, 10, '2025-12-14 01:43:42'),
+(227, 'AEV63324999-Elloh', 'Mediterranean Shipping Company', '2025-05-03 00:00:00', 1, 10, '2025-12-27 22:18:20'),
+(228, 'MEDU65294359', 'Maersk Line', '2025-10-18 00:00:00', 1, 22, '2026-01-15 01:43:30');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `customerusers`
+--
+
+DROP TABLE IF EXISTS `customerusers`;
+CREATE TABLE IF NOT EXISTS `customerusers` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `UserName` varchar(512) DEFAULT NULL,
+  `PasswordHash` varchar(2000) DEFAULT NULL,
+  `EmailConfirmed` int UNSIGNED DEFAULT '0',
+  `FirstName` varchar(2000) DEFAULT NULL,
+  `LastName` varchar(2000) DEFAULT NULL,
+  `CompanyName` varchar(2000) DEFAULT NULL,
+  `CompanyAddress` varchar(2000) DEFAULT NULL,
+  `PhoneNumber` varchar(100) DEFAULT NULL,
+  `CustomerUsersStatusId` int UNSIGNED DEFAULT NULL,
+  `CustomerUsersTypeId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_CustomerUsers_Status` (`CustomerUsersStatusId`),
+  KEY `FK_CustomerUsers_Type` (`CustomerUsersTypeId`)
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `customerusers`
+--
+
+INSERT INTO `customerusers` (`Id`, `UserName`, `PasswordHash`, `EmailConfirmed`, `FirstName`, `LastName`, `CompanyName`, `CompanyAddress`, `PhoneNumber`, `CustomerUsersStatusId`, `CustomerUsersTypeId`) VALUES
+(1, 'karimex@user.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 1, 'Ahmed', 'Hassan', 'KARIMEX', '123 Rue du Commerce, Casablanca', '+212661234567', 1, 1),
+(2, 'import@company.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 1, 'Mohamed', 'Bennani', 'IMPORT EXPORT SARL', '456 Avenue Hassan II, Rabat', '+212662345678', 2, 3),
+(3, 'trade@intl.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 1, 'Fatima', 'Alaoui', 'COMMERCE INTERNATIONAL', '789 Boulevard Zerktouni, Casablanca', '+212663456789', 3, 1),
+(4, 'client4@yopmail.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 1, 'Client', 'User4', NULL, NULL, NULL, 4, 1),
+(5, 'client5@yopmail.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 0, 'Client', 'User5', NULL, NULL, NULL, 1, 1),
+(6, 'client6@yopmail.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 0, 'Client', 'User6', NULL, NULL, NULL, 1, 1),
+(7, 'client7@yopmail.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 0, 'Client', 'User7', NULL, NULL, NULL, 5, 1),
+(8, 'client8@yopmail.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 0, 'Client', 'User8', NULL, NULL, NULL, 3, 1),
+(9, 'client9@yopmail.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 0, 'Client', 'User9', NULL, NULL, NULL, 3, 1),
+(10, 'client10@yopmail.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 0, 'Client', 'User10', NULL, NULL, NULL, 3, 1),
+(11, 'client11@yopmail.com', '$2y$10$4EG31wAiwbs1AfRfQd2lse.pNWoZ77Sex4IMz3q7Y9ABcHGlCGRTq', 0, 'Client', 'User11', NULL, NULL, NULL, 3, 1),
+(12, 'pate@mailinator.com', '$2y$10$22hmYDbS.SxFkyiLJapUb.PLARv/zPhFkJRoU5FsjrigH3KqrDTMG', 0, 'Sean', 'Miller', 'Stanton and Gamble Associates', 'Wells and Sweeney Traders', '+1 (146) 994-5659', 1, 1),
+(13, 'test@yopmail.com', '$2y$10$xK0u0pEet61ZxJhHwb/tiu4yLRk02HyOphpXKg9PGxrSNuY86Rp.e', 0, 'Aphrodite', 'Santana', 'Nichols Cleveland Associates', 'Payne Murray LLC', '+1 (575) 619-8742', 1, 1),
+(22, 'elloh.assouman@yopmail.com', '$2y$10$lMSI.AC2x0u32XpNajeSDOFQuILJi9r/tQfFaORYHcHLvuTjc04O6', 1, 'Clark', 'Cruz', 'Best and Walter Inc', 'Osborne Waters Traders', '+1 (315) 664-3486', 3, 2);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `customerusersstatus`
+--
+
+DROP TABLE IF EXISTS `customerusersstatus`;
+CREATE TABLE IF NOT EXISTS `customerusersstatus` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Label` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `customerusersstatus`
+--
+
+INSERT INTO `customerusersstatus` (`Id`, `Label`) VALUES
+(1, 'En attente Utilisateur'),
+(2, 'En attente Admin'),
+(3, 'Activé'),
+(4, 'Désactivé'),
+(5, 'Supprimé');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `customeruserstype`
+--
+
+DROP TABLE IF EXISTS `customeruserstype`;
+CREATE TABLE IF NOT EXISTS `customeruserstype` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Label` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `customeruserstype`
+--
+
+INSERT INTO `customeruserstype` (`Id`, `Label`) VALUES
+(1, 'Client'),
+(2, 'Client TMS'),
+(3, 'Terminal Admin');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `customerusers_thirdparty`
+--
+
+DROP TABLE IF EXISTS `customerusers_thirdparty`;
+CREATE TABLE IF NOT EXISTS `customerusers_thirdparty` (
+  `CustomerUsers_Id` int UNSIGNED NOT NULL,
+  `ThirdParty_Id` int UNSIGNED NOT NULL,
+  PRIMARY KEY (`CustomerUsers_Id`,`ThirdParty_Id`),
+  KEY `FK_CustomerUsers_ThirdParty_ThirdParty` (`ThirdParty_Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `customerusers_thirdparty`
+--
+
+INSERT INTO `customerusers_thirdparty` (`CustomerUsers_Id`, `ThirdParty_Id`) VALUES
+(1, 5),
+(2, 5),
+(3, 5),
+(4, 5),
+(5, 5),
+(6, 5),
+(7, 5),
+(8, 5),
+(9, 5),
+(10, 5),
+(11, 5),
+(1, 6),
+(2, 6),
+(3, 6),
+(4, 6),
+(5, 6),
+(6, 6),
+(7, 6),
+(8, 6),
+(9, 6),
+(10, 6),
+(11, 6),
+(1, 7),
+(2, 7),
+(3, 7),
+(4, 7),
+(5, 7),
+(6, 7),
+(7, 7),
+(8, 7),
+(9, 7),
+(10, 7),
+(11, 7),
+(1, 8),
+(2, 8),
+(3, 8),
+(4, 8),
+(5, 8),
+(6, 8),
+(7, 8),
+(8, 8),
+(9, 8),
+(10, 8),
+(11, 8),
+(1, 9),
+(2, 9),
+(3, 9),
+(4, 9),
+(5, 9),
+(6, 9),
+(7, 9),
+(8, 9),
+(9, 9),
+(10, 9),
+(11, 9),
+(1, 10),
+(2, 10),
+(3, 10),
+(4, 10),
+(5, 10),
+(6, 10),
+(7, 10),
+(8, 10),
+(9, 10),
+(10, 10),
+(11, 10),
+(1, 11),
+(2, 11),
+(3, 11),
+(4, 11),
+(5, 11),
+(6, 11),
+(7, 11),
+(8, 11),
+(9, 11),
+(10, 11),
+(11, 11),
+(1, 12),
+(2, 12),
+(3, 12),
+(4, 12),
+(5, 12),
+(6, 12),
+(7, 12),
+(8, 12),
+(9, 12),
+(10, 12),
+(11, 12),
+(1, 13),
+(2, 13),
+(3, 13),
+(4, 13),
+(5, 13),
+(6, 13),
+(7, 13),
+(8, 13),
+(9, 13),
+(10, 13),
+(11, 13),
+(1, 14),
+(2, 14),
+(3, 14),
+(4, 14),
+(5, 14),
+(6, 14),
+(7, 14),
+(8, 14),
+(9, 14),
+(10, 14),
+(11, 14),
+(22, 14),
+(1, 15),
+(2, 15),
+(3, 15),
+(4, 15),
+(5, 15),
+(6, 15),
+(7, 15),
+(8, 15),
+(9, 15),
+(10, 15),
+(11, 15),
+(1, 20),
+(2, 20),
+(3, 20),
+(4, 20),
+(5, 20),
+(6, 20),
+(7, 20),
+(8, 20),
+(9, 20),
+(10, 20),
+(11, 20),
+(1, 21),
+(2, 21),
+(3, 21),
+(4, 21),
+(5, 21),
+(6, 21),
+(7, 21),
+(8, 21),
+(9, 21),
+(10, 21),
+(11, 21),
+(1, 22),
+(2, 22),
+(3, 22),
+(4, 22),
+(5, 22),
+(6, 22),
+(7, 22),
+(8, 22),
+(9, 22),
+(10, 22),
+(11, 22),
+(1, 23),
+(2, 23),
+(3, 23),
+(4, 23),
+(5, 23),
+(6, 23),
+(7, 23),
+(8, 23),
+(9, 23),
+(10, 23),
+(11, 23);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `document`
+--
+
+DROP TABLE IF EXISTS `document`;
+CREATE TABLE IF NOT EXISTS `document` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Text` varchar(100) DEFAULT NULL,
+  `Date` datetime DEFAULT NULL,
+  `BlId` int UNSIGNED DEFAULT NULL,
+  `JobFileId` int UNSIGNED DEFAULT NULL,
+  `DocumentTypeId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_Document_BL` (`BlId`),
+  KEY `FK_Document_JobFile` (`JobFileId`),
+  KEY `FK_Document_DocumentType` (`DocumentTypeId`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `document`
+--
+
+INSERT INTO `document` (`Id`, `Text`, `Date`, `BlId`, `JobFileId`, `DocumentTypeId`) VALUES
+(1, 'Original B/L - MEDUDM992142', '2025-11-10 09:30:00', 1, 1, 1),
+(2, 'Manifest de chargement', '2025-11-10 10:00:00', 1, 1, 2),
+(3, 'Packing List', '2025-11-10 10:30:00', 1, 1, 3),
+(4, 'Original B/L - EBKG08737243', '2025-11-15 11:30:00', 2, 2, 1),
+(5, 'Certificat de sécurité', '2025-11-15 12:00:00', 2, 2, 6);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `documenttype`
+--
+
+DROP TABLE IF EXISTS `documenttype`;
+CREATE TABLE IF NOT EXISTS `documenttype` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Label` varchar(200) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `documenttype`
+--
+
+INSERT INTO `documenttype` (`Id`, `Label`) VALUES
+(1, 'BAD SHIPPING'),
+(2, 'Déclaration Douane'),
+(3, 'COREOR'),
+(4, 'N° BOOKING'),
+(5, 'Mode de livraison');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `event`
+--
+
+DROP TABLE IF EXISTS `event`;
+CREATE TABLE IF NOT EXISTS `event` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `EventDate` datetime DEFAULT NULL,
+  `JobFileId` int UNSIGNED DEFAULT NULL,
+  `EventTypeId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_Event_JobFile` (`JobFileId`),
+  KEY `FK_Event_EventType` (`EventTypeId`)
+) ENGINE=InnoDB AUTO_INCREMENT=1308 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `event`
+--
+
+INSERT INTO `event` (`Id`, `EventDate`, `JobFileId`, `EventTypeId`) VALUES
+(1, '2025-11-04 01:00:00', 1, 4),
+(3, '2025-11-06 01:00:00', 1, 37),
+(4, '2025-11-06 06:00:00', 1, 32),
+(5, '2025-11-06 13:00:00', 1, 9),
+(6, '2025-11-26 07:00:00', 2, 2),
+(7, '2025-11-28 13:00:00', 2, 38),
+(8, '2025-01-28 00:00:00', 3, 4),
+(11, '2025-02-05 00:00:00', 3, 20),
+(12, '2025-02-07 00:00:00', 3, 33),
+(13, '2025-02-10 00:00:00', 3, 9),
+(14, '2025-01-31 00:00:00', 4, 4),
+(15, '2025-10-15 00:00:00', 5, 4),
+(16, '2025-10-13 00:00:00', 6, 4),
+(19, '2025-10-20 00:00:00', 6, 21),
+(20, '2025-10-21 00:00:00', 6, 24),
+(21, '2025-11-01 00:00:00', 6, 6),
+(22, '2025-11-26 00:00:00', 7, 4),
+(23, '2025-11-27 00:00:00', 8, 4),
+(24, '2025-11-24 00:00:00', 9, 4),
+(27, '2025-12-02 00:00:00', 9, 35),
+(28, '2025-12-05 00:00:00', 9, 19),
+(29, '2025-12-09 00:00:00', 9, 6),
+(30, '2025-01-28 00:00:00', 10, 4),
+(31, '2025-01-30 00:00:00', 11, 4),
+(34, '2025-02-04 00:00:00', 11, 29),
+(35, '2025-02-08 00:00:00', 11, 31),
+(36, '2025-03-01 00:00:00', 11, 6),
+(37, '2025-05-11 00:00:00', 12, 4),
+(40, '2025-05-17 00:00:00', 12, 24),
+(41, '2025-05-18 00:00:00', 12, 31),
+(42, '2025-05-22 00:00:00', 12, 6),
+(43, '2025-05-14 00:00:00', 13, 4),
+(44, '2025-05-12 00:00:00', 14, 4),
+(45, '2025-05-13 00:00:00', 15, 4),
+(48, '2025-05-22 00:00:00', 15, 31),
+(49, '2025-05-24 00:00:00', 15, 33),
+(50, '2025-06-01 00:00:00', 15, 9),
+(51, '2025-01-30 00:00:00', 16, 4),
+(52, '2025-01-29 00:00:00', 17, 4),
+(54, '2025-02-02 00:00:00', 17, 33),
+(55, '2025-02-03 00:00:00', 17, 20),
+(56, '2025-02-15 00:00:00', 17, 9),
+(57, '2025-01-30 00:00:00', 18, 4),
+(58, '2025-05-13 00:00:00', 19, 4),
+(59, '2025-05-11 00:00:00', 20, 4),
+(60, '2025-05-13 00:00:00', 20, 19),
+(61, '2025-05-16 00:00:00', 20, 29),
+(62, '2025-06-09 00:00:00', 20, 8),
+(63, '2025-05-14 00:00:00', 21, 4),
+(64, '2025-05-15 00:00:00', 21, 35),
+(65, '2025-05-19 00:00:00', 21, 35),
+(66, '2025-06-07 00:00:00', 21, 6),
+(67, '2025-11-26 00:00:00', 22, 4),
+(70, '2025-12-04 00:00:00', 22, 29),
+(71, '2025-12-05 00:00:00', 22, 31),
+(72, '2025-12-17 00:00:00', 22, 8),
+(73, '2025-06-22 00:00:00', 23, 4),
+(74, '2025-06-23 00:00:00', 24, 4),
+(75, '2025-06-26 00:00:00', 24, 32),
+(76, '2025-06-28 00:00:00', 24, 8),
+(77, '2025-06-24 00:00:00', 25, 4),
+(78, '2025-05-06 00:00:00', 26, 4),
+(79, '2025-05-05 00:00:00', 27, 4),
+(80, '2025-05-06 00:00:00', 28, 4),
+(81, '2025-05-14 00:00:00', 29, 4),
+(82, '2025-05-17 00:00:00', 29, 19),
+(83, '2025-05-19 00:00:00', 29, 23),
+(84, '2025-06-05 00:00:00', 29, 9),
+(85, '2025-08-04 00:00:00', 30, 4),
+(88, '2025-08-10 00:00:00', 30, 23),
+(89, '2025-08-13 00:00:00', 30, 21),
+(90, '2025-08-20 00:00:00', 30, 8),
+(91, '2025-06-24 00:00:00', 31, 4),
+(92, '2025-06-24 00:00:00', 32, 4),
+(94, '2025-07-01 00:00:00', 32, 21),
+(95, '2025-07-02 00:00:00', 32, 23),
+(96, '2025-07-12 00:00:00', 32, 8),
+(97, '2025-06-24 00:00:00', 33, 4),
+(98, '2025-06-26 00:00:00', 33, 31),
+(99, '2025-06-27 00:00:00', 33, 19),
+(100, '2025-06-30 00:00:00', 33, 9),
+(101, '2025-05-04 00:00:00', 34, 4),
+(104, '2025-05-11 00:00:00', 34, 33),
+(105, '2025-05-12 00:00:00', 34, 19),
+(106, '2025-05-23 00:00:00', 34, 9),
+(107, '2025-05-06 00:00:00', 35, 4),
+(108, '2025-05-03 00:00:00', 36, 4),
+(109, '2025-05-05 00:00:00', 37, 4),
+(111, '2025-05-08 00:00:00', 37, 23),
+(112, '2025-05-11 00:00:00', 37, 19),
+(113, '2025-05-15 00:00:00', 37, 6),
+(114, '2025-06-22 00:00:00', 38, 4),
+(115, '2025-01-30 00:00:00', 39, 4),
+(116, '2025-02-01 00:00:00', 39, 19),
+(117, '2025-02-02 00:00:00', 39, 23),
+(118, '2025-02-27 00:00:00', 39, 8),
+(119, '2025-01-31 00:00:00', 40, 4),
+(121, '2025-02-04 00:00:00', 40, 35),
+(122, '2025-02-05 00:00:00', 40, 19),
+(123, '2025-02-13 00:00:00', 40, 6),
+(124, '2025-08-05 00:00:00', 41, 4),
+(126, '2025-08-10 00:00:00', 41, 20),
+(127, '2025-08-12 00:00:00', 41, 24),
+(128, '2025-08-30 00:00:00', 41, 8),
+(129, '2025-06-22 00:00:00', 42, 4),
+(130, '2025-06-22 00:00:00', 43, 4),
+(132, '2025-06-27 00:00:00', 43, 19),
+(133, '2025-06-28 00:00:00', 43, 35),
+(134, '2025-07-17 00:00:00', 43, 8),
+(135, '2025-05-03 00:00:00', 44, 4),
+(136, '2025-05-05 00:00:00', 44, 29),
+(137, '2025-05-09 00:00:00', 44, 17),
+(138, '2025-05-16 00:00:00', 44, 8),
+(139, '2025-05-14 00:00:00', 45, 4),
+(140, '2025-05-17 00:00:00', 45, 20),
+(141, '2025-05-19 00:00:00', 45, 17),
+(142, '2025-06-02 00:00:00', 45, 6),
+(143, '2025-06-24 00:00:00', 46, 4),
+(144, '2025-06-27 00:00:00', 46, 21),
+(145, '2025-07-01 00:00:00', 46, 33),
+(146, '2025-07-17 00:00:00', 46, 8),
+(147, '2025-06-24 00:00:00', 47, 4),
+(149, '2025-06-27 00:00:00', 47, 20),
+(150, '2025-06-30 00:00:00', 47, 35),
+(151, '2025-07-09 00:00:00', 47, 8),
+(152, '2025-06-21 00:00:00', 48, 4),
+(153, '2025-06-24 00:00:00', 49, 4),
+(154, '2025-10-15 00:00:00', 50, 4),
+(155, '2025-08-05 00:00:00', 51, 4),
+(156, '2025-08-04 00:00:00', 52, 4),
+(157, '2025-08-07 00:00:00', 52, 20),
+(158, '2025-08-10 00:00:00', 52, 17),
+(159, '2025-08-28 00:00:00', 52, 9),
+(160, '2025-08-03 00:00:00', 53, 4),
+(162, '2025-08-07 00:00:00', 53, 31),
+(163, '2025-08-10 00:00:00', 53, 17),
+(164, '2025-08-22 00:00:00', 53, 9),
+(165, '2025-08-04 00:00:00', 54, 4),
+(166, '2025-08-07 00:00:00', 54, 32),
+(167, '2025-08-10 00:00:00', 54, 32),
+(168, '2025-08-18 00:00:00', 54, 6),
+(169, '2025-08-06 00:00:00', 55, 4),
+(170, '2025-08-08 00:00:00', 55, 17),
+(171, '2025-08-12 00:00:00', 55, 35),
+(172, '2025-08-13 00:00:00', 55, 9),
+(173, '2025-08-04 00:00:00', 56, 4),
+(174, '2025-06-29 00:00:00', 57, 4),
+(175, '2025-07-02 00:00:00', 57, 32),
+(176, '2025-07-05 00:00:00', 57, 6),
+(177, '2025-08-03 00:00:00', 58, 4),
+(178, '2025-08-04 00:00:00', 59, 4),
+(179, '2025-05-04 00:00:00', 60, 4),
+(180, '2025-05-05 00:00:00', 60, 35),
+(181, '2025-05-07 00:00:00', 60, 29),
+(182, '2025-05-21 00:00:00', 60, 8),
+(183, '2025-05-06 00:00:00', 61, 4),
+(184, '2025-05-09 00:00:00', 61, 33),
+(185, '2025-05-12 00:00:00', 61, 33),
+(186, '2025-06-02 00:00:00', 61, 8),
+(187, '2025-11-27 00:00:00', 62, 4),
+(188, '2025-11-27 00:00:00', 63, 4),
+(189, '2025-11-30 00:00:00', 63, 32),
+(190, '2025-12-02 00:00:00', 63, 32),
+(191, '2025-12-12 00:00:00', 63, 6),
+(192, '2025-11-24 00:00:00', 64, 4),
+(193, '2025-10-13 00:00:00', 65, 4),
+(194, '2025-10-15 00:00:00', 65, 32),
+(195, '2025-10-16 00:00:00', 65, 19),
+(196, '2025-10-23 00:00:00', 65, 8),
+(197, '2025-10-14 00:00:00', 66, 4),
+(199, '2025-10-20 00:00:00', 66, 35),
+(200, '2025-10-24 00:00:00', 66, 23),
+(201, '2025-10-28 00:00:00', 66, 8),
+(202, '2025-10-14 00:00:00', 67, 4),
+(203, '2025-01-31 00:00:00', 68, 4),
+(205, '2025-02-03 00:00:00', 68, 21),
+(206, '2025-02-06 00:00:00', 68, 35),
+(207, '2025-02-08 00:00:00', 68, 8),
+(208, '2025-01-31 00:00:00', 69, 4),
+(209, '2025-02-02 00:00:00', 69, 23),
+(210, '2025-02-05 00:00:00', 69, 20),
+(211, '2025-02-09 00:00:00', 69, 9),
+(212, '2025-10-14 00:00:00', 70, 4),
+(214, '2025-10-18 00:00:00', 70, 19),
+(215, '2025-10-22 00:00:00', 70, 23),
+(216, '2025-11-08 00:00:00', 70, 6),
+(217, '2025-10-15 00:00:00', 71, 4),
+(218, '2025-06-29 00:00:00', 72, 4),
+(219, '2025-07-02 00:00:00', 72, 35),
+(220, '2025-07-04 00:00:00', 72, 8),
+(221, '2025-06-28 00:00:00', 73, 4),
+(222, '2025-07-01 00:00:00', 73, 35),
+(223, '2025-07-04 00:00:00', 73, 35),
+(224, '2025-07-21 00:00:00', 73, 8),
+(225, '2025-05-05 00:00:00', 74, 4),
+(226, '2025-05-03 00:00:00', 75, 4),
+(229, '2025-05-09 00:00:00', 75, 31),
+(230, '2025-05-12 00:00:00', 75, 35),
+(231, '2025-05-25 00:00:00', 75, 6),
+(232, '2025-05-04 00:00:00', 76, 4),
+(233, '2025-01-29 00:00:00', 77, 4),
+(234, '2025-01-31 00:00:00', 78, 4),
+(235, '2025-01-28 00:00:00', 79, 4),
+(236, '2025-10-15 00:00:00', 80, 4),
+(237, '2025-06-23 00:00:00', 81, 4),
+(238, '2025-06-23 00:00:00', 82, 4),
+(239, '2025-06-21 00:00:00', 83, 4),
+(240, '2025-05-14 00:00:00', 84, 4),
+(241, '2025-05-04 00:00:00', 85, 4),
+(242, '2025-05-04 00:00:00', 86, 4),
+(245, '2025-05-12 00:00:00', 86, 31),
+(246, '2025-05-16 00:00:00', 86, 17),
+(247, '2025-05-25 00:00:00', 86, 6),
+(248, '2025-05-03 00:00:00', 87, 4),
+(250, '2025-05-05 00:00:00', 87, 19),
+(251, '2025-05-09 00:00:00', 87, 33),
+(252, '2025-05-24 00:00:00', 87, 9),
+(253, '2025-05-05 00:00:00', 88, 4),
+(254, '2025-05-07 00:00:00', 88, 32),
+(255, '2025-05-11 00:00:00', 88, 35),
+(256, '2025-06-04 00:00:00', 88, 8),
+(257, '2025-10-16 00:00:00', 89, 4),
+(260, '2025-10-24 00:00:00', 89, 35),
+(261, '2025-10-28 00:00:00', 89, 21),
+(262, '2025-11-02 00:00:00', 89, 8),
+(263, '2025-10-16 00:00:00', 90, 4),
+(264, '2025-10-18 00:00:00', 90, 23),
+(265, '2025-10-21 00:00:00', 90, 8),
+(266, '2025-05-04 00:00:00', 91, 4),
+(267, '2025-05-05 00:00:00', 91, 24),
+(268, '2025-05-09 00:00:00', 91, 31),
+(269, '2025-05-27 00:00:00', 91, 8),
+(270, '2025-05-05 00:00:00', 92, 4),
+(272, '2025-05-09 00:00:00', 92, 20),
+(273, '2025-05-10 00:00:00', 92, 19),
+(274, '2025-06-02 00:00:00', 92, 9),
+(275, '2025-11-24 00:00:00', 93, 4),
+(276, '2025-11-25 00:00:00', 93, 24),
+(277, '2025-11-26 00:00:00', 93, 29),
+(278, '2025-12-20 00:00:00', 93, 8),
+(279, '2025-11-24 00:00:00', 94, 4),
+(282, '2025-12-01 00:00:00', 94, 29),
+(283, '2025-12-04 00:00:00', 94, 24),
+(284, '2025-12-11 00:00:00', 94, 8),
+(285, '2025-11-25 00:00:00', 95, 4),
+(286, '2025-01-28 00:00:00', 96, 4),
+(287, '2025-01-28 00:00:00', 97, 4),
+(288, '2025-01-29 00:00:00', 97, 29),
+(289, '2025-01-31 00:00:00', 97, 31),
+(290, '2025-02-19 00:00:00', 97, 8),
+(291, '2025-01-29 00:00:00', 98, 4),
+(293, '2025-02-04 00:00:00', 98, 19),
+(294, '2025-02-05 00:00:00', 98, 20),
+(295, '2025-02-15 00:00:00', 98, 8),
+(296, '2025-01-31 00:00:00', 99, 4),
+(297, '2025-01-30 00:00:00', 100, 4),
+(298, '2025-01-29 00:00:00', 101, 4),
+(299, '2025-01-31 00:00:00', 101, 20),
+(300, '2025-02-03 00:00:00', 101, 33),
+(301, '2025-02-11 00:00:00', 101, 6),
+(302, '2025-06-22 00:00:00', 102, 4),
+(305, '2025-06-28 00:00:00', 102, 33),
+(306, '2025-07-02 00:00:00', 102, 32),
+(307, '2025-07-17 00:00:00', 102, 9),
+(308, '2025-08-03 00:00:00', 103, 4),
+(309, '2025-08-03 00:00:00', 104, 4),
+(310, '2025-08-05 00:00:00', 105, 4),
+(312, '2025-08-08 00:00:00', 105, 21),
+(313, '2025-08-12 00:00:00', 105, 19),
+(314, '2025-08-14 00:00:00', 105, 8),
+(315, '2025-05-05 00:00:00', 106, 4),
+(316, '2025-05-06 00:00:00', 106, 21),
+(317, '2025-05-09 00:00:00', 106, 19),
+(318, '2025-05-28 00:00:00', 106, 8),
+(319, '2025-05-15 00:00:00', 107, 4),
+(321, '2025-05-21 00:00:00', 107, 19),
+(322, '2025-05-23 00:00:00', 107, 24),
+(323, '2025-06-07 00:00:00', 107, 6),
+(324, '2025-05-15 00:00:00', 108, 4),
+(325, '2025-05-16 00:00:00', 109, 4),
+(326, '2025-05-13 00:00:00', 110, 4),
+(329, '2025-05-18 00:00:00', 110, 17),
+(330, '2025-05-20 00:00:00', 110, 19),
+(331, '2025-05-21 00:00:00', 110, 9),
+(332, '2025-05-15 00:00:00', 111, 4),
+(333, '2025-05-13 00:00:00', 112, 4),
+(335, '2025-05-19 00:00:00', 112, 29),
+(336, '2025-05-21 00:00:00', 112, 19),
+(337, '2025-05-28 00:00:00', 112, 9),
+(338, '2025-05-31 00:00:00', 113, 4),
+(341, '2025-06-07 00:00:00', 113, 35),
+(342, '2025-06-11 00:00:00', 113, 24),
+(343, '2025-06-16 00:00:00', 113, 8),
+(344, '2025-05-29 00:00:00', 114, 4),
+(347, '2025-06-06 00:00:00', 114, 33),
+(348, '2025-06-10 00:00:00', 114, 32),
+(349, '2025-06-24 00:00:00', 114, 8),
+(350, '2025-05-13 00:00:00', 115, 4),
+(352, '2025-05-16 00:00:00', 115, 33),
+(353, '2025-05-18 00:00:00', 115, 21),
+(354, '2025-05-20 00:00:00', 115, 8),
+(355, '2025-05-14 00:00:00', 116, 4),
+(356, '2025-05-15 00:00:00', 117, 4),
+(357, '2025-05-17 00:00:00', 117, 35),
+(358, '2025-05-18 00:00:00', 117, 29),
+(359, '2025-05-21 00:00:00', 117, 8),
+(360, '2025-05-14 00:00:00', 118, 4),
+(363, '2025-05-22 00:00:00', 118, 31),
+(364, '2025-05-24 00:00:00', 118, 32),
+(365, '2025-06-07 00:00:00', 118, 8),
+(366, '2025-01-31 00:00:00', 119, 4),
+(368, '2025-02-04 00:00:00', 119, 20),
+(369, '2025-02-06 00:00:00', 119, 35),
+(370, '2025-02-21 00:00:00', 119, 8),
+(371, '2025-02-01 00:00:00', 120, 4),
+(373, '2025-02-04 00:00:00', 120, 29),
+(374, '2025-02-07 00:00:00', 120, 24),
+(375, '2025-02-17 00:00:00', 120, 9),
+(376, '2025-01-30 00:00:00', 121, 4),
+(379, '2025-02-06 00:00:00', 121, 29),
+(380, '2025-02-07 00:00:00', 121, 32),
+(381, '2025-02-21 00:00:00', 121, 6),
+(382, '2025-05-14 00:00:00', 122, 4),
+(383, '2025-05-31 00:00:00', 123, 4),
+(386, '2025-06-07 00:00:00', 123, 35),
+(387, '2025-06-09 00:00:00', 123, 33),
+(388, '2025-06-27 00:00:00', 123, 9),
+(389, '2025-05-31 00:00:00', 124, 4),
+(390, '2025-06-01 00:00:00', 124, 32),
+(391, '2025-06-05 00:00:00', 124, 32),
+(392, '2025-06-19 00:00:00', 124, 8),
+(393, '2025-05-15 00:00:00', 125, 4),
+(394, '2025-05-16 00:00:00', 126, 4),
+(397, '2025-05-26 00:00:00', 126, 29),
+(398, '2025-05-29 00:00:00', 126, 24),
+(399, '2025-06-05 00:00:00', 126, 9),
+(400, '2025-03-25 00:00:00', 127, 4),
+(402, '2025-03-27 00:00:00', 127, 24),
+(403, '2025-03-29 00:00:00', 127, 32),
+(404, '2025-04-23 00:00:00', 127, 8),
+(405, '2025-04-14 00:00:00', 128, 4),
+(406, '2025-04-17 00:00:00', 128, 31),
+(407, '2025-04-18 00:00:00', 128, 32),
+(408, '2025-05-01 00:00:00', 128, 6),
+(409, '2025-04-13 00:00:00', 129, 4),
+(410, '2025-04-13 00:00:00', 130, 4),
+(411, '2025-04-11 00:00:00', 131, 4),
+(414, '2025-04-19 00:00:00', 131, 24),
+(415, '2025-04-21 00:00:00', 131, 24),
+(416, '2025-04-29 00:00:00', 131, 9),
+(417, '2025-05-04 00:00:00', 132, 4),
+(418, '2025-05-05 00:00:00', 132, 35),
+(419, '2025-05-08 00:00:00', 132, 20),
+(420, '2025-05-10 00:00:00', 132, 6),
+(421, '2025-05-03 00:00:00', 133, 4),
+(422, '2025-05-05 00:00:00', 133, 17),
+(423, '2025-05-09 00:00:00', 133, 20),
+(424, '2025-05-23 00:00:00', 133, 9),
+(425, '2025-05-03 00:00:00', 134, 4),
+(426, '2025-05-15 00:00:00', 135, 4),
+(427, '2025-05-17 00:00:00', 135, 32),
+(428, '2025-05-21 00:00:00', 135, 17),
+(429, '2025-06-10 00:00:00', 135, 6),
+(430, '2025-05-13 00:00:00', 136, 4),
+(432, '2025-05-15 00:00:00', 136, 29),
+(433, '2025-05-19 00:00:00', 136, 35),
+(434, '2025-06-01 00:00:00', 136, 6),
+(435, '2025-05-16 00:00:00', 137, 4),
+(437, '2025-05-19 00:00:00', 137, 29),
+(438, '2025-05-21 00:00:00', 137, 29),
+(439, '2025-06-02 00:00:00', 137, 8),
+(440, '2025-05-03 00:00:00', 138, 4),
+(441, '2025-05-04 00:00:00', 138, 29),
+(442, '2025-05-05 00:00:00', 138, 23),
+(443, '2025-05-18 00:00:00', 138, 6),
+(444, '2025-05-14 00:00:00', 139, 4),
+(445, '2025-05-13 00:00:00', 140, 4),
+(448, '2025-05-18 00:00:00', 140, 35),
+(449, '2025-05-22 00:00:00', 140, 32),
+(450, '2025-06-06 00:00:00', 140, 9),
+(451, '2025-05-14 00:00:00', 141, 4),
+(453, '2025-05-20 00:00:00', 141, 32),
+(454, '2025-05-23 00:00:00', 141, 20),
+(455, '2025-06-08 00:00:00', 141, 9),
+(456, '2025-05-13 00:00:00', 142, 4),
+(459, '2025-05-20 00:00:00', 142, 21),
+(460, '2025-05-23 00:00:00', 142, 24),
+(461, '2025-05-26 00:00:00', 142, 8),
+(462, '2025-05-15 00:00:00', 143, 4),
+(463, '2025-05-13 00:00:00', 144, 4),
+(464, '2025-05-14 00:00:00', 145, 4),
+(465, '2025-05-13 00:00:00', 146, 4),
+(466, '2025-05-16 00:00:00', 146, 35),
+(467, '2025-05-18 00:00:00', 146, 24),
+(468, '2025-05-28 00:00:00', 146, 8),
+(469, '2025-06-12 00:00:00', 147, 4),
+(470, '2025-05-31 00:00:00', 148, 4),
+(471, '2025-05-29 00:00:00', 149, 4),
+(472, '2025-05-31 00:00:00', 150, 4),
+(475, '2025-06-04 00:00:00', 150, 32),
+(476, '2025-06-06 00:00:00', 150, 24),
+(477, '2025-06-20 00:00:00', 150, 6),
+(478, '2025-05-14 00:00:00', 151, 4),
+(479, '2025-05-13 00:00:00', 152, 4),
+(480, '2025-05-29 00:00:00', 153, 4),
+(483, '2025-06-05 00:00:00', 153, 20),
+(484, '2025-06-06 00:00:00', 153, 20),
+(485, '2025-06-20 00:00:00', 153, 8),
+(486, '2025-05-30 00:00:00', 154, 4),
+(488, '2025-06-04 00:00:00', 154, 24),
+(489, '2025-06-05 00:00:00', 154, 29),
+(490, '2025-06-25 00:00:00', 154, 9),
+(491, '2025-05-29 00:00:00', 155, 4),
+(492, '2025-05-30 00:00:00', 155, 24),
+(493, '2025-06-02 00:00:00', 155, 31),
+(494, '2025-06-04 00:00:00', 155, 6),
+(495, '2025-03-22 00:00:00', 156, 4),
+(496, '2025-03-24 00:00:00', 156, 33),
+(497, '2025-03-25 00:00:00', 156, 24),
+(498, '2025-04-15 00:00:00', 156, 6),
+(499, '2025-03-22 00:00:00', 157, 4),
+(501, '2025-03-29 00:00:00', 157, 21),
+(502, '2025-04-02 00:00:00', 157, 29),
+(503, '2025-04-03 00:00:00', 157, 8),
+(504, '2025-04-11 00:00:00', 158, 4),
+(505, '2025-04-12 00:00:00', 159, 4),
+(506, '2025-05-15 00:00:00', 160, 4),
+(507, '2025-05-15 00:00:00', 161, 4),
+(508, '2025-05-16 00:00:00', 161, 21),
+(509, '2025-05-19 00:00:00', 161, 29),
+(510, '2025-05-22 00:00:00', 161, 6),
+(511, '2025-01-31 00:00:00', 162, 4),
+(512, '2025-02-01 00:00:00', 162, 19),
+(513, '2025-02-05 00:00:00', 162, 19),
+(514, '2025-02-09 00:00:00', 162, 9),
+(515, '2025-02-01 00:00:00', 163, 4),
+(516, '2025-06-11 00:00:00', 164, 4),
+(519, '2025-06-16 00:00:00', 164, 21),
+(520, '2025-06-19 00:00:00', 164, 35),
+(521, '2025-06-21 00:00:00', 164, 9),
+(522, '2025-01-30 00:00:00', 165, 4),
+(523, '2025-01-30 00:00:00', 166, 4),
+(524, '2025-01-31 00:00:00', 166, 33),
+(525, '2025-02-04 00:00:00', 166, 35),
+(526, '2025-02-19 00:00:00', 166, 8),
+(527, '2025-05-30 00:00:00', 167, 4),
+(528, '2025-06-01 00:00:00', 167, 19),
+(529, '2025-06-04 00:00:00', 167, 33),
+(530, '2025-06-23 00:00:00', 167, 8),
+(531, '2025-05-29 00:00:00', 168, 4),
+(533, '2025-06-03 00:00:00', 168, 32),
+(534, '2025-06-07 00:00:00', 168, 20),
+(535, '2025-06-15 00:00:00', 168, 8),
+(536, '2025-06-10 00:00:00', 169, 4),
+(537, '2025-06-01 00:00:00', 170, 4),
+(539, '2025-06-06 00:00:00', 170, 31),
+(540, '2025-06-09 00:00:00', 170, 19),
+(541, '2025-06-14 00:00:00', 170, 9),
+(542, '2025-05-14 00:00:00', 171, 4),
+(543, '2025-05-17 00:00:00', 171, 29),
+(544, '2025-05-21 00:00:00', 171, 35),
+(545, '2025-05-22 00:00:00', 171, 6),
+(546, '2025-05-15 00:00:00', 172, 4),
+(547, '2025-05-15 00:00:00', 173, 4),
+(550, '2025-05-23 00:00:00', 173, 31),
+(551, '2025-05-26 00:00:00', 173, 33),
+(552, '2025-06-01 00:00:00', 173, 8),
+(553, '2025-05-30 00:00:00', 174, 4),
+(554, '2025-06-01 00:00:00', 175, 4),
+(556, '2025-06-08 00:00:00', 175, 33),
+(557, '2025-06-11 00:00:00', 175, 31),
+(558, '2025-06-12 00:00:00', 175, 6),
+(559, '2025-05-29 00:00:00', 176, 4),
+(561, '2025-05-31 00:00:00', 176, 29),
+(562, '2025-06-01 00:00:00', 176, 33),
+(563, '2025-06-03 00:00:00', 176, 8),
+(564, '2025-05-05 00:00:00', 177, 4),
+(565, '2025-05-06 00:00:00', 177, 19),
+(566, '2025-05-08 00:00:00', 177, 31),
+(567, '2025-05-20 00:00:00', 177, 6),
+(568, '2025-05-31 00:00:00', 178, 4),
+(570, '2025-06-06 00:00:00', 178, 32),
+(571, '2025-06-10 00:00:00', 178, 23),
+(572, '2025-06-16 00:00:00', 178, 9),
+(573, '2025-06-01 00:00:00', 179, 4),
+(574, '2025-04-13 00:00:00', 180, 4),
+(575, '2025-04-12 00:00:00', 181, 4),
+(578, '2025-04-19 00:00:00', 181, 19),
+(579, '2025-04-23 00:00:00', 181, 35),
+(580, '2025-04-25 00:00:00', 181, 8),
+(581, '2025-04-12 00:00:00', 182, 4),
+(582, '2025-03-25 00:00:00', 183, 4),
+(583, '2025-03-24 00:00:00', 184, 4),
+(584, '2025-04-13 00:00:00', 185, 4),
+(585, '2025-04-12 00:00:00', 186, 4),
+(587, '2025-04-16 00:00:00', 186, 35),
+(588, '2025-04-18 00:00:00', 186, 21),
+(589, '2025-04-29 00:00:00', 186, 9),
+(590, '2025-03-22 00:00:00', 187, 4),
+(593, '2025-03-29 00:00:00', 187, 35),
+(594, '2025-04-01 00:00:00', 187, 33),
+(595, '2025-04-06 00:00:00', 187, 6),
+(596, '2025-03-25 00:00:00', 188, 4),
+(597, '2025-03-27 00:00:00', 188, 24),
+(598, '2025-03-28 00:00:00', 188, 33),
+(599, '2025-04-24 00:00:00', 188, 6),
+(600, '2025-03-25 00:00:00', 189, 4),
+(601, '2025-03-28 00:00:00', 189, 24),
+(602, '2025-03-31 00:00:00', 189, 33),
+(603, '2025-04-16 00:00:00', 189, 8),
+(604, '2025-05-15 00:00:00', 190, 4),
+(605, '2025-05-14 00:00:00', 191, 4),
+(606, '2025-05-16 00:00:00', 192, 4),
+(607, '2025-05-19 00:00:00', 192, 23),
+(608, '2025-05-21 00:00:00', 192, 21),
+(609, '2025-05-26 00:00:00', 192, 6),
+(610, '2025-05-05 00:00:00', 193, 4),
+(611, '2025-05-15 00:00:00', 194, 4),
+(612, '2025-05-16 00:00:00', 195, 4),
+(613, '2025-05-14 00:00:00', 196, 4),
+(614, '2025-05-05 00:00:00', 197, 4),
+(615, '2025-05-03 00:00:00', 198, 4),
+(616, '2025-05-05 00:00:00', 198, 17),
+(617, '2025-05-07 00:00:00', 198, 29),
+(618, '2025-05-08 00:00:00', 198, 9),
+(619, '2025-06-09 00:00:00', 199, 4),
+(620, '2025-06-10 00:00:00', 200, 4),
+(621, '2025-06-11 00:00:00', 200, 23),
+(622, '2025-06-14 00:00:00', 200, 17),
+(623, '2025-06-29 00:00:00', 200, 8),
+(624, '2025-06-10 00:00:00', 201, 4),
+(625, '2025-06-11 00:00:00', 201, 33),
+(626, '2025-06-12 00:00:00', 201, 20),
+(627, '2025-07-01 00:00:00', 201, 8),
+(628, '2025-05-13 00:00:00', 202, 4),
+(629, '2025-05-16 00:00:00', 202, 19),
+(630, '2025-05-20 00:00:00', 202, 35),
+(631, '2025-05-24 00:00:00', 202, 9),
+(632, '2025-05-13 00:00:00', 203, 4),
+(634, '2025-05-18 00:00:00', 203, 29),
+(635, '2025-05-19 00:00:00', 203, 31),
+(636, '2025-06-09 00:00:00', 203, 6),
+(637, '2025-05-16 00:00:00', 204, 4),
+(638, '2025-05-18 00:00:00', 204, 20),
+(639, '2025-05-21 00:00:00', 204, 32),
+(640, '2025-06-03 00:00:00', 204, 8),
+(641, '2025-09-12 00:00:00', 205, 4),
+(644, '2025-09-19 00:00:00', 205, 17),
+(645, '2025-09-23 00:00:00', 205, 33),
+(646, '2025-10-09 00:00:00', 205, 8),
+(647, '2025-09-12 00:00:00', 206, 4),
+(649, '2025-09-18 00:00:00', 206, 29),
+(650, '2025-09-21 00:00:00', 206, 21),
+(651, '2025-10-01 00:00:00', 206, 9),
+(652, '2025-07-29 00:00:00', 207, 4),
+(655, '2025-08-05 00:00:00', 207, 21),
+(656, '2025-08-09 00:00:00', 207, 29),
+(657, '2025-08-27 00:00:00', 207, 9),
+(658, '2025-10-12 00:00:00', 208, 4),
+(659, '2025-10-14 00:00:00', 208, 24),
+(660, '2025-10-15 00:00:00', 208, 17),
+(661, '2025-11-06 00:00:00', 208, 8),
+(662, '2025-10-12 00:00:00', 209, 4),
+(663, '2025-10-12 00:00:00', 210, 4),
+(666, '2025-10-22 00:00:00', 210, 17),
+(667, '2025-10-24 00:00:00', 210, 24),
+(668, '2025-10-26 00:00:00', 210, 8),
+(669, '2025-10-10 00:00:00', 211, 4),
+(670, '2025-10-10 00:00:00', 212, 4),
+(672, '2025-10-15 00:00:00', 212, 21),
+(673, '2025-10-19 00:00:00', 212, 32),
+(674, '2025-10-25 00:00:00', 212, 8),
+(675, '2025-09-14 00:00:00', 213, 4),
+(677, '2025-09-21 00:00:00', 213, 29),
+(678, '2025-09-23 00:00:00', 213, 19),
+(679, '2025-10-02 00:00:00', 213, 8),
+(680, '2025-09-12 00:00:00', 214, 4),
+(681, '2025-08-18 00:00:00', 215, 4),
+(682, '2025-08-20 00:00:00', 215, 24),
+(683, '2025-08-21 00:00:00', 215, 24),
+(684, '2025-08-24 00:00:00', 215, 9),
+(685, '2025-08-16 00:00:00', 216, 4),
+(686, '2025-08-17 00:00:00', 216, 35),
+(687, '2025-08-21 00:00:00', 216, 33),
+(688, '2025-09-14 00:00:00', 216, 6),
+(689, '2025-08-16 00:00:00', 217, 4),
+(690, '2025-10-09 00:00:00', 218, 4),
+(691, '2025-10-09 00:00:00', 219, 4),
+(692, '2025-10-11 00:00:00', 220, 4),
+(693, '2025-10-12 00:00:00', 220, 19),
+(694, '2025-10-16 00:00:00', 220, 17),
+(695, '2025-10-27 00:00:00', 220, 8),
+(696, '2025-01-20 00:00:00', 221, 4),
+(697, '2025-01-23 00:00:00', 222, 4),
+(700, '2025-01-28 00:00:00', 222, 29),
+(701, '2025-01-29 00:00:00', 222, 19),
+(702, '2025-02-16 00:00:00', 222, 9),
+(703, '2025-01-22 00:00:00', 223, 4),
+(704, '2025-01-23 00:00:00', 223, 19),
+(705, '2025-01-25 00:00:00', 223, 35),
+(706, '2025-01-29 00:00:00', 223, 6),
+(707, '2025-01-20 00:00:00', 224, 4),
+(710, '2025-01-25 00:00:00', 224, 33),
+(711, '2025-01-27 00:00:00', 224, 17),
+(712, '2025-02-14 00:00:00', 224, 8),
+(713, '2025-07-27 00:00:00', 225, 4),
+(714, '2025-07-30 00:00:00', 225, 32),
+(715, '2025-08-03 00:00:00', 225, 32),
+(716, '2025-08-12 00:00:00', 225, 9),
+(717, '2025-01-20 00:00:00', 226, 4),
+(718, '2025-01-21 00:00:00', 227, 4),
+(720, '2025-01-26 00:00:00', 227, 35),
+(721, '2025-01-28 00:00:00', 227, 24),
+(722, '2025-01-31 00:00:00', 227, 9),
+(723, '2025-01-20 00:00:00', 228, 4),
+(726, '2025-01-27 00:00:00', 228, 17),
+(727, '2025-01-30 00:00:00', 228, 32),
+(728, '2025-02-07 00:00:00', 228, 9),
+(729, '2025-08-17 00:00:00', 229, 4),
+(731, '2025-08-19 00:00:00', 229, 35),
+(732, '2025-08-23 00:00:00', 229, 31),
+(733, '2025-09-10 00:00:00', 229, 9),
+(734, '2025-11-04 00:00:00', 230, 4),
+(736, '2025-11-10 00:00:00', 230, 23),
+(737, '2025-11-11 00:00:00', 230, 21),
+(738, '2025-11-23 00:00:00', 230, 9),
+(740, '2025-11-05 00:00:00', 232, 4),
+(741, '2025-11-03 00:00:00', 233, 4),
+(742, '2025-11-05 00:00:00', 233, 21),
+(743, '2025-11-07 00:00:00', 233, 24),
+(744, '2025-11-08 00:00:00', 233, 24),
+(745, '2025-11-28 00:00:00', 233, 9),
+(746, '2025-08-17 00:00:00', 234, 4),
+(747, '2025-08-18 00:00:00', 234, 19),
+(748, '2025-08-21 00:00:00', 234, 24),
+(749, '2025-08-22 00:00:00', 234, 24),
+(750, '2025-08-24 00:00:00', 234, 33),
+(751, '2025-09-01 00:00:00', 234, 9),
+(752, '2025-08-17 00:00:00', 235, 4),
+(753, '2025-08-19 00:00:00', 235, 33),
+(754, '2025-08-23 00:00:00', 235, 20),
+(755, '2025-08-25 00:00:00', 235, 8),
+(756, '2025-11-03 00:00:00', 236, 4),
+(757, '2025-11-06 00:00:00', 236, 21),
+(758, '2025-11-09 00:00:00', 236, 33),
+(759, '2025-11-11 00:00:00', 236, 29),
+(760, '2025-11-12 00:00:00', 236, 23),
+(761, '2025-11-26 00:00:00', 236, 8),
+(762, '2025-11-03 00:00:00', 237, 4),
+(763, '2025-11-04 00:00:00', 237, 24),
+(764, '2025-11-05 00:00:00', 237, 19),
+(765, '2025-11-22 00:00:00', 237, 8),
+(766, '2025-11-06 00:00:00', 238, 4),
+(767, '2025-11-09 00:00:00', 238, 17),
+(768, '2025-11-13 00:00:00', 238, 6),
+(769, '2025-10-09 00:00:00', 239, 4),
+(770, '2025-10-11 00:00:00', 239, 19),
+(771, '2025-10-13 00:00:00', 239, 19),
+(772, '2025-11-04 00:00:00', 239, 8),
+(773, '2025-10-12 00:00:00', 240, 4),
+(774, '2025-10-13 00:00:00', 240, 33),
+(775, '2025-10-15 00:00:00', 240, 35),
+(776, '2025-10-17 00:00:00', 240, 20),
+(777, '2025-10-25 00:00:00', 240, 8),
+(778, '2025-08-17 00:00:00', 241, 4),
+(779, '2025-08-18 00:00:00', 241, 24),
+(780, '2025-08-20 00:00:00', 241, 29),
+(781, '2025-08-21 00:00:00', 241, 23),
+(782, '2025-08-24 00:00:00', 241, 29),
+(783, '2025-08-26 00:00:00', 241, 6),
+(784, '2025-08-18 00:00:00', 242, 4),
+(785, '2025-08-19 00:00:00', 242, 29),
+(786, '2025-08-21 00:00:00', 242, 31),
+(787, '2025-08-23 00:00:00', 242, 23),
+(788, '2025-08-29 00:00:00', 242, 6),
+(789, '2025-07-29 00:00:00', 243, 4),
+(790, '2025-08-01 00:00:00', 243, 31),
+(791, '2025-08-05 00:00:00', 243, 21),
+(792, '2025-08-09 00:00:00', 243, 24),
+(793, '2025-08-13 00:00:00', 243, 19),
+(794, '2025-08-21 00:00:00', 243, 8),
+(795, '2025-10-11 00:00:00', 244, 4),
+(796, '2025-10-14 00:00:00', 244, 31),
+(797, '2025-10-18 00:00:00', 244, 17),
+(798, '2025-10-22 00:00:00', 244, 31),
+(799, '2025-10-26 00:00:00', 244, 9),
+(800, '2025-11-16 00:00:00', 245, 4),
+(801, '2025-11-15 00:00:00', 246, 4),
+(802, '2025-11-16 00:00:00', 247, 4),
+(803, '2025-10-11 00:00:00', 248, 4),
+(804, '2025-10-11 00:00:00', 249, 4),
+(805, '2025-10-13 00:00:00', 249, 24),
+(806, '2025-10-15 00:00:00', 249, 35),
+(807, '2025-10-16 00:00:00', 249, 32),
+(808, '2025-10-22 00:00:00', 249, 6),
+(809, '2025-04-14 00:00:00', 250, 4),
+(810, '2025-04-16 00:00:00', 250, 33),
+(811, '2025-04-19 00:00:00', 250, 17),
+(812, '2025-04-20 00:00:00', 250, 19),
+(813, '2025-05-11 00:00:00', 250, 6),
+(814, '2025-04-12 00:00:00', 251, 4),
+(815, '2025-04-14 00:00:00', 251, 33),
+(816, '2025-04-18 00:00:00', 251, 21),
+(817, '2025-04-20 00:00:00', 251, 31),
+(818, '2025-04-22 00:00:00', 251, 6),
+(819, '2025-01-21 00:00:00', 252, 4),
+(820, '2025-01-22 00:00:00', 253, 4),
+(821, '2025-01-24 00:00:00', 253, 24),
+(822, '2025-01-26 00:00:00', 253, 20),
+(823, '2025-01-27 00:00:00', 253, 21),
+(824, '2025-01-28 00:00:00', 253, 33),
+(825, '2025-02-06 00:00:00', 253, 6),
+(826, '2025-09-14 00:00:00', 254, 4),
+(827, '2025-01-21 00:00:00', 255, 4),
+(828, '2025-01-22 00:00:00', 255, 35),
+(829, '2025-01-25 00:00:00', 255, 20),
+(830, '2025-01-28 00:00:00', 255, 35),
+(831, '2025-01-30 00:00:00', 255, 20),
+(832, '2025-02-02 00:00:00', 255, 8),
+(833, '2025-01-20 00:00:00', 256, 4),
+(834, '2025-07-29 00:00:00', 257, 4),
+(835, '2025-08-01 00:00:00', 257, 17),
+(836, '2025-08-02 00:00:00', 257, 32),
+(837, '2025-08-04 00:00:00', 257, 21),
+(838, '2025-08-22 00:00:00', 257, 6),
+(839, '2025-11-14 00:00:00', 258, 4),
+(840, '2025-11-16 00:00:00', 258, 21),
+(841, '2025-11-19 00:00:00', 258, 35),
+(842, '2025-11-23 00:00:00', 258, 32),
+(843, '2025-11-27 00:00:00', 258, 24),
+(844, '2025-12-13 00:00:00', 258, 9),
+(845, '2025-11-17 00:00:00', 259, 4),
+(846, '2025-11-20 00:00:00', 259, 32),
+(847, '2025-11-22 00:00:00', 259, 29),
+(848, '2025-11-25 00:00:00', 259, 20),
+(849, '2025-12-06 00:00:00', 259, 6),
+(850, '2025-11-06 00:00:00', 260, 4),
+(851, '2025-08-18 00:00:00', 261, 4),
+(852, '2025-08-18 00:00:00', 262, 4),
+(853, '2025-08-21 00:00:00', 262, 21),
+(854, '2025-08-23 00:00:00', 262, 24),
+(855, '2025-08-25 00:00:00', 262, 17),
+(856, '2025-08-26 00:00:00', 262, 23),
+(857, '2025-09-07 00:00:00', 262, 6),
+(858, '2025-08-17 00:00:00', 263, 4),
+(859, '2025-08-19 00:00:00', 263, 32),
+(860, '2025-08-20 00:00:00', 263, 35),
+(861, '2025-08-21 00:00:00', 263, 29),
+(862, '2025-08-25 00:00:00', 263, 35),
+(863, '2025-09-13 00:00:00', 263, 9),
+(864, '2025-09-14 00:00:00', 264, 4),
+(865, '2025-09-17 00:00:00', 264, 33),
+(866, '2025-09-20 00:00:00', 264, 24),
+(867, '2025-09-21 00:00:00', 264, 33),
+(868, '2025-10-10 00:00:00', 264, 6),
+(869, '2025-09-11 00:00:00', 265, 4),
+(870, '2025-09-11 00:00:00', 266, 4),
+(871, '2025-09-14 00:00:00', 266, 35),
+(872, '2025-09-17 00:00:00', 266, 19),
+(873, '2025-09-19 00:00:00', 266, 19),
+(874, '2025-09-21 00:00:00', 266, 17),
+(875, '2025-10-06 00:00:00', 266, 8),
+(876, '2025-09-14 00:00:00', 267, 4),
+(877, '2025-09-15 00:00:00', 267, 35),
+(878, '2025-09-19 00:00:00', 267, 20),
+(879, '2025-09-21 00:00:00', 267, 35),
+(880, '2025-10-11 00:00:00', 267, 9),
+(881, '2025-09-12 00:00:00', 268, 4),
+(882, '2025-09-14 00:00:00', 269, 4),
+(883, '2025-09-17 00:00:00', 269, 17),
+(884, '2025-09-18 00:00:00', 269, 17),
+(885, '2025-09-21 00:00:00', 269, 17),
+(886, '2025-09-22 00:00:00', 269, 24),
+(887, '2025-10-14 00:00:00', 269, 9),
+(888, '2025-04-14 00:00:00', 270, 4),
+(889, '2025-04-16 00:00:00', 270, 21),
+(890, '2025-04-20 00:00:00', 270, 33),
+(891, '2025-04-29 00:00:00', 270, 6),
+(892, '2025-04-15 00:00:00', 271, 4),
+(893, '2025-11-15 00:00:00', 272, 4),
+(894, '2025-11-05 00:00:00', 273, 4),
+(895, '2025-11-08 00:00:00', 273, 20),
+(896, '2025-11-12 00:00:00', 273, 17),
+(897, '2025-11-13 00:00:00', 273, 21),
+(898, '2025-11-21 00:00:00', 273, 6),
+(899, '2025-11-05 00:00:00', 274, 4),
+(900, '2025-11-06 00:00:00', 275, 4),
+(901, '2025-11-09 00:00:00', 275, 17),
+(902, '2025-11-10 00:00:00', 275, 21),
+(903, '2025-11-14 00:00:00', 275, 31),
+(904, '2025-11-18 00:00:00', 275, 6),
+(905, '2025-01-21 00:00:00', 276, 4),
+(906, '2025-01-24 00:00:00', 276, 33),
+(907, '2025-01-27 00:00:00', 276, 35),
+(908, '2025-01-28 00:00:00', 276, 24),
+(909, '2025-01-30 00:00:00', 276, 20),
+(910, '2025-02-07 00:00:00', 276, 6),
+(911, '2025-01-23 00:00:00', 277, 4),
+(912, '2025-01-25 00:00:00', 277, 23),
+(913, '2025-01-26 00:00:00', 277, 20),
+(914, '2025-01-28 00:00:00', 277, 35),
+(915, '2025-01-30 00:00:00', 277, 8),
+(916, '2025-01-21 00:00:00', 278, 4),
+(917, '2025-01-20 00:00:00', 279, 4),
+(918, '2025-01-23 00:00:00', 279, 33),
+(919, '2025-01-26 00:00:00', 279, 19),
+(920, '2025-01-30 00:00:00', 279, 35),
+(921, '2025-02-15 00:00:00', 279, 8),
+(922, '2025-01-21 00:00:00', 280, 4),
+(923, '2025-01-23 00:00:00', 280, 19),
+(924, '2025-01-27 00:00:00', 280, 21),
+(925, '2025-01-29 00:00:00', 280, 29),
+(926, '2025-01-31 00:00:00', 280, 17),
+(927, '2025-02-10 00:00:00', 280, 8),
+(928, '2025-08-16 00:00:00', 281, 4),
+(929, '2025-08-19 00:00:00', 281, 17),
+(930, '2025-08-22 00:00:00', 281, 35),
+(931, '2025-09-04 00:00:00', 281, 8),
+(932, '2025-11-05 00:00:00', 282, 4),
+(933, '2025-11-05 00:00:00', 283, 4),
+(934, '2025-11-07 00:00:00', 283, 21),
+(935, '2025-11-11 00:00:00', 283, 19),
+(936, '2025-11-15 00:00:00', 283, 29),
+(937, '2025-11-21 00:00:00', 283, 6),
+(938, '2025-11-05 00:00:00', 284, 4),
+(939, '2025-11-06 00:00:00', 285, 4),
+(940, '2025-11-09 00:00:00', 285, 17),
+(941, '2025-11-11 00:00:00', 285, 8),
+(942, '2025-01-22 00:00:00', 286, 4),
+(943, '2025-01-24 00:00:00', 286, 17),
+(944, '2025-01-28 00:00:00', 286, 33),
+(945, '2025-01-29 00:00:00', 286, 21),
+(946, '2025-02-02 00:00:00', 286, 32),
+(947, '2025-02-04 00:00:00', 286, 6),
+(948, '2025-01-20 00:00:00', 287, 4),
+(949, '2025-01-21 00:00:00', 287, 35),
+(950, '2025-01-25 00:00:00', 287, 32),
+(951, '2025-01-26 00:00:00', 287, 20),
+(952, '2025-01-29 00:00:00', 287, 35),
+(953, '2025-02-17 00:00:00', 287, 9),
+(954, '2025-01-21 00:00:00', 288, 4),
+(955, '2025-01-24 00:00:00', 288, 35),
+(956, '2025-01-27 00:00:00', 288, 17),
+(957, '2025-01-30 00:00:00', 288, 6),
+(958, '2025-04-15 00:00:00', 289, 4),
+(959, '2025-04-15 00:00:00', 290, 4),
+(960, '2025-04-16 00:00:00', 290, 31),
+(961, '2025-04-20 00:00:00', 290, 23),
+(962, '2025-04-23 00:00:00', 290, 33),
+(963, '2025-04-24 00:00:00', 290, 20),
+(964, '2025-05-15 00:00:00', 290, 8),
+(965, '2025-09-11 00:00:00', 291, 4),
+(966, '2025-09-12 00:00:00', 291, 35),
+(967, '2025-09-16 00:00:00', 291, 32),
+(968, '2025-09-29 00:00:00', 291, 9),
+(969, '2025-09-13 00:00:00', 292, 4),
+(970, '2025-09-14 00:00:00', 292, 35),
+(971, '2025-09-15 00:00:00', 292, 24),
+(972, '2025-09-19 00:00:00', 292, 9),
+(973, '2025-09-13 00:00:00', 293, 4),
+(974, '2025-10-11 00:00:00', 294, 4),
+(975, '2025-10-09 00:00:00', 295, 4),
+(976, '2025-10-11 00:00:00', 295, 29),
+(977, '2025-10-12 00:00:00', 295, 32),
+(978, '2025-10-13 00:00:00', 295, 23),
+(979, '2025-10-22 00:00:00', 295, 6),
+(980, '2025-11-14 00:00:00', 296, 4),
+(981, '2025-11-14 00:00:00', 297, 4),
+(982, '2025-11-17 00:00:00', 297, 17),
+(983, '2025-11-18 00:00:00', 297, 21),
+(984, '2025-11-20 00:00:00', 297, 24),
+(985, '2025-12-09 00:00:00', 297, 8),
+(986, '2025-11-05 00:00:00', 298, 4),
+(987, '2025-11-05 00:00:00', 299, 4),
+(988, '2025-11-07 00:00:00', 299, 17),
+(989, '2025-11-11 00:00:00', 299, 21),
+(990, '2025-11-16 00:00:00', 299, 6),
+(991, '2025-11-06 00:00:00', 300, 4),
+(992, '2025-11-08 00:00:00', 300, 33),
+(993, '2025-11-12 00:00:00', 300, 35),
+(994, '2025-11-15 00:00:00', 300, 8),
+(995, '2025-11-03 00:00:00', 301, 4),
+(996, '2025-01-21 00:00:00', 302, 4),
+(997, '2025-01-23 00:00:00', 302, 21),
+(998, '2025-01-27 00:00:00', 302, 19),
+(999, '2025-02-14 00:00:00', 302, 8),
+(1000, '2025-01-23 00:00:00', 303, 4),
+(1001, '2025-01-26 00:00:00', 303, 17),
+(1002, '2025-01-27 00:00:00', 303, 21),
+(1003, '2025-01-29 00:00:00', 303, 23),
+(1004, '2025-02-01 00:00:00', 303, 32),
+(1005, '2025-02-09 00:00:00', 303, 8),
+(1006, '2025-01-20 00:00:00', 304, 4),
+(1007, '2025-01-22 00:00:00', 304, 31),
+(1008, '2025-01-25 00:00:00', 304, 33),
+(1009, '2025-01-27 00:00:00', 304, 31),
+(1010, '2025-01-30 00:00:00', 304, 21),
+(1011, '2025-02-14 00:00:00', 304, 8),
+(1012, '2025-08-16 00:00:00', 305, 4),
+(1013, '2025-08-17 00:00:00', 305, 35),
+(1014, '2025-08-19 00:00:00', 305, 33),
+(1015, '2025-09-04 00:00:00', 305, 6),
+(1016, '2025-08-17 00:00:00', 306, 4),
+(1017, '2025-11-03 00:00:00', 307, 4),
+(1018, '2025-11-05 00:00:00', 307, 21),
+(1019, '2025-11-07 00:00:00', 307, 17),
+(1020, '2025-11-08 00:00:00', 307, 9),
+(1021, '2025-03-03 00:00:00', 308, 4),
+(1022, '2025-03-04 00:00:00', 308, 33),
+(1023, '2025-03-06 00:00:00', 308, 31),
+(1024, '2025-03-11 00:00:00', 308, 6),
+(1025, '2025-08-12 00:00:00', 309, 4),
+(1026, '2025-08-15 00:00:00', 309, 23),
+(1027, '2025-08-16 00:00:00', 309, 23),
+(1028, '2025-08-18 00:00:00', 309, 35),
+(1029, '2025-09-08 00:00:00', 309, 6),
+(1030, '2025-08-12 00:00:00', 310, 4),
+(1031, '2025-08-12 00:00:00', 311, 4),
+(1032, '2025-08-13 00:00:00', 312, 4),
+(1033, '2025-03-07 00:00:00', 313, 4),
+(1034, '2025-03-09 00:00:00', 314, 4),
+(1035, '2025-03-12 00:00:00', 314, 23),
+(1036, '2025-03-16 00:00:00', 314, 19),
+(1037, '2025-03-24 00:00:00', 314, 6),
+(1038, '2025-03-08 00:00:00', 315, 4),
+(1039, '2025-03-09 00:00:00', 315, 33),
+(1040, '2025-03-13 00:00:00', 315, 33),
+(1041, '2025-04-05 00:00:00', 315, 8),
+(1042, '2025-10-27 00:00:00', 316, 4),
+(1043, '2025-10-28 00:00:00', 316, 29),
+(1044, '2025-10-30 00:00:00', 316, 17),
+(1045, '2025-11-01 00:00:00', 316, 35),
+(1046, '2025-11-05 00:00:00', 316, 19),
+(1047, '2025-11-22 00:00:00', 316, 9),
+(1048, '2025-10-27 00:00:00', 317, 4),
+(1049, '2025-10-30 00:00:00', 317, 33),
+(1050, '2025-11-01 00:00:00', 317, 23),
+(1051, '2025-11-02 00:00:00', 317, 21),
+(1052, '2025-11-06 00:00:00', 317, 24),
+(1053, '2025-11-07 00:00:00', 317, 9),
+(1054, '2025-10-29 00:00:00', 318, 4),
+(1055, '2025-10-31 00:00:00', 318, 23),
+(1056, '2025-11-01 00:00:00', 318, 29),
+(1057, '2025-11-03 00:00:00', 318, 19),
+(1058, '2025-11-18 00:00:00', 318, 9),
+(1059, '2025-01-18 00:00:00', 319, 4),
+(1060, '2025-01-17 00:00:00', 320, 4),
+(1061, '2025-01-17 00:00:00', 321, 4),
+(1062, '2025-03-08 00:00:00', 322, 4),
+(1063, '2025-03-10 00:00:00', 322, 23),
+(1064, '2025-03-11 00:00:00', 322, 29),
+(1065, '2025-03-13 00:00:00', 322, 19),
+(1066, '2025-04-05 00:00:00', 322, 6),
+(1067, '2025-03-09 00:00:00', 323, 4),
+(1068, '2025-03-12 00:00:00', 323, 33),
+(1069, '2025-03-13 00:00:00', 323, 23),
+(1070, '2025-03-15 00:00:00', 323, 20),
+(1071, '2025-03-17 00:00:00', 323, 19),
+(1072, '2025-03-28 00:00:00', 323, 9),
+(1073, '2025-03-06 00:00:00', 324, 4),
+(1074, '2025-03-09 00:00:00', 324, 20),
+(1075, '2025-03-11 00:00:00', 324, 21),
+(1076, '2025-03-14 00:00:00', 324, 29),
+(1077, '2025-03-31 00:00:00', 324, 9),
+(1078, '2025-05-20 00:00:00', 325, 4),
+(1079, '2025-05-21 00:00:00', 325, 35),
+(1080, '2025-05-25 00:00:00', 325, 35),
+(1081, '2025-05-31 00:00:00', 325, 8),
+(1082, '2025-07-07 00:00:00', 326, 4),
+(1083, '2025-07-08 00:00:00', 327, 4),
+(1084, '2025-07-10 00:00:00', 327, 31),
+(1085, '2025-07-11 00:00:00', 327, 23),
+(1086, '2025-07-14 00:00:00', 327, 20),
+(1087, '2025-07-18 00:00:00', 327, 20),
+(1088, '2025-07-24 00:00:00', 327, 9),
+(1089, '2025-07-07 00:00:00', 328, 4),
+(1090, '2025-10-26 00:00:00', 329, 4),
+(1091, '2025-10-29 00:00:00', 329, 19),
+(1092, '2025-10-30 00:00:00', 329, 19),
+(1093, '2025-11-02 00:00:00', 329, 9),
+(1094, '2025-05-21 00:00:00', 330, 4),
+(1095, '2025-08-12 00:00:00', 331, 4),
+(1096, '2025-01-15 00:00:00', 332, 4),
+(1097, '2025-01-16 00:00:00', 332, 17),
+(1098, '2025-01-19 00:00:00', 332, 20),
+(1099, '2025-01-21 00:00:00', 332, 35),
+(1100, '2025-01-23 00:00:00', 332, 33),
+(1101, '2025-02-10 00:00:00', 332, 8),
+(1102, '2025-01-17 00:00:00', 333, 4),
+(1103, '2025-07-08 00:00:00', 334, 4),
+(1104, '2025-07-10 00:00:00', 334, 17),
+(1105, '2025-07-13 00:00:00', 334, 32),
+(1106, '2025-07-16 00:00:00', 334, 31),
+(1107, '2025-08-01 00:00:00', 334, 9),
+(1108, '2025-07-09 00:00:00', 335, 4),
+(1109, '2025-07-12 00:00:00', 335, 29),
+(1110, '2025-07-16 00:00:00', 335, 33),
+(1111, '2025-07-20 00:00:00', 335, 35),
+(1112, '2025-07-31 00:00:00', 335, 6),
+(1113, '2025-07-09 00:00:00', 336, 4),
+(1114, '2025-03-04 00:00:00', 337, 4),
+(1115, '2025-03-06 00:00:00', 337, 17),
+(1116, '2025-03-07 00:00:00', 337, 17),
+(1117, '2025-03-09 00:00:00', 337, 29),
+(1118, '2025-03-25 00:00:00', 337, 9),
+(1119, '2025-03-04 00:00:00', 338, 4),
+(1120, '2025-03-05 00:00:00', 338, 33),
+(1121, '2025-03-07 00:00:00', 338, 21),
+(1122, '2025-03-10 00:00:00', 338, 33),
+(1123, '2025-03-19 00:00:00', 338, 8),
+(1124, '2025-01-16 00:00:00', 339, 4),
+(1125, '2025-01-17 00:00:00', 340, 4),
+(1126, '2025-01-18 00:00:00', 340, 17),
+(1127, '2025-01-21 00:00:00', 340, 33),
+(1128, '2025-01-22 00:00:00', 340, 31),
+(1129, '2025-02-09 00:00:00', 340, 8),
+(1130, '2025-03-03 00:00:00', 341, 4),
+(1131, '2025-03-03 00:00:00', 342, 4),
+(1132, '2025-03-04 00:00:00', 342, 35),
+(1133, '2025-03-07 00:00:00', 342, 19),
+(1134, '2025-03-09 00:00:00', 342, 9),
+(1135, '2025-05-18 00:00:00', 343, 4),
+(1136, '2025-05-19 00:00:00', 343, 19),
+(1137, '2025-05-20 00:00:00', 343, 21),
+(1138, '2025-05-24 00:00:00', 343, 35),
+(1139, '2025-05-26 00:00:00', 343, 20),
+(1140, '2025-05-30 00:00:00', 343, 6),
+(1141, '2025-03-06 00:00:00', 344, 4),
+(1142, '2025-03-09 00:00:00', 344, 24),
+(1143, '2025-03-11 00:00:00', 344, 35),
+(1144, '2025-03-13 00:00:00', 344, 19),
+(1145, '2025-03-21 00:00:00', 344, 9),
+(1146, '2025-03-08 00:00:00', 345, 4),
+(1147, '2025-03-09 00:00:00', 346, 4),
+(1148, '2025-01-18 00:00:00', 347, 4),
+(1149, '2025-01-20 00:00:00', 347, 32),
+(1150, '2025-01-23 00:00:00', 347, 24),
+(1151, '2025-01-24 00:00:00', 347, 24),
+(1152, '2025-01-25 00:00:00', 347, 9),
+(1153, '2025-01-18 00:00:00', 348, 4),
+(1154, '2025-01-17 00:00:00', 349, 4),
+(1155, '2025-01-18 00:00:00', 349, 33),
+(1156, '2025-01-21 00:00:00', 349, 33),
+(1157, '2025-01-24 00:00:00', 349, 29),
+(1158, '2025-02-15 00:00:00', 349, 8),
+(1159, '2025-01-18 00:00:00', 350, 4),
+(1160, '2025-01-19 00:00:00', 350, 21),
+(1161, '2025-01-21 00:00:00', 350, 33),
+(1162, '2025-02-12 00:00:00', 350, 8),
+(1163, '2025-10-26 00:00:00', 351, 4),
+(1164, '2025-10-27 00:00:00', 352, 4),
+(1165, '2025-10-28 00:00:00', 353, 4),
+(1166, '2025-10-31 00:00:00', 353, 32),
+(1167, '2025-11-02 00:00:00', 353, 35),
+(1168, '2025-11-05 00:00:00', 353, 8),
+(1169, '2025-11-01 00:00:00', 354, 4),
+(1170, '2025-11-04 00:00:00', 355, 4),
+(1171, '2025-11-05 00:00:00', 355, 29),
+(1172, '2025-11-08 00:00:00', 355, 21),
+(1173, '2025-11-09 00:00:00', 355, 19),
+(1174, '2025-11-16 00:00:00', 355, 6),
+(1175, '2025-11-03 00:00:00', 356, 4),
+(1176, '2025-11-04 00:00:00', 356, 19),
+(1177, '2025-11-07 00:00:00', 356, 29),
+(1178, '2025-11-22 00:00:00', 356, 9),
+(1179, '2025-11-01 00:00:00', 357, 4),
+(1180, '2025-11-04 00:00:00', 357, 17),
+(1181, '2025-11-05 00:00:00', 357, 20),
+(1182, '2025-11-09 00:00:00', 357, 17),
+(1183, '2025-11-20 00:00:00', 357, 9),
+(1184, '2025-08-11 00:00:00', 358, 4),
+(1185, '2025-08-12 00:00:00', 358, 20),
+(1186, '2025-08-15 00:00:00', 358, 21),
+(1187, '2025-08-16 00:00:00', 358, 6),
+(1188, '2025-08-13 00:00:00', 359, 4),
+(1189, '2025-03-07 00:00:00', 360, 4),
+(1190, '2025-03-10 00:00:00', 360, 24),
+(1191, '2025-03-12 00:00:00', 360, 29),
+(1192, '2025-03-13 00:00:00', 360, 17),
+(1193, '2025-03-17 00:00:00', 360, 31),
+(1194, '2025-03-22 00:00:00', 360, 8),
+(1195, '2025-03-08 00:00:00', 361, 4),
+(1196, '2025-03-09 00:00:00', 361, 21),
+(1197, '2025-03-12 00:00:00', 361, 33),
+(1198, '2025-03-15 00:00:00', 361, 9),
+(1199, '2025-03-08 00:00:00', 362, 4),
+(1200, '2025-03-07 00:00:00', 363, 4),
+(1201, '2025-03-07 00:00:00', 364, 4),
+(1202, '2025-03-08 00:00:00', 364, 24),
+(1203, '2025-03-11 00:00:00', 364, 23),
+(1204, '2025-03-15 00:00:00', 364, 23),
+(1205, '2025-03-19 00:00:00', 364, 35),
+(1206, '2025-03-26 00:00:00', 364, 8),
+(1207, '2025-03-07 00:00:00', 365, 4),
+(1208, '2025-03-08 00:00:00', 365, 33),
+(1209, '2025-03-09 00:00:00', 365, 20),
+(1210, '2025-03-25 00:00:00', 365, 6),
+(1211, '2025-03-08 00:00:00', 366, 4),
+(1212, '2025-03-07 00:00:00', 367, 4),
+(1213, '2025-03-02 00:00:00', 368, 4),
+(1214, '2025-01-15 00:00:00', 369, 4),
+(1215, '2025-01-17 00:00:00', 369, 35),
+(1216, '2025-01-18 00:00:00', 369, 32),
+(1217, '2025-02-07 00:00:00', 369, 9),
+(1218, '2025-01-15 00:00:00', 370, 4),
+(1219, '2025-05-21 00:00:00', 371, 4),
+(1220, '2025-05-24 00:00:00', 371, 32),
+(1221, '2025-05-26 00:00:00', 371, 24),
+(1222, '2025-05-29 00:00:00', 371, 24),
+(1223, '2025-06-11 00:00:00', 371, 6),
+(1224, '2025-05-20 00:00:00', 372, 4),
+(1225, '2025-05-23 00:00:00', 372, 20),
+(1226, '2025-05-25 00:00:00', 372, 9),
+(1227, '2025-03-02 00:00:00', 373, 4),
+(1228, '2025-03-04 00:00:00', 373, 32),
+(1229, '2025-03-07 00:00:00', 373, 33),
+(1230, '2025-03-15 00:00:00', 373, 9),
+(1231, '2025-01-17 00:00:00', 374, 4),
+(1232, '2025-01-18 00:00:00', 374, 19),
+(1233, '2025-01-22 00:00:00', 374, 19),
+(1234, '2025-01-26 00:00:00', 374, 20),
+(1235, '2025-02-08 00:00:00', 374, 9),
+(1236, '2025-03-08 00:00:00', 375, 4),
+(1237, '2025-03-10 00:00:00', 375, 35),
+(1238, '2025-03-12 00:00:00', 375, 20),
+(1239, '2025-03-15 00:00:00', 375, 32),
+(1240, '2025-03-17 00:00:00', 375, 19),
+(1241, '2025-04-04 00:00:00', 375, 9),
+(1242, '2025-05-20 00:00:00', 376, 4),
+(1243, '2025-05-22 00:00:00', 376, 31),
+(1244, '2025-05-23 00:00:00', 376, 17),
+(1245, '2025-05-26 00:00:00', 376, 19),
+(1246, '2025-05-27 00:00:00', 376, 6),
+(1247, '2025-05-18 00:00:00', 377, 4),
+(1248, '2025-05-19 00:00:00', 378, 4),
+(1249, '2025-07-09 00:00:00', 379, 4),
+(1250, '2025-10-29 00:00:00', 380, 4),
+(1251, '2025-10-30 00:00:00', 380, 19),
+(1252, '2025-11-02 00:00:00', 380, 19),
+(1253, '2025-11-10 00:00:00', 380, 6),
+(1254, '2025-10-28 00:00:00', 381, 4),
+(1255, '2025-03-03 00:00:00', 382, 4),
+(1256, '2025-03-05 00:00:00', 383, 4),
+(1257, '2025-05-21 00:00:00', 384, 4),
+(1258, '2025-05-22 00:00:00', 384, 21),
+(1259, '2025-05-25 00:00:00', 384, 17),
+(1260, '2025-05-26 00:00:00', 384, 31),
+(1261, '2025-05-30 00:00:00', 384, 23),
+(1262, '2025-06-05 00:00:00', 384, 9),
+(1263, '2025-05-20 00:00:00', 385, 4),
+(1264, '2025-08-10 00:00:00', 386, 4),
+(1265, '2025-08-11 00:00:00', 387, 4),
+(1266, '2025-08-13 00:00:00', 388, 4),
+(1267, '2025-11-04 00:00:00', 389, 4),
+(1268, '2025-11-02 00:00:00', 390, 4),
+(1269, '2025-11-02 00:00:00', 391, 4),
+(1270, '2025-11-05 00:00:00', 391, 33),
+(1271, '2025-11-07 00:00:00', 391, 33),
+(1272, '2025-11-11 00:00:00', 391, 32),
+(1273, '2025-11-21 00:00:00', 391, 9),
+(1274, '2025-10-28 00:00:00', 392, 4),
+(1275, '2025-10-30 00:00:00', 392, 23),
+(1276, '2025-11-02 00:00:00', 392, 32),
+(1277, '2025-11-19 00:00:00', 392, 9),
+(1278, '2025-10-26 00:00:00', 393, 4),
+(1279, '2025-05-18 00:00:00', 394, 4),
+(1280, '2025-05-21 00:00:00', 395, 4),
+(1281, '2025-05-24 00:00:00', 395, 35),
+(1282, '2025-05-27 00:00:00', 395, 31),
+(1283, '2025-06-05 00:00:00', 395, 6),
+(1284, '2025-05-20 00:00:00', 396, 4),
+(1285, '2025-05-23 00:00:00', 396, 35),
+(1286, '2025-05-24 00:00:00', 396, 31),
+(1287, '2025-05-27 00:00:00', 396, 20),
+(1288, '2025-06-11 00:00:00', 396, 8),
+(1289, '2025-03-08 00:00:00', 397, 4),
+(1290, '2025-03-10 00:00:00', 397, 17),
+(1291, '2025-03-12 00:00:00', 397, 20),
+(1292, '2025-03-15 00:00:00', 397, 6),
+(1293, '2025-03-07 00:00:00', 398, 4),
+(1294, '2025-03-10 00:00:00', 398, 32),
+(1295, '2025-03-11 00:00:00', 398, 23),
+(1296, '2025-03-12 00:00:00', 398, 24),
+(1297, '2025-03-13 00:00:00', 398, 29),
+(1298, '2025-03-30 00:00:00', 398, 8),
+(1299, '2025-10-26 00:00:00', 399, 4),
+(1300, '2025-03-02 00:00:00', 400, 4),
+(1301, '2025-03-05 00:00:00', 400, 17),
+(1302, '2025-03-08 00:00:00', 400, 6),
+(1303, '2025-03-04 00:00:00', 401, 4),
+(1304, '2025-03-04 00:00:00', 402, 4),
+(1305, '2025-03-02 00:00:00', 403, 4),
+(1306, '2025-12-27 22:08:31', 1, 21),
+(1307, '2025-12-27 22:16:38', 231, 21);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `eventtype`
+--
+
+DROP TABLE IF EXISTS `eventtype`;
+CREATE TABLE IF NOT EXISTS `eventtype` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Code` varchar(4) DEFAULT NULL,
+  `Label` varchar(100) DEFAULT NULL,
+  `FamilyId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_EventType_Family` (`FamilyId`)
+) ENGINE=InnoDB AUTO_INCREMENT=70 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `eventtype`
+--
+
+INSERT INTO `eventtype` (`Id`, `Code`, `Label`, `FamilyId`) VALUES
+(2, 'FUII', 'event_type_FUII', 7),
+(3, 'BUFU', 'event_type_FUII_bulk', 7),
+(4, 'VEFU', 'event_type_FUII_vehicle', 7),
+(5, 'CIFU', 'event_type_FUII_cistern', 7),
+(6, 'DELI', 'Livraison Plein Import par Camion', 2),
+(7, 'BUDE', 'event_type_DELI_bulk', 2),
+(8, 'VEDE', 'event_type_DELI_vehicle', 2),
+(9, 'CIDE', 'event_type_DELI_cistern', 2),
+(10, 'BUDM', 'event_type_DAMAGE_INV_bulk', 8),
+(11, 'VEDM', 'event_type_DAMAGE_INV_vehicle', 8),
+(12, 'CIDM', 'event_type_DAMAGE_INV_cistern', 8),
+(13, 'DAMA', 'event_type_DAMAGE_INV', 8),
+(14, 'BLFE', 'event_type_BL_FEE', 13),
+(15, 'TMS', 'Temperature Measure', 14),
+(16, 'EMIN', 'Entrée de Vide par Camion … VT', 7),
+(17, 'EMIW', 'Entrée de Vide par Wagon … VT', 7),
+(18, 'EMIX', 'Entrée de Vide pour Embarquement', 7),
+(19, 'EPTI', 'Entrée Frigo vide pour PTI … ATL', 7),
+(20, 'EREP', 'Retour Vide de Réparation', 7),
+(21, 'DECH', 'Débarquement conteneur', 7),
+(22, 'RMER', 'Reprise du Parc : Mvt maritime', 7),
+(23, 'RLIS', 'Retour Plein de Scanner', 7),
+(24, 'RLIV', 'Livraison Refusée par la Douane', 7),
+(25, 'FUIX', 'Entrée Plein Export sur Camion', 7),
+(26, 'FUIW', 'Entrée Plein Export par Wagon', 7),
+(27, 'RTER', 'Reprise du Parc : Mvt Terrestre', 7),
+(28, 'REGE', 'REGUL. ENTREE / PORTABLE', 7),
+(29, 'REEX', 'Réexportation', 4),
+(30, 'EMOD', 'Enlèvement vide sous palan', 2),
+(31, 'EMOU', 'Sortie de Vide par voie terrestre', 2),
+(32, 'EMOW', 'Sortie de Vide par wagon', 2),
+(33, 'EMOX', 'Sortie Vide pour Empotage', 2),
+(34, 'SODV', 'Sortie Dépot Vide', 2),
+(35, 'SPTI', 'Sortie Frigo vide PTI par Camion', 2),
+(36, 'FUOT', 'Sortie de Plein Transbo', 2),
+(37, 'DELS', 'Livraison Plein Import pour Scanner', 2),
+(38, 'DELW', 'Livraison Plein Import par Wagon', 2),
+(39, 'DELQ', 'Livraison Guerite Quai', 2),
+(40, 'FUOX', 'Sortie de Plein Export', 2),
+(41, 'LOAD', 'Embarquement', 2),
+(42, 'SCAO', 'Sortie après scanner douane', 2),
+(43, 'BREP', 'Sortie pour Réparation', 2),
+(44, 'OULS', 'Sortie Provisoire de VT => LS', 2),
+(45, 'REGS', 'REGUL. SORTIE / PORTABLE', 2),
+(46, 'QUAI', 'QUAI', 13),
+(47, 'RAIL', 'Livraison Wagon', 13),
+(48, 'SCAN', 'SCAN', 13),
+(49, 'DEST', 'DEST', 13),
+(50, 'RLIW', 'Retour Plein de Wagon', 7),
+(51, 'DVIS', 'Double Relevage Visite Douane', 4),
+(52, 'SVGM', 'Saisie Manuelle VGM', 4),
+(53, 'DRLV', 'Double relevage', 4),
+(54, 'SRLV', 'Relevage', 4),
+(55, 'LAFE', 'Late Arrival Fee', 4),
+(56, 'REFU', 'Conteneur Refusé à la Guérite', 4),
+(57, 'ENAN', 'Entrée Anticipée', 4),
+(58, 'EPSP', 'Enlèvement Plein Sous Palan', 2),
+(59, 'REQI', 'Réquisition', 4),
+(60, 'TREQ', 'Transfert Requisition', 4),
+(61, 'DELR', 'Transfert Suite Requisition', 2),
+(62, 'WVGM', 'Poids VGM', 10),
+(63, 'DEPO', 'Sortie pour Dépotage', 2),
+(64, 'TRAN', 'TRANS', 9),
+(65, 'PSEC', 'Transfert Parc Sécurité', 4),
+(66, 'SVIX', 'Sortie vide export', 2),
+(67, 'VTPA', 'Transfert Parc Extérieur', 4),
+(68, 'ETER', 'entrée Terra', 7),
+(69, 'STER', 'sortie Terra', 2);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `family`
+--
+
+DROP TABLE IF EXISTS `family`;
+CREATE TABLE IF NOT EXISTS `family` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Label` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `family`
+--
+
+INSERT INTO `family` (`Id`, `Label`) VALUES
+(1, 'Move'),
+(2, 'Out'),
+(3, 'Repair'),
+(4, 'Inspection'),
+(5, 'Cleaning'),
+(6, 'Packing'),
+(7, 'In'),
+(8, 'Damage_Inventory'),
+(9, 'Transfer'),
+(10, 'WeightVolumeMeasurement'),
+(11, 'Unstuffing'),
+(12, 'Stuffing'),
+(13, 'Fee'),
+(14, 'TemperatureMeasurement'),
+(15, 'Split');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `invoice`
+--
+
+DROP TABLE IF EXISTS `invoice`;
+CREATE TABLE IF NOT EXISTS `invoice` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `InvoiceNumber` int DEFAULT NULL,
+  `BillingDate` datetime DEFAULT NULL,
+  `ValIdationDate` datetime DEFAULT NULL,
+  `SubTotalAmount` decimal(10,0) DEFAULT NULL,
+  `TotalTaxAmount` decimal(10,0) DEFAULT NULL,
+  `TotalAmount` decimal(10,0) DEFAULT NULL,
+  `BilledThirdPartyId` int UNSIGNED DEFAULT NULL,
+  `StatusId` int UNSIGNED DEFAULT '1',
+  `Deleted` int UNSIGNED NOT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_Invoice_BilledThirdParty` (`BilledThirdPartyId`),
+  KEY `FK_Invoice_Status` (`StatusId`)
+) ENGINE=InnoDB AUTO_INCREMENT=569 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `invoice`
+--
+
+INSERT INTO `invoice` (`Id`, `InvoiceNumber`, `BillingDate`, `ValIdationDate`, `SubTotalAmount`, `TotalTaxAmount`, `TotalAmount`, `BilledThirdPartyId`, `StatusId`, `Deleted`) VALUES
+(1, 251000196, NULL, '2025-12-20 18:32:42', '7414', '1482', '8896', 5, 4, 0),
+(2, 251000191, NULL, '2025-12-20 16:39:39', '5577', '1115', '6692', 6, 3, 0),
+(3, NULL, NULL, '2025-07-23 00:00:00', '3139', '627', '3766', 7, 1, 0),
+(4, 251000199, NULL, '2026-01-15 01:46:09', '5835', '1167', '7002', 8, 4, 0),
+(5, 251000198, NULL, '2025-12-20 18:42:02', '4608', '921', '5529', 9, 4, 0),
+(370, 251000006, NULL, '2025-12-13 00:00:00', '9433', '1886', '11319', 10, 4, 0),
+(371, 251000007, NULL, '2025-12-13 00:00:00', '3928', '785', '4713', 11, 4, 0),
+(372, 251000008, NULL, '2025-12-13 00:00:00', '5933', '1186', '7119', 12, 4, 0),
+(373, 251000009, NULL, '2025-12-13 00:00:00', '8266', '1653', '9919', 13, 4, 0),
+(374, 251000010, NULL, '2025-12-13 00:00:00', '5345', '1069', '6414', 14, 4, 0),
+(375, 251000011, NULL, '2025-12-13 00:00:00', '7193', '1438', '8631', 15, 4, 0),
+(376, NULL, NULL, '2025-12-13 00:00:00', '1061', '212', '1273', 0, 1, 0),
+(377, NULL, NULL, '2025-12-13 00:00:00', '5376', '1075', '6451', 5, 1, 0),
+(378, 251000014, NULL, '2025-12-13 00:00:00', '9881', '1976', '11857', 6, 3, 0),
+(379, 251000015, NULL, '2025-12-13 00:00:00', '4320', '864', '5184', 7, 3, 0),
+(380, 251000016, NULL, '2025-12-13 00:00:00', '3748', '749', '4497', 8, 4, 0),
+(381, 251000017, NULL, '2025-12-13 00:00:00', '3315', '663', '3978', 9, 4, 0),
+(382, 251000018, NULL, '2025-12-13 00:00:00', '2998', '599', '3597', 10, 3, 0),
+(383, NULL, NULL, '2025-12-13 00:00:00', '3939', '787', '4726', 11, 1, 0),
+(384, NULL, NULL, '2025-12-13 00:00:00', '1666', '333', '1999', 12, 1, 0),
+(385, 251000021, NULL, '2025-12-13 00:00:00', '5280', '1056', '6336', 13, 3, 0),
+(386, 251000022, NULL, '2025-12-13 00:00:00', '6453', '1290', '7743', 14, 3, 0),
+(387, 251000023, NULL, '2025-12-13 00:00:00', '4745', '949', '5694', 15, 4, 0),
+(388, 251000024, NULL, '2025-12-13 00:00:00', '3506', '701', '4207', 0, 4, 0),
+(389, 251000025, NULL, '2025-12-13 00:00:00', '6367', '1273', '7640', 5, 3, 0),
+(390, 251000026, NULL, '2025-12-13 00:00:00', '7368', '1473', '8841', 6, 4, 0),
+(391, 251000027, NULL, '2025-12-13 00:00:00', '4656', '931', '5587', 7, 4, 0),
+(392, NULL, NULL, '2025-12-13 00:00:00', '7256', '1451', '8707', 5, 1, 0),
+(393, NULL, NULL, '2025-12-13 00:00:00', '7386', '1477', '8863', 6, 1, 0),
+(394, 251000030, NULL, '2025-12-13 00:00:00', '1962', '392', '2354', 7, 3, 0),
+(395, 251000031, NULL, '2025-12-13 00:00:00', '4475', '895', '5370', 8, 3, 0),
+(396, 251000032, NULL, '2025-12-13 00:00:00', '5101', '1020', '6121', 9, 4, 0),
+(397, 251000033, NULL, '2025-12-13 00:00:00', '9101', '1820', '10921', 10, 4, 0),
+(398, 251000034, NULL, '2025-12-13 00:00:00', '5959', '1191', '7150', 11, 3, 0),
+(399, 251000035, NULL, '2025-12-13 00:00:00', '8557', '1711', '10268', 12, 4, 0),
+(400, 251000036, NULL, '2025-12-13 00:00:00', '4817', '963', '5780', 13, 4, 0),
+(401, 251000037, NULL, '2025-12-13 00:00:00', '3412', '682', '4094', 14, 4, 0),
+(402, 251000038, NULL, '2025-12-13 00:00:00', '2622', '524', '3146', 15, 4, 0),
+(403, 251000039, NULL, '2025-12-13 00:00:00', '1193', '238', '1431', 8, 4, 0),
+(404, 251000040, NULL, '2025-12-13 00:00:00', '1830', '366', '2196', 9, 4, 0),
+(405, 251000041, NULL, '2025-12-13 00:00:00', '4914', '982', '5896', 10, 4, 0),
+(406, 251000042, NULL, '2025-12-13 00:00:00', '2702', '540', '3242', 11, 4, 0),
+(407, 251000043, NULL, '2025-12-13 00:00:00', '7481', '1496', '8977', 12, 4, 0),
+(408, 251000044, NULL, '2025-12-13 00:00:00', '3425', '685', '4110', 13, 4, 0),
+(409, NULL, NULL, '2025-12-13 00:00:00', '9057', '1811', '10868', 14, 1, 0),
+(410, NULL, NULL, '2025-12-13 00:00:00', '7420', '1484', '8904', 15, 1, 0),
+(411, 251000047, NULL, '2025-12-13 00:00:00', '3240', '648', '3888', 0, 3, 0),
+(412, 251000048, NULL, '2025-12-13 00:00:00', '4494', '898', '5392', 5, 3, 0),
+(413, 251000049, NULL, '2025-12-13 00:00:00', '9525', '1905', '11430', 6, 4, 0),
+(414, 251000050, NULL, '2025-12-13 00:00:00', '3370', '674', '4044', 7, 4, 0),
+(415, 251000051, NULL, '2025-12-13 00:00:00', '6041', '1208', '7249', 8, 3, 0),
+(416, NULL, NULL, '2025-12-13 00:00:00', '2273', '454', '2727', 9, 1, 0),
+(417, NULL, NULL, '2025-12-13 00:00:00', '3875', '775', '4650', 10, 1, 0),
+(418, 251000054, NULL, '2025-12-13 00:00:00', '9591', '1918', '11509', 11, 3, 0),
+(419, 251000055, NULL, '2025-12-13 00:00:00', '5515', '1103', '6618', 5, 3, 0),
+(420, 251000056, NULL, '2025-12-13 00:00:00', '5632', '1126', '6758', 6, 4, 0),
+(421, 251000057, NULL, '2025-12-13 00:00:00', '5380', '1076', '6456', 7, 4, 0),
+(422, 251000058, NULL, '2025-12-13 00:00:00', '5282', '1056', '6338', 8, 3, 0),
+(423, 251000059, NULL, '2025-12-13 00:00:00', '6114', '1222', '7336', 9, 4, 0),
+(424, 251000060, NULL, '2025-12-13 00:00:00', '6504', '1300', '7804', 10, 4, 0),
+(425, 251000061, NULL, '2025-12-13 00:00:00', '2620', '524', '3144', 11, 4, 0),
+(426, 251000062, NULL, '2025-12-13 00:00:00', '1490', '298', '1788', 12, 4, 0),
+(427, 251000063, NULL, '2025-12-13 00:00:00', '1223', '244', '1467', 13, 4, 0),
+(428, 251000064, NULL, '2025-12-13 00:00:00', '6353', '1270', '7623', 14, 4, 0),
+(429, 251000065, NULL, '2025-12-13 00:00:00', '7321', '1464', '8785', 15, 4, 0),
+(430, 251000066, NULL, '2025-12-13 00:00:00', '3495', '699', '4194', 12, 4, 0),
+(431, 251000067, NULL, '2025-12-13 00:00:00', '8192', '1638', '9830', 13, 4, 0),
+(432, 251000068, NULL, '2025-12-13 00:00:00', '9812', '1962', '11774', 14, 4, 0),
+(433, NULL, NULL, '2025-12-13 00:00:00', '2408', '481', '2889', 15, 1, 0),
+(434, NULL, NULL, '2025-12-13 00:00:00', '5153', '1030', '6183', 0, 1, 0),
+(435, 251000071, NULL, '2025-12-13 00:00:00', '2087', '417', '2504', 5, 3, 0),
+(436, 251000072, NULL, '2025-12-13 00:00:00', '5042', '1008', '6050', 6, 3, 0),
+(437, 251000073, NULL, '2025-12-13 00:00:00', '4227', '845', '5072', 7, 4, 0),
+(438, 251000074, NULL, '2025-12-13 00:00:00', '8904', '1780', '10684', 8, 4, 0),
+(439, 251000075, NULL, '2025-12-13 00:00:00', '8752', '1750', '10502', 9, 3, 0),
+(440, 251000076, NULL, '2025-12-13 00:00:00', '5381', '1076', '6457', 10, 4, 0),
+(441, 251000077, NULL, '2025-12-13 00:00:00', '5493', '1098', '6591', 11, 4, 0),
+(442, 251000078, NULL, '2025-12-13 00:00:00', '4146', '829', '4975', 12, 4, 0),
+(443, 251000079, NULL, '2025-12-13 00:00:00', '3393', '678', '4071', 13, 4, 0),
+(444, 251000080, NULL, '2025-12-13 00:00:00', '1886', '377', '2263', 14, 4, 0),
+(445, 251000081, NULL, '2025-12-13 00:00:00', '9023', '1804', '10827', 15, 4, 0),
+(446, NULL, NULL, '2025-12-13 00:00:00', '5590', '1118', '6708', 5, 1, 0),
+(447, NULL, NULL, '2025-12-13 00:00:00', '6565', '1313', '7878', 6, 1, 0),
+(448, 251000084, NULL, '2025-12-13 00:00:00', '2658', '531', '3189', 7, 3, 0),
+(449, 251000085, NULL, '2025-12-13 00:00:00', '8424', '1684', '10108', 8, 3, 0),
+(450, 251000086, NULL, '2025-12-13 00:00:00', '7976', '1595', '9571', 9, 4, 0),
+(451, 251000087, NULL, '2025-12-13 00:00:00', '4115', '823', '4938', 10, 4, 0),
+(452, 251000088, NULL, '2025-12-13 00:00:00', '1465', '293', '1758', 11, 3, 0),
+(453, 251000089, NULL, '2025-12-13 00:00:00', '9529', '1905', '11434', 12, 4, 0),
+(454, 251000090, NULL, '2025-12-13 00:00:00', '6468', '1293', '7761', 13, 4, 0),
+(455, 251000091, NULL, '2025-12-13 00:00:00', '3851', '770', '4621', 14, 4, 0),
+(456, 251000092, NULL, '2025-12-13 00:00:00', '3781', '756', '4537', 15, 4, 0),
+(457, 251000093, NULL, '2025-12-13 00:00:00', '3382', '676', '4058', 0, 4, 0),
+(458, 251000094, NULL, '2025-12-13 00:00:00', '3200', '640', '3840', 5, 4, 0),
+(459, NULL, NULL, '2025-12-13 00:00:00', '7162', '1432', '8594', 6, 1, 0),
+(460, NULL, NULL, '2025-12-13 00:00:00', '4074', '814', '4888', 7, 1, 0),
+(461, 251000097, NULL, '2025-12-13 00:00:00', '1781', '356', '2137', 8, 3, 0),
+(462, 251000098, NULL, '2025-12-13 00:00:00', '9857', '1971', '11828', 9, 3, 0),
+(463, 251000099, NULL, '2025-12-13 00:00:00', '1928', '385', '2313', 10, 4, 0),
+(464, 251000100, NULL, '2025-12-13 00:00:00', '5124', '1024', '6148', 11, 4, 0),
+(465, 251000101, NULL, '2025-12-13 00:00:00', '1799', '359', '2158', 12, 3, 0),
+(466, 251000102, NULL, '2025-12-13 00:00:00', '9674', '1934', '11608', 13, 4, 0),
+(467, 251000103, NULL, '2025-12-13 00:00:00', '4389', '877', '5266', 14, 4, 0),
+(468, 251000104, NULL, '2025-12-13 00:00:00', '3312', '662', '3974', 15, 4, 0),
+(469, 251000105, NULL, '2025-12-13 00:00:00', '3085', '617', '3702', 0, 4, 0),
+(470, 251000106, NULL, '2025-12-13 00:00:00', '5006', '1001', '6007', 5, 4, 0),
+(471, 251000107, NULL, '2025-12-13 00:00:00', '6122', '1224', '7346', 6, 4, 0),
+(472, 251000108, NULL, '2025-12-13 00:00:00', '7281', '1456', '8737', 7, 4, 0),
+(473, 251000109, NULL, '2025-12-13 00:00:00', '3752', '750', '4502', 5, 4, 0),
+(474, 251000110, NULL, '2025-12-13 00:00:00', '5088', '1017', '6105', 6, 4, 0),
+(475, 251000111, NULL, '2025-12-13 00:00:00', '6624', '1324', '7948', 7, 4, 0),
+(476, NULL, NULL, '2025-12-13 00:00:00', '4883', '976', '5859', 8, 1, 0),
+(477, NULL, NULL, '2025-12-13 00:00:00', '4751', '950', '5701', 9, 1, 0),
+(478, 251000114, NULL, '2025-12-13 00:00:00', '4273', '854', '5127', 10, 3, 0),
+(479, 251000115, NULL, '2025-12-13 00:00:00', '3609', '721', '4330', 11, 3, 0),
+(480, 251000116, NULL, '2025-12-13 00:00:00', '8328', '1665', '9993', 12, 4, 0),
+(481, 251000117, NULL, '2025-12-13 00:00:00', '4920', '984', '5904', 13, 4, 0),
+(482, 251000118, NULL, '2025-12-13 00:00:00', '3015', '603', '3618', 14, 3, 0),
+(483, NULL, NULL, '2025-12-13 00:00:00', '8328', '1665', '9993', 15, 1, 0),
+(484, NULL, NULL, '2025-12-13 00:00:00', '6746', '1349', '8095', 8, 1, 0),
+(485, 251000121, NULL, '2025-12-13 00:00:00', '3268', '653', '3921', 9, 3, 0),
+(486, 251000122, NULL, '2025-12-13 00:00:00', '9226', '1845', '11071', 10, 3, 0),
+(487, 251000123, NULL, '2025-12-13 00:00:00', '6343', '1268', '7611', 11, 4, 0),
+(488, 251000124, NULL, '2025-12-13 00:00:00', '3795', '759', '4554', 12, 4, 0),
+(489, 251000125, NULL, '2025-12-13 00:00:00', '8611', '1722', '10333', 13, 3, 0),
+(490, 251000126, NULL, '2025-12-13 00:00:00', '9052', '1810', '10862', 14, 4, 0),
+(491, 251000127, NULL, '2025-12-13 00:00:00', '8198', '1639', '9837', 15, 4, 0),
+(492, 251000128, NULL, '2025-12-13 00:00:00', '6506', '1301', '7807', 0, 4, 0),
+(493, 251000129, NULL, '2025-12-13 00:00:00', '3758', '751', '4509', 5, 4, 0),
+(494, 251000130, NULL, '2025-12-13 00:00:00', '3917', '783', '4700', 6, 4, 0),
+(495, 251000131, NULL, '2025-12-13 00:00:00', '1003', '200', '1203', 7, 4, 0),
+(496, NULL, NULL, '2025-12-13 00:00:00', '3733', '746', '4479', 8, 1, 0),
+(497, NULL, NULL, '2025-12-13 00:00:00', '4851', '970', '5821', 9, 1, 0),
+(498, 251000134, NULL, '2025-12-13 00:00:00', '6445', '1289', '7734', 10, 3, 0),
+(499, 251000135, NULL, '2025-12-13 00:00:00', '6803', '1360', '8163', 11, 3, 0),
+(500, 251000136, NULL, '2025-12-13 00:00:00', '6742', '1348', '8090', 5, 4, 0),
+(501, 251000137, NULL, '2025-12-13 00:00:00', '7931', '1586', '9517', 6, 4, 0),
+(502, 251000138, NULL, '2025-12-13 00:00:00', '1094', '218', '1312', 7, 3, 0),
+(503, 251000139, NULL, '2025-12-13 00:00:00', '5938', '1187', '7125', 8, 4, 0),
+(504, 251000140, NULL, '2025-12-13 00:00:00', '3419', '683', '4102', 9, 4, 0),
+(505, NULL, NULL, '2025-12-13 22:42:17', '8767', '1753', '10520', 10, 2, 0),
+(506, NULL, NULL, '2025-12-13 22:41:22', '8738', '1747', '10485', 11, 2, 0),
+(507, 251000143, NULL, '2025-12-13 00:00:00', '5446', '1089', '6535', 12, 3, 0),
+(508, 251000144, NULL, '2025-12-13 00:00:00', '4643', '928', '5571', 13, 3, 0),
+(509, 251000145, NULL, '2025-12-13 00:00:00', '5285', '1057', '6342', 14, 4, 0),
+(510, 251000146, NULL, '2025-12-13 00:00:00', '7336', '1467', '8803', 15, 4, 0),
+(511, 251000147, NULL, '2025-12-13 00:00:00', '4219', '843', '5062', 12, 3, 0),
+(512, NULL, NULL, '2025-12-13 00:00:00', '7755', '1551', '9306', 13, 1, 0),
+(513, NULL, NULL, '2025-12-13 00:00:00', '6614', '1322', '7936', 14, 1, 0),
+(514, 251000150, NULL, '2025-12-13 00:00:00', '9308', '1861', '11169', 15, 3, 0),
+(515, 251000151, NULL, '2025-12-13 00:00:00', '1201', '240', '1441', 0, 3, 0),
+(516, 251000152, NULL, '2025-12-13 00:00:00', '2553', '510', '3063', 5, 4, 0),
+(517, 251000153, NULL, '2025-12-13 00:00:00', '7953', '1590', '9543', 6, 4, 0),
+(518, 251000154, NULL, '2025-12-13 00:00:00', '8878', '1775', '10653', 7, 3, 0),
+(519, 251000155, NULL, '2025-12-13 00:00:00', '5039', '1007', '6046', 8, 4, 0),
+(520, 251000156, NULL, '2025-12-13 00:00:00', '8512', '1702', '10214', 9, 4, 0),
+(521, 251000157, NULL, '2025-12-13 00:00:00', '3847', '769', '4616', 10, 3, 0),
+(522, NULL, NULL, '2025-12-13 00:00:00', '9469', '1893', '11362', 11, 1, 0),
+(523, 251000159, NULL, '2025-12-13 00:00:00', '9565', '1913', '11478', 12, 3, 0),
+(524, 251000160, NULL, '2025-12-13 00:00:00', '1622', '324', '1946', 13, 3, 0),
+(525, 251000161, NULL, '2025-12-13 00:00:00', '4045', '809', '4854', 14, 4, 0),
+(526, 251000162, NULL, '2025-12-13 00:00:00', '4848', '969', '5817', 15, 4, 0),
+(527, 251000163, NULL, '2025-12-13 00:00:00', '6811', '1362', '8173', 5, 3, 0),
+(528, 251000164, NULL, '2025-12-13 00:00:00', '4741', '948', '5689', 6, 4, 0),
+(529, 251000165, NULL, '2025-12-13 00:00:00', '7871', '1574', '9445', 7, 4, 0),
+(530, NULL, NULL, '2025-12-13 00:00:00', '3956', '791', '4747', 8, 1, 0),
+(531, NULL, NULL, '2025-12-13 00:00:00', '4525', '905', '5430', 9, 1, 0),
+(532, 251000168, NULL, '2025-12-13 00:00:00', '3146', '629', '3775', 10, 3, 0),
+(533, 251000169, NULL, '2025-12-13 00:00:00', '7834', '1566', '9400', 11, 3, 0),
+(534, 251000170, NULL, '2025-12-13 00:00:00', '6811', '1362', '8173', 12, 4, 0),
+(535, 251000171, NULL, '2025-12-13 00:00:00', '5876', '1175', '7051', 13, 4, 0),
+(536, 251000172, NULL, '2025-12-13 00:00:00', '9462', '1892', '11354', 14, 3, 0),
+(537, 251000173, NULL, '2025-12-13 00:00:00', '7311', '1462', '8773', 15, 4, 0),
+(538, 251000174, NULL, '2025-12-13 00:00:00', '7390', '1478', '8868', 0, 4, 0),
+(539, 251000175, NULL, '2025-12-13 00:00:00', '7611', '1522', '9133', 5, 4, 0),
+(540, 251000176, NULL, '2025-12-13 00:00:00', '1207', '241', '1448', 6, 4, 0),
+(541, NULL, NULL, '2025-12-13 00:00:00', '1190', '238', '1428', 7, 1, 0),
+(542, NULL, NULL, '2025-12-13 00:00:00', '4146', '829', '4975', 8, 1, 0),
+(543, 251000179, NULL, '2025-12-13 00:00:00', '8290', '1658', '9948', 9, 3, 0),
+(544, 251000180, NULL, '2025-12-13 00:00:00', '7923', '1584', '9507', 10, 3, 0),
+(545, 251000181, NULL, '2025-12-13 00:00:00', '2530', '506', '3036', 11, 4, 0),
+(546, 251000182, NULL, '2025-12-13 00:00:00', '9350', '1870', '11220', 12, 4, 0),
+(547, 251000183, NULL, '2025-12-13 00:00:00', '9034', '1806', '10840', 13, 3, 0),
+(548, 251000184, NULL, '2025-12-13 00:00:00', '6967', '1393', '8360', 14, 4, 0),
+(549, 251000185, NULL, '2025-12-13 00:00:00', '4575', '915', '5490', 15, 4, 0),
+(557, NULL, NULL, NULL, '175000', '0', '175000', 5, 1, 1),
+(558, NULL, NULL, NULL, '175000', '0', '175000', 5, 1, 1),
+(559, NULL, NULL, NULL, '175000', '0', '175000', 5, 1, 1),
+(560, NULL, NULL, NULL, '175000', '0', '175000', 5, 1, 1),
+(561, NULL, NULL, NULL, '175000', '0', '175000', 5, 1, 1),
+(562, NULL, NULL, NULL, '1135000', '0', '1135000', 5, 1, 1),
+(563, NULL, NULL, NULL, '175000', '0', '175000', 5, 1, 1),
+(564, NULL, NULL, NULL, '175000', '0', '175000', 5, 1, 1),
+(565, NULL, NULL, NULL, '175000', '0', '175000', 5, 1, 1),
+(566, NULL, NULL, NULL, '175000', '0', '175000', 5, 1, 1),
+(567, NULL, '2025-12-28 00:17:50', NULL, '175000', '0', '175000', 5, 1, 0),
+(568, NULL, '2026-01-15 00:00:00', NULL, '475000', '0', '475000', 5, 1, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `invoiceitem`
+--
+
+DROP TABLE IF EXISTS `invoiceitem`;
+CREATE TABLE IF NOT EXISTS `invoiceitem` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Quantity` int DEFAULT NULL,
+  `Rate` decimal(10,0) DEFAULT NULL,
+  `Amount` decimal(10,0) DEFAULT NULL,
+  `CalculatedTax` decimal(10,0) DEFAULT NULL,
+  `InvoiceId` int UNSIGNED DEFAULT NULL,
+  `JobFileId` int UNSIGNED DEFAULT NULL,
+  `EventId` int UNSIGNED DEFAULT NULL,
+  `SubscriptionId` int UNSIGNED DEFAULT NULL,
+  `RateRangePeriodId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_InvoiceItem_Invoice` (`InvoiceId`),
+  KEY `FK_InvoiceItem_JobFile` (`JobFileId`),
+  KEY `FK_InvoiceItem_Event` (`EventId`),
+  KEY `FK_InvoiceItem_Subscription` (`SubscriptionId`),
+  KEY `FK_InvoiceItem_RateRangePeriod` (`RateRangePeriodId`)
+) ENGINE=InnoDB AUTO_INCREMENT=1107 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `invoiceitem`
+--
+
+INSERT INTO `invoiceitem` (`Id`, `Quantity`, `Rate`, `Amount`, `CalculatedTax`, `InvoiceId`, `JobFileId`, `EventId`, `SubscriptionId`, `RateRangePeriodId`) VALUES
+(1, 3, '777', '2331', '466', 1, 1, 1, 1, 1),
+(2, 3, '119', '357', '71', 1, 1, 1, 1, 1),
+(3, 1, '907', '907', '181', 2, 1, 1, 1, 1),
+(4, 1, '429', '429', '85', 2, 1, 1, 1, 1),
+(5, 4, '774', '3096', '619', 3, 1, 1, 1, 1),
+(6, 5, '709', '3545', '709', 3, 1, 1, 1, 1),
+(7, 5, '586', '2930', '586', 4, 1, 1, 1, 1),
+(8, 2, '789', '1578', '315', 4, 1, 1, 1, 1),
+(9, 1, '909', '909', '181', 4, 1, 1, 1, 1),
+(10, 4, '350', '1400', '280', 5, 1, 1, 1, 1),
+(11, 1, '374', '374', '74', 5, 1, 1, 1, 1),
+(831, 3, '3472', '10416', '2083', 370, 51, NULL, NULL, NULL),
+(832, 3, '2565', '7695', '1539', 371, 52, NULL, NULL, NULL),
+(833, 8, '2887', '23096', '4619', 372, 53, NULL, NULL, NULL),
+(834, 6, '1232', '7392', '1478', 373, 54, NULL, NULL, NULL),
+(835, 8, '2910', '23280', '4656', 374, 55, NULL, NULL, NULL),
+(836, 11, '3416', '37576', '7515', 375, 56, NULL, NULL, NULL),
+(837, 2, '4160', '8320', '1664', 376, 57, NULL, NULL, NULL),
+(838, 10, '1431', '14310', '2862', 377, 58, NULL, NULL, NULL),
+(839, 6, '845', '5070', '1014', 378, 59, NULL, NULL, NULL),
+(840, 9, '4612', '41508', '8301', 379, 60, NULL, NULL, NULL),
+(841, 5, '1458', '7290', '1458', 380, 61, NULL, NULL, NULL),
+(842, 7, '196', '1372', '274', 381, 62, NULL, NULL, NULL),
+(843, 7, '4573', '32011', '6402', 382, 63, NULL, NULL, NULL),
+(844, 20, '3649', '72980', '14596', 383, 64, NULL, NULL, NULL),
+(845, 15, '1293', '19395', '3879', 384, 65, NULL, NULL, NULL),
+(846, 19, '2625', '49875', '9975', 385, 66, NULL, NULL, NULL),
+(847, 16, '1759', '28144', '5628', 386, 67, NULL, NULL, NULL),
+(848, 6, '2969', '17814', '3562', 387, 68, NULL, NULL, NULL),
+(849, 15, '2114', '31710', '6342', 388, 69, NULL, NULL, NULL),
+(850, 13, '4700', '61100', '12220', 389, 70, NULL, NULL, NULL),
+(851, 12, '429', '5148', '1029', 390, 71, NULL, NULL, NULL),
+(852, 10, '1790', '17900', '3580', 391, 72, NULL, NULL, NULL),
+(853, 7, '2856', '19992', '3998', 392, 73, NULL, NULL, NULL),
+(854, 6, '1478', '8868', '1773', 393, 74, NULL, NULL, NULL),
+(855, 3, '1748', '5244', '1048', 394, 75, NULL, NULL, NULL),
+(856, 18, '167', '3006', '601', 395, 76, NULL, NULL, NULL),
+(857, 3, '3205', '9615', '1923', 396, 77, NULL, NULL, NULL),
+(858, 2, '2376', '4752', '950', 397, 78, NULL, NULL, NULL),
+(859, 3, '3690', '11070', '2214', 398, 79, NULL, NULL, NULL),
+(860, 16, '1583', '25328', '5065', 399, 80, NULL, NULL, NULL),
+(861, 5, '887', '4435', '887', 400, 81, NULL, NULL, NULL),
+(862, 10, '3893', '38930', '7786', 401, 82, NULL, NULL, NULL),
+(863, 5, '2308', '11540', '2308', 402, 83, NULL, NULL, NULL),
+(864, 9, '4453', '40077', '8015', 403, 84, NULL, NULL, NULL),
+(865, 9, '4539', '40851', '8170', 404, 85, NULL, NULL, NULL),
+(866, 20, '523', '10460', '2092', 405, 86, NULL, NULL, NULL),
+(867, 12, '375', '4500', '900', 406, 87, NULL, NULL, NULL),
+(868, 6, '4541', '27246', '5449', 407, 88, NULL, NULL, NULL),
+(869, 14, '1331', '18634', '3726', 408, 89, NULL, NULL, NULL),
+(870, 7, '2051', '14357', '2871', 409, 90, NULL, NULL, NULL),
+(871, 6, '4367', '26202', '5240', 410, 91, NULL, NULL, NULL),
+(872, 2, '4996', '9992', '1998', 411, 92, NULL, NULL, NULL),
+(873, 5, '4259', '21295', '4259', 412, 93, NULL, NULL, NULL),
+(874, 20, '1799', '35980', '7196', 413, 94, NULL, NULL, NULL),
+(875, 15, '3087', '46305', '9261', 414, 95, NULL, NULL, NULL),
+(876, 12, '621', '7452', '1490', 415, 96, NULL, NULL, NULL),
+(877, 18, '4053', '72954', '14590', 416, 97, NULL, NULL, NULL),
+(878, 20, '4795', '95900', '19180', 417, 98, NULL, NULL, NULL),
+(879, 3, '1728', '5184', '1036', 418, 99, NULL, NULL, NULL),
+(880, 15, '2295', '34425', '6885', 419, 100, NULL, NULL, NULL),
+(881, 16, '2325', '37200', '7440', 420, 101, NULL, NULL, NULL),
+(882, 15, '2944', '44160', '8832', 421, 102, NULL, NULL, NULL),
+(883, 16, '2664', '42624', '8524', 422, 103, NULL, NULL, NULL),
+(884, 20, '4207', '84140', '16828', 423, 104, NULL, NULL, NULL),
+(885, 19, '491', '9329', '1865', 424, 105, NULL, NULL, NULL),
+(886, 10, '1295', '12950', '2590', 425, 106, NULL, NULL, NULL),
+(887, 17, '1395', '23715', '4743', 426, 107, NULL, NULL, NULL),
+(888, 6, '3994', '23964', '4792', 427, 108, NULL, NULL, NULL),
+(889, 18, '1634', '29412', '5882', 428, 109, NULL, NULL, NULL),
+(890, 5, '421', '2105', '421', 429, 110, NULL, NULL, NULL),
+(891, 14, '3375', '47250', '9450', 430, 111, NULL, NULL, NULL),
+(892, 19, '4730', '89870', '17974', 431, 112, NULL, NULL, NULL),
+(893, 2, '2515', '5030', '1006', 432, 113, NULL, NULL, NULL),
+(894, 3, '1220', '3660', '732', 433, 114, NULL, NULL, NULL),
+(895, 4, '476', '1904', '380', 434, 115, NULL, NULL, NULL),
+(896, 13, '4487', '58331', '11666', 435, 116, NULL, NULL, NULL),
+(897, 11, '4458', '49038', '9807', 436, 117, NULL, NULL, NULL),
+(898, 4, '976', '3904', '780', 437, 118, NULL, NULL, NULL),
+(899, 11, '2093', '23023', '4604', 438, 119, NULL, NULL, NULL),
+(900, 8, '3214', '25712', '5142', 439, 120, NULL, NULL, NULL),
+(901, 13, '2785', '36205', '7241', 440, 121, NULL, NULL, NULL),
+(902, 7, '2093', '14651', '2930', 441, 122, NULL, NULL, NULL),
+(903, 4, '4153', '16612', '3322', 442, 123, NULL, NULL, NULL),
+(904, 1, '2736', '2736', '547', 443, 124, NULL, NULL, NULL),
+(905, 4, '2381', '9524', '1904', 444, 125, NULL, NULL, NULL),
+(906, 15, '3793', '56895', '11379', 445, 126, NULL, NULL, NULL),
+(907, 11, '111', '1221', '244', 446, 127, NULL, NULL, NULL),
+(908, 18, '1937', '34866', '6973', 447, 128, NULL, NULL, NULL),
+(909, 14, '1629', '22806', '4561', 448, 129, NULL, NULL, NULL),
+(910, 20, '1984', '39680', '7936', 449, 130, NULL, NULL, NULL),
+(911, 9, '4980', '44820', '8964', 450, 131, NULL, NULL, NULL),
+(912, 9, '682', '6138', '1227', 451, 132, NULL, NULL, NULL),
+(913, 20, '121', '2420', '484', 452, 133, NULL, NULL, NULL),
+(914, 12, '2265', '27180', '5436', 453, 134, NULL, NULL, NULL),
+(915, 20, '2917', '58340', '11668', 454, 135, NULL, NULL, NULL),
+(916, 4, '2836', '11344', '2268', 455, 136, NULL, NULL, NULL),
+(917, 8, '4060', '32480', '6496', 456, 137, NULL, NULL, NULL),
+(918, 1, '4551', '4551', '910', 457, 138, NULL, NULL, NULL),
+(919, 6, '972', '5832', '1166', 458, 139, NULL, NULL, NULL),
+(920, 12, '3439', '41268', '8253', 459, 140, NULL, NULL, NULL),
+(921, 19, '4211', '80009', '16001', 460, 141, NULL, NULL, NULL),
+(922, 4, '914', '3656', '731', 461, 142, NULL, NULL, NULL),
+(923, 2, '254', '508', '101', 462, 143, NULL, NULL, NULL),
+(924, 17, '4208', '71536', '14307', 463, 144, NULL, NULL, NULL),
+(925, 14, '3509', '49126', '9825', 464, 145, NULL, NULL, NULL),
+(926, 7, '3267', '22869', '4573', 465, 146, NULL, NULL, NULL),
+(927, 14, '2835', '39690', '7938', 466, 147, NULL, NULL, NULL),
+(928, 20, '2954', '59080', '11816', 467, 148, NULL, NULL, NULL),
+(929, 7, '3475', '24325', '4865', 468, 149, NULL, NULL, NULL),
+(930, 19, '210', '3990', '798', 469, 150, NULL, NULL, NULL),
+(931, 15, '2326', '34890', '6978', 470, 151, NULL, NULL, NULL),
+(932, 19, '1286', '24434', '4886', 471, 152, NULL, NULL, NULL),
+(933, 5, '407', '2035', '407', 472, 153, NULL, NULL, NULL),
+(934, 8, '780', '6240', '1248', 473, 154, NULL, NULL, NULL),
+(935, 16, '2866', '45856', '9171', 474, 155, NULL, NULL, NULL),
+(936, 16, '215', '3440', '688', 475, 156, NULL, NULL, NULL),
+(937, 12, '1974', '23688', '4737', 476, 157, NULL, NULL, NULL),
+(938, 18, '2742', '49356', '9871', 477, 158, NULL, NULL, NULL),
+(939, 19, '1912', '36328', '7265', 478, 159, NULL, NULL, NULL),
+(940, 12, '4626', '55512', '11102', 479, 160, NULL, NULL, NULL),
+(941, 2, '2872', '5744', '1148', 480, 161, NULL, NULL, NULL),
+(942, 8, '2481', '19848', '3969', 481, 162, NULL, NULL, NULL),
+(943, 9, '4296', '38664', '7732', 482, 163, NULL, NULL, NULL),
+(944, 10, '3907', '39070', '7814', 483, 164, NULL, NULL, NULL),
+(945, 16, '844', '13504', '2700', 484, 165, NULL, NULL, NULL),
+(946, 6, '1142', '6852', '1370', 485, 166, NULL, NULL, NULL),
+(947, 10, '4235', '42350', '8470', 486, 167, NULL, NULL, NULL),
+(948, 14, '602', '8428', '1685', 487, 168, NULL, NULL, NULL),
+(949, 3, '2096', '6288', '1257', 488, 169, NULL, NULL, NULL),
+(950, 14, '1349', '18886', '3777', 489, 170, NULL, NULL, NULL),
+(951, 14, '4014', '56196', '11239', 490, 171, NULL, NULL, NULL),
+(952, 3, '895', '2685', '537', 491, 172, NULL, NULL, NULL),
+(953, 7, '967', '6769', '1353', 492, 173, NULL, NULL, NULL),
+(954, 14, '2803', '39242', '7848', 493, 174, NULL, NULL, NULL),
+(955, 19, '4630', '87970', '17594', 494, 175, NULL, NULL, NULL),
+(956, 9, '2667', '24003', '4800', 495, 176, NULL, NULL, NULL),
+(957, 11, '3101', '34111', '6822', 496, 177, NULL, NULL, NULL),
+(958, 17, '3838', '65246', '13049', 497, 178, NULL, NULL, NULL),
+(959, 5, '625', '3125', '625', 498, 179, NULL, NULL, NULL),
+(960, 11, '4069', '44759', '8951', 499, 180, NULL, NULL, NULL),
+(961, 15, '2248', '33720', '6744', 500, 181, NULL, NULL, NULL),
+(962, 5, '1737', '8685', '1737', 501, 182, NULL, NULL, NULL),
+(963, 4, '2560', '10240', '2048', 502, 183, NULL, NULL, NULL),
+(964, 9, '4525', '40725', '8145', 503, 184, NULL, NULL, NULL),
+(965, 19, '3221', '61199', '12239', 504, 185, NULL, NULL, NULL),
+(966, 12, '4539', '54468', '10893', 505, 186, NULL, NULL, NULL),
+(967, 18, '3364', '60552', '12110', 506, 187, NULL, NULL, NULL),
+(968, 14, '1953', '27342', '5468', 507, 188, NULL, NULL, NULL),
+(969, 1, '4848', '4848', '969', 508, 189, NULL, NULL, NULL),
+(970, 12, '3241', '38892', '7778', 509, 190, NULL, NULL, NULL),
+(971, 5, '1658', '8290', '1658', 510, 191, NULL, NULL, NULL),
+(972, 7, '609', '4263', '852', 511, 192, NULL, NULL, NULL),
+(973, 17, '3009', '51153', '10230', 512, 193, NULL, NULL, NULL),
+(974, 7, '503', '3521', '704', 513, 194, NULL, NULL, NULL),
+(975, 10, '1413', '14130', '2826', 514, 195, NULL, NULL, NULL),
+(976, 13, '646', '8398', '1679', 515, 196, NULL, NULL, NULL),
+(977, 15, '3312', '49680', '9936', 516, 197, NULL, NULL, NULL),
+(978, 11, '1639', '18029', '3605', 517, 198, NULL, NULL, NULL),
+(979, 19, '1146', '21774', '4354', 518, 199, NULL, NULL, NULL),
+(980, 4, '1735', '6940', '1388', 519, 200, NULL, NULL, NULL),
+(981, 13, '2930', '38090', '7618', 520, 201, NULL, NULL, NULL),
+(982, 15, '2161', '32415', '6483', 521, 202, NULL, NULL, NULL),
+(983, 16, '1072', '17152', '3430', 522, 203, NULL, NULL, NULL),
+(984, 4, '1247', '4988', '997', 523, 204, NULL, NULL, NULL),
+(985, 10, '2446', '24460', '4892', 524, 205, NULL, NULL, NULL),
+(986, 19, '911', '17309', '3461', 525, 206, NULL, NULL, NULL),
+(987, 4, '2237', '8948', '1789', 526, 207, NULL, NULL, NULL),
+(988, 2, '1999', '3998', '799', 527, 208, NULL, NULL, NULL),
+(989, 18, '4563', '82134', '16426', 528, 209, NULL, NULL, NULL),
+(990, 1, '841', '841', '168', 529, 210, NULL, NULL, NULL),
+(991, 5, '3343', '16715', '3343', 530, 211, NULL, NULL, NULL),
+(992, 2, '4045', '8090', '1618', 531, 212, NULL, NULL, NULL),
+(993, 18, '2012', '36216', '7243', 532, 213, NULL, NULL, NULL),
+(994, 19, '3027', '57513', '11502', 533, 214, NULL, NULL, NULL),
+(995, 13, '193', '2509', '501', 534, 215, NULL, NULL, NULL),
+(996, 5, '714', '3570', '714', 535, 216, NULL, NULL, NULL),
+(997, 13, '4766', '61958', '12391', 536, 217, NULL, NULL, NULL),
+(998, 20, '587', '11740', '2348', 537, 218, NULL, NULL, NULL),
+(999, 14, '1760', '24640', '4928', 538, 219, NULL, NULL, NULL),
+(1000, 1, '2714', '2714', '542', 539, 220, NULL, NULL, NULL),
+(1001, 1, '2362', '2362', '472', 540, 221, NULL, NULL, NULL),
+(1002, 14, '1044', '14616', '2923', 541, 222, NULL, NULL, NULL),
+(1003, 8, '3413', '27304', '5460', 542, 223, NULL, NULL, NULL),
+(1004, 1, '1613', '1613', '322', 543, 224, NULL, NULL, NULL),
+(1005, 15, '3778', '56670', '11334', 544, 225, NULL, NULL, NULL),
+(1006, 3, '2946', '8838', '1767', 545, 226, NULL, NULL, NULL),
+(1007, 6, '4143', '24858', '4971', 546, 227, NULL, NULL, NULL),
+(1008, 7, '749', '5243', '1048', 547, 228, NULL, NULL, NULL),
+(1009, 12, '2897', '34764', '6952', 548, 229, NULL, NULL, NULL),
+(1010, 13, '1790', '23270', '4654', 549, 230, NULL, NULL, NULL),
+(1025, 0, NULL, '100000', '0', 557, 231, 1307, 13, 5),
+(1026, 0, NULL, '75000', '0', 557, 231, 1307, 14, 6),
+(1027, 0, NULL, '0', '0', 557, 231, 1307, 15, 7),
+(1028, 0, NULL, '0', '0', 557, 231, 1307, 15, 8),
+(1029, 0, NULL, '0', '0', 557, 231, 1307, 15, 9),
+(1032, 2, NULL, '100000', '0', 558, 231, 1307, 13, 5),
+(1033, 2, NULL, '75000', '0', 558, 231, 1307, 14, 6),
+(1034, 2, NULL, '0', '0', 558, 231, 1307, 15, 7),
+(1035, 2, NULL, '0', '0', 558, 231, 1307, 15, 8),
+(1036, 2, NULL, '0', '0', 558, 231, 1307, 15, 9),
+(1039, 3, NULL, '100000', '0', 559, 231, 1307, 13, 5),
+(1040, 3, NULL, '75000', '0', 559, 231, 1307, 14, 6),
+(1041, 3, NULL, '0', '0', 559, 231, 1307, 15, 7),
+(1042, 3, NULL, '0', '0', 559, 231, 1307, 15, 8),
+(1043, 3, NULL, '0', '0', 559, 231, 1307, 15, 9),
+(1046, 3, NULL, '100000', '0', 560, 231, 1307, 13, 5),
+(1047, 3, NULL, '75000', '0', 560, 231, 1307, 14, 6),
+(1048, 3, NULL, '0', '0', 560, 231, 1307, 15, 7),
+(1049, 3, NULL, '0', '0', 560, 231, 1307, 15, 8),
+(1050, 3, NULL, '0', '0', 560, 231, 1307, 15, 9),
+(1053, 5, NULL, '100000', '0', 561, 231, 1307, 13, 5),
+(1054, 5, NULL, '75000', '0', 561, 231, 1307, 14, 6),
+(1055, 5, NULL, '0', '0', 561, 231, 1307, 15, 7),
+(1056, 5, NULL, '0', '0', 561, 231, 1307, 15, 8),
+(1057, 5, NULL, '0', '0', 561, 231, 1307, 15, 9),
+(1060, 64, NULL, '100000', '0', 562, 231, 1307, 13, 5),
+(1061, 64, NULL, '75000', '0', 562, 231, 1307, 14, 6),
+(1062, 64, NULL, '0', '0', 562, 231, 1307, 15, 7),
+(1063, 64, NULL, '150000', '0', 562, 231, 1307, 15, 8),
+(1064, 64, NULL, '810000', '0', 562, 231, 1307, 15, 9),
+(1067, 5, NULL, '100000', '0', 563, 231, 1307, 13, 5),
+(1068, 5, NULL, '75000', '0', 563, 231, 1307, 14, 6),
+(1069, 5, NULL, '0', '0', 563, 231, 1307, 15, 7),
+(1070, 5, NULL, '0', '0', 563, 231, 1307, 15, 8),
+(1071, 5, NULL, '0', '0', 563, 231, 1307, 15, 9),
+(1074, 1, NULL, '100000', '0', 564, 231, 1307, 13, 5),
+(1075, 1, NULL, '75000', '0', 564, 231, 1307, 14, 6),
+(1076, 1, NULL, '0', '0', 564, 231, 1307, 15, 7),
+(1077, 1, NULL, '0', '0', 564, 231, 1307, 15, 8),
+(1078, 1, NULL, '0', '0', 564, 231, 1307, 15, 9),
+(1081, 1, NULL, '100000', '0', 565, 231, 1307, 13, 5),
+(1082, 1, NULL, '75000', '0', 565, 231, 1307, 14, 6),
+(1083, 1, NULL, '0', '0', 565, 231, 1307, 15, 7),
+(1084, 1, NULL, '0', '0', 565, 231, 1307, 15, 8),
+(1085, 1, NULL, '0', '0', 565, 231, 1307, 15, 9),
+(1088, 2, NULL, '100000', '0', 566, 231, 1307, 13, 5),
+(1089, 2, NULL, '75000', '0', 566, 231, 1307, 14, 6),
+(1090, 2, NULL, '0', '0', 566, 231, 1307, 15, 7),
+(1091, 2, NULL, '0', '0', 566, 231, 1307, 15, 8),
+(1092, 2, NULL, '0', '0', 566, 231, 1307, 15, 9),
+(1095, 2, NULL, '100000', '0', 567, 231, 1307, 13, 5),
+(1096, 2, NULL, '75000', '0', 567, 231, 1307, 14, 6),
+(1097, 2, NULL, '0', '0', 567, 231, 1307, 15, 7),
+(1098, 2, NULL, '0', '0', 567, 231, 1307, 15, 8),
+(1099, 2, NULL, '0', '0', 567, 231, 1307, 15, 9),
+(1100, 20, NULL, '100000', '0', 568, 1, 1306, 13, 5),
+(1101, 20, NULL, '75000', '0', 568, 1, 1306, 14, 6),
+(1102, 20, NULL, '0', '0', 568, 1, 1306, 15, 7),
+(1103, 20, NULL, '150000', '0', 568, 1, 1306, 15, 8),
+(1104, 20, NULL, '150000', '0', 568, 1, 1306, 15, 9);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `invoicestatus`
+--
+
+DROP TABLE IF EXISTS `invoicestatus`;
+CREATE TABLE IF NOT EXISTS `invoicestatus` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Label` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `invoicestatus`
+--
+
+INSERT INTO `invoicestatus` (`Id`, `Label`) VALUES
+(1, 'Draft'),
+(2, 'Saved'),
+(3, 'Validated'),
+(4, 'Paid'),
+(5, 'PartiallyPaid'),
+(6, 'Reconciled'),
+(7, 'Applied'),
+(8, 'Settled'),
+(9, 'SettledCash');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `jobfile`
+--
+
+DROP TABLE IF EXISTS `jobfile`;
+CREATE TABLE IF NOT EXISTS `jobfile` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `DateOpen` datetime DEFAULT NULL,
+  `DateClose` datetime DEFAULT NULL,
+  `ShippingLineId` int UNSIGNED DEFAULT NULL,
+  `PositionId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_JobFile_ShippingLine` (`ShippingLineId`),
+  KEY `FK_JobFile_Position` (`PositionId`)
+) ENGINE=InnoDB AUTO_INCREMENT=232 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `jobfile`
+--
+
+INSERT INTO `jobfile` (`Id`, `DateOpen`, `DateClose`, `ShippingLineId`, `PositionId`) VALUES
+(1, '2025-05-21 00:00:00', '2025-08-12 00:00:00', NULL, NULL),
+(2, '2025-09-12 00:00:00', NULL, NULL, NULL),
+(3, '2025-08-22 00:00:00', '2025-02-10 00:00:00', NULL, NULL),
+(4, '2025-07-26 00:00:00', '2025-01-31 01:00:00', NULL, NULL),
+(5, '2025-11-10 00:00:00', NULL, NULL, NULL),
+(6, '2025-06-29 00:00:00', '2025-11-01 00:00:00', NULL, NULL),
+(7, '2025-08-18 00:00:00', NULL, NULL, NULL),
+(8, '2025-06-25 00:00:00', NULL, NULL, NULL),
+(9, '2025-11-10 00:00:00', '2025-12-06 00:00:00', NULL, NULL),
+(10, '2025-03-23 00:00:00', NULL, NULL, NULL),
+(11, '2025-04-16 00:00:00', '2025-05-13 00:00:00', NULL, NULL),
+(12, '2025-10-30 00:00:00', '2025-05-22 00:00:00', NULL, NULL),
+(13, '2025-07-16 00:00:00', NULL, NULL, NULL),
+(14, '2025-03-28 00:00:00', NULL, NULL, NULL),
+(15, '2025-07-11 00:00:00', '2025-06-01 00:00:00', NULL, NULL),
+(16, '2025-12-14 01:08:14', NULL, 16, 1),
+(17, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 12, 1),
+(18, '2025-12-14 01:08:14', NULL, 14, 1),
+(19, '2025-12-14 01:08:14', NULL, 17, 1),
+(20, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 20, 1),
+(21, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 103, 1),
+(22, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 2, 1),
+(23, '2025-12-14 01:08:14', NULL, 101, 1),
+(24, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 14, 1),
+(25, '2025-12-14 01:08:14', NULL, 11, 1),
+(26, '2025-12-14 01:08:14', NULL, 100, 1),
+(27, '2025-12-14 01:08:14', NULL, 102, 1),
+(28, '2025-12-14 01:08:14', NULL, 101, 1),
+(29, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 4, 1),
+(30, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 22, 1),
+(31, '2025-12-14 01:08:14', NULL, 14, 1),
+(32, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 107, 1),
+(33, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 23, 1),
+(34, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 11, 1),
+(36, '2025-12-14 01:08:14', NULL, 13, 1),
+(37, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 2, 1),
+(38, '2025-12-14 01:08:14', NULL, 106, 1),
+(39, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 16, 1),
+(40, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 4, 1),
+(41, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 103, 1),
+(42, '2025-12-14 01:08:14', NULL, 15, 1),
+(43, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 12, 1),
+(44, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 11, 1),
+(45, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 23, 1),
+(46, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 4, 1),
+(47, '2025-12-14 01:08:14', '2026-01-13 01:08:14', 22, 1),
+(48, '2025-12-14 01:08:14', NULL, 16, 1),
+(49, '2025-12-14 01:08:14', NULL, 105, 1),
+(50, '2025-12-14 01:08:14', NULL, 8, 1),
+(51, '2025-12-13 17:54:11', NULL, 1, 1),
+(52, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(53, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(54, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(55, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(56, '2025-12-13 17:54:11', NULL, 1, 1),
+(57, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(58, '2025-12-13 17:54:11', NULL, 1, 1),
+(59, '2025-12-13 17:54:11', NULL, 1, 1),
+(60, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(61, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(62, '2025-12-13 17:54:11', NULL, 1, 1),
+(63, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(64, '2025-12-13 17:54:11', NULL, 1, 1),
+(65, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(66, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(67, '2025-12-13 17:54:11', NULL, 1, 1),
+(68, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(69, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(70, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(71, '2025-12-13 17:54:11', NULL, 1, 1),
+(72, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(73, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(74, '2025-12-13 17:54:11', NULL, 1, 1),
+(75, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(76, '2025-12-13 17:54:11', NULL, 1, 1),
+(77, '2025-12-13 17:54:11', NULL, 1, 1),
+(78, '2025-12-13 17:54:11', NULL, 1, 1),
+(79, '2025-12-13 17:54:11', NULL, 1, 1),
+(80, '2025-12-13 17:54:11', NULL, 1, 1),
+(81, '2025-12-13 17:54:11', NULL, 1, 1),
+(82, '2025-12-13 17:54:11', NULL, 1, 1),
+(83, '2025-12-13 17:54:11', NULL, 1, 1),
+(84, '2025-12-13 17:54:11', NULL, 1, 1),
+(85, '2025-12-13 17:54:11', NULL, 1, 1),
+(86, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(87, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(88, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(89, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(90, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(91, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(92, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(93, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(94, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(95, '2025-12-13 17:54:11', NULL, 1, 1),
+(96, '2025-12-13 17:54:11', NULL, 1, 1),
+(97, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(98, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(99, '2025-12-13 17:54:11', NULL, 1, 1),
+(100, '2025-12-13 17:54:11', NULL, 1, 1),
+(101, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(102, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(103, '2025-12-13 17:54:11', NULL, 1, 1),
+(104, '2025-12-13 17:54:11', NULL, 1, 1),
+(105, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(106, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(107, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(108, '2025-12-13 17:54:11', NULL, 1, 1),
+(109, '2025-12-13 17:54:11', NULL, 1, 1),
+(110, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(111, '2025-12-13 17:54:11', NULL, 1, 1),
+(112, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(113, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(114, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(115, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(116, '2025-12-13 17:54:11', NULL, 1, 1),
+(117, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(118, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(119, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(120, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(121, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(122, '2025-12-13 17:54:11', NULL, 1, 1),
+(123, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(124, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(125, '2025-12-13 17:54:11', NULL, 1, 1),
+(126, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(127, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(128, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(129, '2025-12-13 17:54:11', NULL, 1, 1),
+(130, '2025-12-13 17:54:11', NULL, 1, 1),
+(131, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(132, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(133, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(134, '2025-12-13 17:54:11', NULL, 1, 1),
+(135, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(136, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(137, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(138, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(139, '2025-12-13 17:54:11', NULL, 1, 1),
+(140, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(141, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(142, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(143, '2025-12-13 17:54:11', NULL, 1, 1),
+(144, '2025-12-13 17:54:11', NULL, 1, 1),
+(145, '2025-12-13 17:54:11', NULL, 1, 1),
+(146, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(147, '2025-12-13 17:54:11', NULL, 1, 1),
+(148, '2025-12-13 17:54:11', NULL, 1, 1),
+(149, '2025-12-13 17:54:11', NULL, 1, 1),
+(150, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(151, '2025-12-13 17:54:11', NULL, 1, 1),
+(152, '2025-12-13 17:54:11', NULL, 1, 1),
+(153, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(154, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(155, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(156, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(157, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(158, '2025-12-13 17:54:11', NULL, 1, 1),
+(159, '2025-12-13 17:54:11', NULL, 1, 1),
+(160, '2025-12-13 17:54:11', NULL, 1, 1),
+(161, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(162, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(163, '2025-12-13 17:54:11', NULL, 1, 1),
+(164, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(165, '2025-12-13 17:54:11', NULL, 1, 1),
+(166, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(167, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(168, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(169, '2025-12-13 17:54:11', NULL, 1, 1),
+(170, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(171, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(172, '2025-12-13 17:54:11', NULL, 1, 1),
+(173, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(174, '2025-12-13 17:54:11', NULL, 1, 1),
+(175, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(176, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(177, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(178, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(179, '2025-12-13 17:54:11', NULL, 1, 1),
+(180, '2025-12-13 17:54:11', NULL, 1, 1),
+(181, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(182, '2025-12-13 17:54:11', NULL, 1, 1),
+(183, '2025-12-13 17:54:11', NULL, 1, 1),
+(184, '2025-12-13 17:54:11', NULL, 1, 1),
+(185, '2025-12-13 17:54:11', NULL, 1, 1),
+(186, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(187, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(188, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(189, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(190, '2025-12-13 17:54:11', NULL, 1, 1),
+(191, '2025-12-13 17:54:11', NULL, 1, 1),
+(192, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(193, '2025-12-13 17:54:11', NULL, 1, 1),
+(194, '2025-12-13 17:54:11', NULL, 1, 1),
+(195, '2025-12-13 17:54:11', NULL, 1, 1),
+(196, '2025-12-13 17:54:11', NULL, 1, 1),
+(197, '2025-12-13 17:54:11', NULL, 1, 1),
+(198, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(199, '2025-12-13 17:54:11', NULL, 1, 1),
+(200, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(201, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(202, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(203, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(204, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(205, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(206, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(207, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(208, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(209, '2025-12-13 17:54:11', NULL, 1, 1),
+(210, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(211, '2025-12-13 17:54:11', NULL, 1, 1),
+(212, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(213, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(214, '2025-12-13 17:54:11', NULL, 1, 1),
+(215, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(216, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(217, '2025-12-13 17:54:11', NULL, 1, 1),
+(218, '2025-12-13 17:54:11', NULL, 1, 1),
+(219, '2025-12-13 17:54:11', NULL, 1, 1),
+(220, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(221, '2025-12-13 17:54:11', NULL, 1, 1),
+(222, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(223, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(224, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(225, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(226, '2025-12-13 17:54:11', NULL, 1, 1),
+(227, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(228, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(229, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(230, '2025-12-13 17:54:11', '2025-12-13 17:54:11', 1, 1),
+(231, '2025-12-27 22:05:26', NULL, 1, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `payment`
+--
+
+DROP TABLE IF EXISTS `payment`;
+CREATE TABLE IF NOT EXISTS `payment` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Number` int DEFAULT NULL,
+  `Value` decimal(10,0) DEFAULT NULL,
+  `PaymentDate` datetime DEFAULT NULL,
+  `PaymentTypeId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_Payment_PaymentType` (`PaymentTypeId`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `payment`
+--
+
+INSERT INTO `payment` (`Id`, `Number`, `Value`, `PaymentDate`, `PaymentTypeId`) VALUES
+(1, 1001, '6000', '2025-11-13 00:00:00', 3),
+(2, 1002, '5400', '2025-11-14 00:00:00', 3),
+(3, 1003, '4560', '2025-11-21 00:00:00', 2),
+(4, 1004, '3000', '2025-11-21 00:00:00', 4);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `paymenttype`
+--
+
+DROP TABLE IF EXISTS `paymenttype`;
+CREATE TABLE IF NOT EXISTS `paymenttype` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Label` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `paymenttype`
+--
+
+INSERT INTO `paymenttype` (`Id`, `Label`) VALUES
+(1, 'Espèces'),
+(2, 'Chèque'),
+(3, 'Virement bancaire'),
+(4, 'Carte de crédit'),
+(5, 'Crédit client');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `payment_invoice`
+--
+
+DROP TABLE IF EXISTS `payment_invoice`;
+CREATE TABLE IF NOT EXISTS `payment_invoice` (
+  `Payment_Id` int UNSIGNED NOT NULL,
+  `Invoice_Id` int UNSIGNED NOT NULL,
+  PRIMARY KEY (`Payment_Id`,`Invoice_Id`),
+  KEY `FK_Payment_Invoice_Invoice` (`Invoice_Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `payment_invoice`
+--
+
+INSERT INTO `payment_invoice` (`Payment_Id`, `Invoice_Id`) VALUES
+(1, 1),
+(2, 2),
+(3, 3),
+(4, 4);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `position`
+--
+
+DROP TABLE IF EXISTS `position`;
+CREATE TABLE IF NOT EXISTS `position` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Label` varchar(100) DEFAULT NULL,
+  `Number` int DEFAULT NULL,
+  `RowId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_Position_Row` (`RowId`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `position`
+--
+
+INSERT INTO `position` (`Id`, `Label`, `Number`, `RowId`) VALUES
+(1, 'Position A1', 1, 1),
+(2, 'Position A2', 2, 1),
+(3, 'Position A3', 3, 1),
+(4, 'Position B1', 1, 2),
+(5, 'Position C1', 1, 3),
+(6, 'Position D1', 1, 4);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `rate`
+--
+
+DROP TABLE IF EXISTS `rate`;
+CREATE TABLE IF NOT EXISTS `rate` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Code` varchar(50) DEFAULT NULL,
+  `Label` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `rate`
+--
+
+INSERT INTO `rate` (`Id`, `Code`, `Label`) VALUES
+(1, 'RATE001', 'Taux standard'),
+(2, 'RATE002', 'Taux réduit'),
+(3, 'RATE003', 'Taux premium'),
+(4, 'RACCONAGECONTENEURPLEIN', 'Acconage Conteneur Plein (Marchandises diverses)'),
+(5, 'RRELEVAGECONTENEURPLEIN', 'Relevage Conteneur Plein (Marchandises diverses)'),
+(6, 'RSTATIONNEMENTCONTENEURPLEIN', 'Stationnement Conteneur Plein');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `rateperiod`
+--
+
+DROP TABLE IF EXISTS `rateperiod`;
+CREATE TABLE IF NOT EXISTS `rateperiod` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `ToDate` datetime DEFAULT NULL,
+  `RateId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_RatePeriod_Rate` (`RateId`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `rateperiod`
+--
+
+INSERT INTO `rateperiod` (`Id`, `ToDate`, `RateId`) VALUES
+(1, '2026-12-31 00:00:00', 1),
+(2, '2026-12-31 00:00:00', 2),
+(3, '2026-12-31 00:00:00', 3),
+(4, '2099-12-31 23:59:59', 4),
+(5, '2099-12-31 23:59:59', 5),
+(6, '2099-12-31 23:59:59', 6);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `raterangeperiod`
+--
+
+DROP TABLE IF EXISTS `raterangeperiod`;
+CREATE TABLE IF NOT EXISTS `raterangeperiod` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `StartValue` int DEFAULT NULL,
+  `EndValue` int DEFAULT NULL,
+  `Rate` decimal(10,0) DEFAULT NULL,
+  `RatePeriodId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_RateRangePeriod_RatePeriod` (`RatePeriodId`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `raterangeperiod`
+--
+
+INSERT INTO `raterangeperiod` (`Id`, `StartValue`, `EndValue`, `Rate`, `RatePeriodId`) VALUES
+(1, 1, 350, '0', 11),
+(2, 351, 360, '500000', 11),
+(3, 361, 365, '500000', 11),
+(4, 366, 99999, '528111', 11),
+(5, 1, 999999, '100000', 4),
+(6, 1, 999999, '75000', 5),
+(7, 1, 5, '0', 6),
+(8, 6, 10, '30000', 6),
+(9, 11, 99999, '15000', 6);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `raterangeperiod_backup_renumber`
+--
+
+DROP TABLE IF EXISTS `raterangeperiod_backup_renumber`;
+CREATE TABLE IF NOT EXISTS `raterangeperiod_backup_renumber` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `StartValue` int DEFAULT NULL,
+  `EndValue` int DEFAULT NULL,
+  `Rate` decimal(10,0) DEFAULT NULL,
+  `RatePeriodId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_RateRangePeriod_RatePeriod` (`RatePeriodId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `raterangeperiod_backup_renumber`
+--
+
+INSERT INTO `raterangeperiod_backup_renumber` (`Id`, `StartValue`, `EndValue`, `Rate`, `RatePeriodId`) VALUES
+(1, 1, 350, '0', 11),
+(11, 351, 360, '500000', 11),
+(115, 361, 365, '500000', 11),
+(116, 366, 99999, '528111', 11);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `row`
+--
+
+DROP TABLE IF EXISTS `row`;
+CREATE TABLE IF NOT EXISTS `row` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Code` varchar(100) DEFAULT NULL,
+  `AreaId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_Row_Area` (`AreaId`)
+) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `row`
+--
+
+INSERT INTO `row` (`Id`, `Code`, `AreaId`) VALUES
+(47, 'D', 1),
+(48, 'C', 1),
+(49, 'B', 1),
+(50, 'A', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `subscription`
+--
+
+DROP TABLE IF EXISTS `subscription`;
+CREATE TABLE IF NOT EXISTS `subscription` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Code` varchar(50) DEFAULT NULL,
+  `FromDate` datetime DEFAULT NULL,
+  `Todate` datetime DEFAULT NULL,
+  `AppliesTo` varchar(2) DEFAULT NULL,
+  `ThirdPartyId` int UNSIGNED DEFAULT NULL,
+  `RateId` int UNSIGNED DEFAULT NULL,
+  `ContractId` int UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `FK_Subscription_Contract` (`ContractId`),
+  KEY `FK_Subscription_Rate` (`RateId`),
+  KEY `FK_Subscription_ThirdParty` (`ThirdPartyId`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `subscription`
+--
+
+INSERT INTO `subscription` (`Id`, `Code`, `FromDate`, `Todate`, `AppliesTo`, `ThirdPartyId`, `RateId`, `ContractId`) VALUES
+(1, 'SUB001', '2025-01-01 00:00:00', '2025-12-31 00:00:00', 'CL', 10, 1, 1),
+(2, 'SUB002', '2025-01-01 00:00:00', '2025-12-31 00:00:00', 'CL', 11, 1, 1),
+(3, 'SUB003', '2025-01-01 00:00:00', '2025-12-31 00:00:00', 'CL', 12, 2, 2),
+(4, 'SUB004', '2025-01-01 00:00:00', '2025-12-31 00:00:00', 'TR', 20, 3, 3),
+(5, 'STORAGE_IMPORT', '2025-01-01 00:00:00', '2099-12-31 00:00:00', 'GL', NULL, NULL, NULL),
+(6, 'STORAGE_EXPORT', '2025-01-01 00:00:00', '2099-12-31 00:00:00', 'GL', NULL, NULL, NULL),
+(7, 'CLEANING', '2025-01-01 00:00:00', '2099-12-31 00:00:00', 'GL', NULL, NULL, NULL),
+(8, 'REPAIR', '2025-01-01 00:00:00', '2099-12-31 00:00:00', 'GL', NULL, NULL, NULL),
+(9, 'TRANSPORT', '2025-01-01 00:00:00', '2099-12-31 00:00:00', 'GL', NULL, NULL, NULL),
+(10, 'HANDLING', '2025-01-01 00:00:00', '2099-12-31 00:00:00', 'GL', NULL, NULL, NULL),
+(11, 'INSPECTION', '2025-01-01 00:00:00', '2099-12-31 00:00:00', 'GL', NULL, NULL, NULL),
+(12, 'INSPECTION_UNSTUFFING', '2025-01-01 00:00:00', '2099-12-31 00:00:00', 'GL', NULL, NULL, NULL),
+(13, 'SACCONAGECONTENEURPLEIN', '1999-01-01 14:00:00', '2099-12-31 14:03:43', 'GL', NULL, 4, 696),
+(14, 'SACCONAGECONTENEURPLEIN', '1999-01-01 14:00:00', '2099-12-31 14:03:43', 'GL', NULL, 5, 697),
+(15, 'SSTATIONNEMENTCONTENEURPLEIN', '1999-01-01 14:00:00', '2099-12-31 14:03:43', 'GL', NULL, 6, 698);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `taxcodes`
+--
+
+DROP TABLE IF EXISTS `taxcodes`;
+CREATE TABLE IF NOT EXISTS `taxcodes` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Code` varchar(50) DEFAULT NULL,
+  `Label` varchar(100) DEFAULT NULL,
+  `TaxValue` decimal(10,0) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `taxcodes`
+--
+
+INSERT INTO `taxcodes` (`Id`, `Code`, `Label`, `TaxValue`) VALUES
+(1, 'TVA0', 'TVA 0 ', NULL),
+(2, 'TVA18', 'TAXE TVA', NULL),
+(3, 'TVA  EXO', 'TVA EXONORE', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `terminal`
+--
+
+DROP TABLE IF EXISTS `terminal`;
+CREATE TABLE IF NOT EXISTS `terminal` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Code` varchar(1000) DEFAULT NULL,
+  `Label` varchar(1000) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `terminal`
+--
+
+INSERT INTO `terminal` (`Id`, `Code`, `Label`) VALUES
+(1, 'ABD', 'Abidjan Terminal');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `thirdparty`
+--
+
+DROP TABLE IF EXISTS `thirdparty`;
+CREATE TABLE IF NOT EXISTS `thirdparty` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `code` varchar(50) DEFAULT NULL,
+  `Label` varchar(200) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `thirdparty`
+--
+
+INSERT INTO `thirdparty` (`Id`, `code`, `Label`) VALUES
+(1, 'MSC', 'Mediterranean Shipping Company'),
+(2, 'MAERSK', 'Maersk Line'),
+(3, 'CMA', 'CMA CGM'),
+(4, 'HAPAG', 'Hapag-Lloyd'),
+(5, 'CLI001', 'KARIMEX'),
+(6, 'CLI002', 'IMPORT EXPORT SARL'),
+(7, 'CLI003', 'COMMERCE INTERNATIONAL'),
+(8, 'CLI004', 'TRADE SOLUTIONS'),
+(9, 'TRA001', 'TRANSITAIRE EXPRESS'),
+(10, 'TRA002', 'WORLD LOGISTICS'),
+(11, 'TRA003', 'CARGO SERVICES'),
+(12, 'COM001', 'COMMISSION CARGO'),
+(13, 'COM002', 'CUSTOMS BROKER PLUS'),
+(14, 'AGE001', 'AGENCE MARITIME PORT'),
+(15, 'AGE002', 'SHIPPING AGENCY INT'),
+(20, 'EVERGREEN', 'Evergreen Marine'),
+(21, 'ONE', 'Ocean Network Express'),
+(22, 'COSCO', 'COSCO Shipping'),
+(23, 'ZIM', 'Zim Integrated Shipping'),
+(104, 'OOCL', 'Orient Overseas Container Line'),
+(105, 'EVERGREEN', 'Evergreen Line'),
+(106, 'COSCO', 'China Ocean Shipping Company'),
+(107, 'YANGMING', 'Yang Ming Marine Transport');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `thirdpartytype`
+--
+
+DROP TABLE IF EXISTS `thirdpartytype`;
+CREATE TABLE IF NOT EXISTS `thirdpartytype` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Label` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `thirdpartytype`
+--
+
+INSERT INTO `thirdpartytype` (`Id`, `Label`) VALUES
+(1, 'Shipping Line'),
+(2, 'Agent'),
+(3, 'Carrier'),
+(4, 'Group'),
+(5, 'Client'),
+(6, 'Forwarder');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `thirdparty_backup_renumber`
+--
+
+DROP TABLE IF EXISTS `thirdparty_backup_renumber`;
+CREATE TABLE IF NOT EXISTS `thirdparty_backup_renumber` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `code` varchar(50) DEFAULT NULL,
+  `Label` varchar(200) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `thirdparty_backup_renumber`
+--
+
+INSERT INTO `thirdparty_backup_renumber` (`Id`, `code`, `Label`) VALUES
+(1, 'MSC', 'Mediterranean Shipping Company'),
+(2, 'MAERSK', 'Maersk Line'),
+(3, 'CMA', 'CMA CGM'),
+(4, 'HAPAG', 'Hapag-Lloyd'),
+(10, 'CLI001', 'KARIMEX'),
+(11, 'CLI002', 'IMPORT EXPORT SARL'),
+(12, 'CLI003', 'COMMERCE INTERNATIONAL'),
+(13, 'CLI004', 'TRADE SOLUTIONS'),
+(20, 'TRA001', 'TRANSITAIRE EXPRESS'),
+(21, 'TRA002', 'WORLD LOGISTICS'),
+(22, 'TRA003', 'CARGO SERVICES'),
+(30, 'COM001', 'COMMISSION CARGO'),
+(31, 'COM002', 'CUSTOMS BROKER PLUS'),
+(40, 'AGE001', 'AGENCE MARITIME PORT'),
+(41, 'AGE002', 'SHIPPING AGENCY INT');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `thirdparty_thirdpartytype`
+--
+
+DROP TABLE IF EXISTS `thirdparty_thirdpartytype`;
+CREATE TABLE IF NOT EXISTS `thirdparty_thirdpartytype` (
+  `ThirdParty_Id` int UNSIGNED NOT NULL,
+  `ThirdPartyType_Id` int UNSIGNED NOT NULL,
+  PRIMARY KEY (`ThirdParty_Id`,`ThirdPartyType_Id`),
+  KEY `ThirdPartyType_Id` (`ThirdPartyType_Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `thirdparty_thirdpartytype`
+--
+
+INSERT INTO `thirdparty_thirdpartytype` (`ThirdParty_Id`, `ThirdPartyType_Id`) VALUES
+(1, 1),
+(2, 1),
+(3, 1),
+(4, 1),
+(104, 1),
+(105, 1),
+(106, 1),
+(107, 1),
+(10, 2),
+(11, 2),
+(12, 2),
+(13, 2),
+(20, 4),
+(21, 4),
+(22, 4),
+(30, 5),
+(31, 5),
+(40, 6),
+(41, 6);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `yarditemcode`
+--
+
+DROP TABLE IF EXISTS `yarditemcode`;
+CREATE TABLE IF NOT EXISTS `yarditemcode` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Label` varchar(200) DEFAULT NULL,
+  `YardItemCodeId` int UNSIGNED NOT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `yarditemcode`
+--
+
+INSERT INTO `yarditemcode` (`Id`, `Label`, `YardItemCodeId`) VALUES
+(1, 'Light', 2),
+(2, 'Medium', 2),
+(3, 'Heavy', 2),
+(4, 'Super-Heavy', 2),
+(5, '4WD', 2),
+(6, 'Bag', 3),
+(7, 'Pallet', 3),
+(8, 'Crate', 3),
+(9, 'Box', 3),
+(10, 'Bulk', 3),
+(11, 'Pack', 3),
+(12, 'Ball', 3),
+(13, 'Tube', 3),
+(14, 'Barrel', 3),
+(15, 'Bearer', 4),
+(16, 'Semi-Bearer', 4),
+(17, '2000 20\' DRY', 1),
+(18, '2028 20\' spécialisé', 1),
+(19, '2040 20\'frigo', 1),
+(20, '2200 20\' DRY', 1),
+(21, '2210 20\' DRY', 1),
+(22, '2211 20\' AERE', 1),
+(23, '2212 20\' AERE', 1),
+(24, '2213 20\' Ventile', 1),
+(25, '2214 20\' Ventile', 1),
+(26, '2215 20\' Ventile', 1),
+(27, '2216 20\' Ventile', 1),
+(28, '2217 20\' Ventile', 1),
+(29, '2218 20\' Ventile', 1),
+(30, '2219 20\' Ventile', 1),
+(31, '2220 20\' Spécialisé', 1),
+(32, '2221 20\' Spécialisé', 1),
+(33, '2222 20\' Spécialisé', 1),
+(34, '2223 20\' Spécialisé', 1),
+(35, '2224 20\' Spécialisé', 1),
+(36, '2225 20\' Sécialisé', 1),
+(37, '2226 20\' Spécialisé', 1),
+(38, '2227 20\' Spécialisé', 1),
+(39, '2228 20\' Spécialisé', 1),
+(40, '2229 20\' Spécialisé', 1),
+(41, '2230 20\' Frigo autonome', 1),
+(42, '2231 20\' Frigo autonome', 1),
+(43, '2232 20\' Frigo autonome', 1),
+(44, '2233 20\' Frigo autonome', 1),
+(45, '2234 20\' Frigo autonome', 1),
+(46, '2235 20\' Frigo autonome', 1),
+(47, '2236 20\' Frigo autonome', 1),
+(48, '2237 20\' Frigo autonome', 1),
+(49, '2238 20\' Frigo autonome', 1),
+(50, '2239 20\' Frigo autonome', 1),
+(51, '2240 20\' Frigo', 1),
+(52, '2241 20\' Frigo', 1),
+(53, '2242 20\' Frigo', 1),
+(54, '2243 20\' Frigo', 1),
+(55, '2244 20\' Frigo', 1),
+(56, '2245 20\' Frigo', 1),
+(57, '2246 20\' Frigo', 1),
+(58, '2247 20\' Frigo', 1),
+(59, '2248 20\' Frigo', 1),
+(60, '2249 20\' Frigo', 1),
+(61, '2250 20\' Open top', 1),
+(62, '2251 20\' Open top', 1),
+(63, '2252 20\' Open top', 1),
+(64, '2253 20\' Open top', 1),
+(65, '2254 20\' Open top', 1),
+(66, '2255 20\' Open top', 1),
+(67, '2256 20\' Open top', 1),
+(68, '2257 20\' Open top', 1),
+(69, '2258 20\' Open top', 1),
+(70, '2260 20\' Flat pliable', 1),
+(71, '2261 20\' Flat pliable', 1),
+(72, '2262 20\' Flat pliable', 1),
+(73, '2263 20\' Flat pliable', 1),
+(74, '2264 20\' Flat pliable', 1),
+(75, '2265 20\' Flat pliable', 1),
+(76, '2266 20\' Flat pliable', 1),
+(77, '2267 20\' Flat pliable', 1),
+(78, '2268 20\' Flat pliable', 1),
+(79, '2269 20\' Flat pliable', 1),
+(80, '2270 20\' Citerne', 1),
+(81, '2271 20\' Citerne Aliment.', 1),
+(82, '2272 20\' Citerne', 1),
+(83, '2273 20\' Citerne', 1),
+(84, '2274 20\' Citerne', 1),
+(85, '2275 20\' Citerne', 1),
+(86, '2276 20\' Citerne DGX', 1),
+(87, '2277 20\' Citerne', 1),
+(88, '2278 20\' Citerne', 1),
+(89, '2279 20\' Citerne', 1),
+(90, '2280 20\' Bulk', 1),
+(91, '2281 20\' BULK', 1),
+(92, '2282 20\' Bulk', 1),
+(93, '2283 20\' Bulk', 1),
+(94, '2284 20\' Bulk', 1),
+(95, '2285 20\' Bulk', 1),
+(96, '2286 20\' Bulk', 1),
+(97, '2287 20\' Bulk', 1),
+(98, '2288 20\' Bulk', 1),
+(99, '2289 20\' Bulk', 1),
+(100, '2299 20\'', 1),
+(101, '2300 20\'', 1),
+(102, '2310 20\'', 1),
+(103, '2670 20\' Citerne', 1),
+(104, '2828 20\' Specialisé', 1),
+(105, '20\' FLAT', 1),
+(106, '2870 20\' Citerne', 1),
+(107, '2880 20\' Citerne', 1),
+(108, '2960 20\' Bolster', 1),
+(109, '2961 20\' Bolster', 1),
+(110, '2963 20\' Bolster', 1),
+(111, 'MAFI  20', 1),
+(112, '0900 11\" dry', 1),
+(113, '12G1 10\' DRY', 1),
+(114, '20S2 20\' Pour Poisson vivant', 1),
+(115, '22A0 20\' Air/Surface', 1),
+(116, '22B0 20\' Bulk Pour Solide en vrac', 1),
+(117, '22B1 20\' Bulk Pour Solide en vrac', 1),
+(118, '22B2 20\' Bulk  pour Solide en vrac', 1),
+(119, '22G0 20\' DRY', 1),
+(120, '22G1 20\' DRY', 1),
+(121, '22G2 20\' AERE', 1),
+(122, '22H0 20\' frigo amovible', 1),
+(123, '22H1 20\'', 1),
+(124, 'CITERNE DANGEREUSE', 1),
+(125, '22P0 20\' Plate-forme', 1),
+(126, '22P1 20\' Plate-forme', 1),
+(127, '22P2 20\' flat pliable', 1),
+(128, '22P3 20\' FLAT PLIABLE', 1),
+(129, '22R0 20\' frigo autonome', 1),
+(130, '22R1 20\' frigo autonome', 1),
+(131, '22R2 20\' Frigo autonome', 1),
+(132, '22R8 20\' FRIGO', 1),
+(133, '22S0 20\' Spécialisé pour Bétail', 1),
+(134, '22S1 20\' Spécialisé pour Automobile', 1),
+(135, '22S2 20\' Spécialisé Poisson vivant', 1),
+(136, '22T0 20\' Citerne', 1),
+(137, '22T1 20\' Cit. alimentaire', 1),
+(138, '22T2 20\' Citerne réfrigéré', 1),
+(139, '22T6 20\' Citerne DGX', 1),
+(140, 'CITERNE CHIMIQUE', 1),
+(141, 'CITERNE FRIGORIFIQUE', 1),
+(142, '22U0 20\' Open Top', 1),
+(143, '22U1 20\' Open Top', 1),
+(144, '22V0 20\' Ventilé', 1),
+(145, '22V1 20\' Ventilé', 1),
+(146, '22V2 20\' Ventilé', 1),
+(147, '22V3 20\' Ventilé', 1),
+(148, '22V9 20\' Ventilé', 1),
+(149, '23U1 20\' open top', 1),
+(150, '25G1 20\' Dry High Cube', 1),
+(151, '25R1 20\' High Cube Frigo', 1),
+(152, '25U1 20\' High Cube Open Top', 1),
+(153, 'gear box 20\'', 1),
+(154, '0020 BABY TANER', 1),
+(155, '4000 40\' Dry', 1),
+(156, '4028 40\' Specialisé (Spreader)', 1),
+(157, '4033 40\' MAFI', 1),
+(158, '4051 40\'OPEN TOP', 1),
+(159, '4100 40\' DRY', 1),
+(160, '4110 40\' Dry', 1),
+(161, '4200 40\' DRY', 1),
+(162, '4210 40\' DRY', 1),
+(163, '4232 40\' FRIGO', 1),
+(164, '4240 40\' FRIGO', 1),
+(165, '4250 40\' open top', 1),
+(166, 'open top', 1),
+(167, '4260 40\' Flat', 1),
+(168, '4261 40\' FLAT', 1),
+(169, '4262 40\' Flat', 1),
+(170, '4263 40\' PLATE FORME', 1),
+(171, '4299 40\' Special', 1),
+(172, '4300 40\' DRY', 1),
+(173, '4310 40\' Dry', 1),
+(174, '4330 40\' Frigo autonome', 1),
+(175, '4332 40\' FRIGO', 1),
+(176, '4350 40\' Open top', 1),
+(177, '4351 40\' Open top', 1),
+(178, '4360 40\' Plate forme', 1),
+(179, '4361 40\' Plate forme', 1),
+(180, '4363 40\' Flat pliable', 1),
+(181, '4364 40\' Flat pliable', 1),
+(182, '4365 40\' Flat pliable', 1),
+(183, '4366 40\' Flat pliable', 1),
+(184, '4367 40\' Flat pliable', 1),
+(185, '4368 40\' Flat pliable', 1),
+(186, '4369 40\' Flat pliable', 1),
+(187, '4370 40\' Citerne', 1),
+(188, '4371 40\' Citerne', 1),
+(189, '4372 40\' Citerne Aliment.', 1),
+(190, '4373 40\' Citerne', 1),
+(191, '4374 40\' Citerne', 1),
+(192, '4375 40\' Citerne', 1),
+(193, '4376 40\' Citerne DGX', 1),
+(194, '4377 40\' Citerne', 1),
+(195, '4378 40\' Citerne', 1),
+(196, '4379 40\' Citerne', 1),
+(197, '4380 40\' Bulk', 1),
+(198, '4381 40\' Bulk', 1),
+(199, '4382 40\' Bulk', 1),
+(200, '4383 40\' Bulk', 1),
+(201, '4384 40\' Bulk', 1),
+(202, '4385 40\' Bulk', 1),
+(203, '4386 40\' Bulk', 1),
+(204, '4387 40\' Bulk', 1),
+(205, '4388 40\' Bulk', 1),
+(206, '4389 40\' Bulk', 1),
+(207, '4400 40\' DRY   High cube', 1),
+(208, '4430 40\' frigo  High cube', 1),
+(209, '4500 40\' Dry high cube', 1),
+(210, '4510 40\' Dry High cube', 1),
+(211, '40\'', 1),
+(212, '40\'', 1),
+(213, '40\'', 1),
+(214, '40\'', 1),
+(215, '40\'', 1),
+(216, '40\'', 1),
+(217, '40 \'', 1),
+(218, '40\'  high cube', 1),
+(219, '4530 40\' FRIGO high cube', 1),
+(220, '4532 40\' FRIGO  High cube', 1),
+(221, '40\' FLAT HIGH CUBE', 1),
+(222, '9900 MAFI 40', 1),
+(223, '41G0 40\' Dry', 1),
+(224, '42G0 40\' Dry', 1),
+(225, '42G1 40\' DRY', 1),
+(226, '42P1 Flat 40\'', 1),
+(227, '42P2 40\' PLTE-FORME', 1),
+(228, '42P3 40\' Plate-forme', 1),
+(229, '42R1 40\' Frigo', 1),
+(230, '42R2 40\' FRIGO', 1),
+(231, '42U0 40\' OPEN TOP', 1),
+(232, '42U1 40\' Open Top', 1),
+(233, '43A0 40\' Air/Surface', 1),
+(234, '43B0 40\' Pour Solide en vrac', 1),
+(235, '43B1 40\' Pour Solide en vrac', 1),
+(236, '43G0 40\' Dry', 1),
+(237, '43G1 40\' Dry', 1),
+(238, '43H0 40\' Frigo amovible', 1),
+(239, '43H1 40\' Frigo amovible', 1),
+(240, '43P0 40\' Plate-forme', 1),
+(241, '43P1 40\' Plate-forme', 1),
+(242, '43P3 40\' Flat pliable', 1),
+(243, '43R0 40\' Frigo autonome', 1),
+(244, '43R1 40\' Frigo autonome', 1),
+(245, '43R2 40\' Frigo autonome', 1),
+(246, '43S0 40\' Spécialisé', 1),
+(247, '43S1 40\' Spécialisé', 1),
+(248, '43T0 40\' Citerne', 1),
+(249, '43T1 40\' Cit. alimentaire', 1),
+(250, '43T2 40\' Citerne réfrigér', 1),
+(251, '43T6 40\' Citerne DGX', 1),
+(252, '43U0 40\' Open Top', 1),
+(253, '43U1 40\' Open Top', 1),
+(254, '43V1 40\' Ventilé', 1),
+(255, '43V2 40\' Ventilé', 1),
+(256, '44R0 40\' frigo High cube', 1),
+(257, '45G0 40\' Dry High Cube', 1),
+(258, '45G1 40\' Dry High Cube', 1),
+(259, '45H0 40\' Frigo High cube', 1),
+(260, '45P0 40\' Flat High cube', 1),
+(261, 'HIGH CUBE40\' Flat', 1),
+(262, '40\' FLAT HIGH CUBE', 1),
+(263, '45R0 40\' Frigo High cube', 1),
+(264, '45R1 40\' FRIGO High cube', 1),
+(265, '45R2 40\' FRIGO High cube', 1),
+(266, '40\' frigo high cube', 1),
+(267, '40\' frigo high cube', 1),
+(268, '45R7 40\' FRIGO High cube', 1),
+(269, '45R8 Frigo high cube', 1),
+(270, '45U0 40\' Open Top High cube', 1),
+(271, '45U1 40\' Open Top High cube', 1),
+(272, '40\' ventilé high cube', 1),
+(273, '40\' super high cube', 1),
+(274, '40\' FLAT', 1),
+(275, '40\' bolster', 1),
+(276, '40\' dry', 1),
+(277, 'gear box 40\'', 1),
+(278, '45\' Super high cube', 1),
+(279, '20x 9 6 Conteneur HC vrac non press', 1),
+(280, '20x 9 6 Press dech horiz / 150 kpa', 1),
+(281, 'Chassis 20\'', 1),
+(282, '20\' conteneur standard', 1),
+(283, '20\' Bolster plateforme', 1),
+(284, '20\' conteneur plateau', 1),
+(285, '20\' Avec groupe electrogene', 1),
+(286, 'Generateur mobile/portatif', 1),
+(287, '20\' ctn. hors limite en hauteur', 1),
+(288, '20x9 6 Ouvert sur une extremite', 1),
+(289, '20x9 6 Large palette march. div.', 1),
+(290, '20x8 6 Isole / Transf chaleur K=0', 1),
+(291, '20\' 4\'3\'\' Reduit', 1),
+(292, '20x8 6 Cote ouvert', 1),
+(293, '20\' conteneur ? toit ouvrant', 1),
+(294, '20\' Conteneur generateur', 1),
+(295, '20x8 6 Large palette', 1),
+(296, 'Conteneur frigorifique 20\'', 1),
+(297, '20\' conteneur frigorifique', 1),
+(298, '20x9 6 Refr. ou chauff. mecaniquemt', 1),
+(299, 'Mafi', 1),
+(300, '20x8 6 March. Div. sur barre susp.', 1),
+(301, '20x8 6 Transporteur de betail', 1),
+(302, '20\' 4\'3\" Reduit', 1),
+(303, 'Tiroirs Delmas', 1),
+(304, '20\' conteneur citerne', 1),
+(305, '20x8 6 Ventilation basse et haute', 1),
+(306, '24 Frigorifique', 1),
+(307, '25\' Frigo (chauff et refrig meca.)', 1),
+(308, '25*8*8 (Longueur*Largeur*Hauteur)', 1),
+(309, '40x8 6 Press. Dech. Horiz. 150 kpa', 1),
+(310, 'Chassis 40\'', 1),
+(311, '40\' conteneur standard', 1),
+(312, 'Bolster', 1),
+(313, '40\' conteneur plateau', 1),
+(314, '40x9 6 Transport d\'automobile', 1),
+(315, '40\' conteneur h.l. en hauteur', 1),
+(316, '40x9 6 High cube a barre suspendue', 1),
+(317, '40x9 6 Ouvert sur une extremite', 1),
+(318, '40\' ctn. Frigorif. h.l. en hauteur', 1),
+(319, '40x9 6 March. Div. / large palette', 1),
+(320, '40\' 4\'3\' Reduit', 1),
+(321, '40\' conteneur ? toit ouvrant', 1),
+(322, '40 Bolster plateforme', 1),
+(323, '40x8 6 Plateforme reduite', 1),
+(324, '40x8 6 Large palette', 1),
+(325, '40x9 6 High cube frigo Antilles', 1),
+(326, '40\' conteneur frigorifique', 1),
+(327, 'Mafi', 1),
+(328, '40x8 6 Ctn stand. a barres susp.', 1),
+(329, '40\' 4\'3\'\' Reduit', 1),
+(330, '40\' conteneur citerne', 1),
+(331, 'Chassis 45\'', 1),
+(332, '45x8 6 2 bouts complets et fixes', 1),
+(333, '45x9 6 Ventilation passive haute', 1),
+(334, '45x9 6 High cube a barre susp.', 1),
+(335, '45x9 6 High cube a large palette', 1),
+(336, '45\'  Toit ouvert 8\' 6', 1),
+(337, '45x8 6 Large palette', 1),
+(338, '45x9 6 Refroid. chauff. mecanique', 1),
+(339, '45x9 6 High cube frig. a large pale', 1),
+(340, '45x9 6 Conteneur/caisson mobile (HW', 1),
+(341, '45x8 6 Ventilation passive en haut', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `yarditemcode_backup_renumber`
+--
+
+DROP TABLE IF EXISTS `yarditemcode_backup_renumber`;
+CREATE TABLE IF NOT EXISTS `yarditemcode_backup_renumber` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Label` varchar(200) DEFAULT NULL,
+  `YardItemCodeId` int UNSIGNED NOT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `yarditemcode_backup_renumber`
+--
+
+INSERT INTO `yarditemcode_backup_renumber` (`Id`, `Label`, `YardItemCodeId`) VALUES
+(1, 'Light', 2),
+(2, 'Medium', 2),
+(3, 'Heavy', 2),
+(4, 'Super-Heavy', 2),
+(5, '4WD', 2),
+(6, 'Bag', 3),
+(7, 'Pallet', 3),
+(8, 'Crate', 3),
+(9, 'Box', 3),
+(10, 'Bulk', 3),
+(11, 'Pack', 3),
+(12, 'Ball', 3),
+(13, 'Tube', 3),
+(14, 'Barrel', 3),
+(15, 'Bearer', 4),
+(16, 'Semi-Bearer', 4),
+(279, '2000 20\' DRY', 1),
+(280, '2028 20\' spécialisé', 1),
+(281, '2040 20\'frigo', 1),
+(282, '2200 20\' DRY', 1),
+(283, '2210 20\' DRY', 1),
+(284, '2211 20\' AERE', 1),
+(285, '2212 20\' AERE', 1),
+(286, '2213 20\' Ventile', 1),
+(287, '2214 20\' Ventile', 1),
+(288, '2215 20\' Ventile', 1),
+(289, '2216 20\' Ventile', 1),
+(290, '2217 20\' Ventile', 1),
+(291, '2218 20\' Ventile', 1),
+(292, '2219 20\' Ventile', 1),
+(293, '2220 20\' Spécialisé', 1),
+(294, '2221 20\' Spécialisé', 1),
+(295, '2222 20\' Spécialisé', 1),
+(296, '2223 20\' Spécialisé', 1),
+(297, '2224 20\' Spécialisé', 1),
+(298, '2225 20\' Sécialisé', 1),
+(299, '2226 20\' Spécialisé', 1),
+(300, '2227 20\' Spécialisé', 1),
+(301, '2228 20\' Spécialisé', 1),
+(302, '2229 20\' Spécialisé', 1),
+(303, '2230 20\' Frigo autonome', 1),
+(304, '2231 20\' Frigo autonome', 1),
+(305, '2232 20\' Frigo autonome', 1),
+(306, '2233 20\' Frigo autonome', 1),
+(307, '2234 20\' Frigo autonome', 1),
+(308, '2235 20\' Frigo autonome', 1),
+(309, '2236 20\' Frigo autonome', 1),
+(310, '2237 20\' Frigo autonome', 1),
+(311, '2238 20\' Frigo autonome', 1),
+(312, '2239 20\' Frigo autonome', 1),
+(313, '2240 20\' Frigo', 1),
+(314, '2241 20\' Frigo', 1),
+(315, '2242 20\' Frigo', 1),
+(316, '2243 20\' Frigo', 1),
+(317, '2244 20\' Frigo', 1),
+(318, '2245 20\' Frigo', 1),
+(319, '2246 20\' Frigo', 1),
+(320, '2247 20\' Frigo', 1),
+(321, '2248 20\' Frigo', 1),
+(322, '2249 20\' Frigo', 1),
+(323, '2250 20\' Open top', 1),
+(324, '2251 20\' Open top', 1),
+(325, '2252 20\' Open top', 1),
+(326, '2253 20\' Open top', 1),
+(327, '2254 20\' Open top', 1),
+(328, '2255 20\' Open top', 1),
+(329, '2256 20\' Open top', 1),
+(330, '2257 20\' Open top', 1),
+(331, '2258 20\' Open top', 1),
+(332, '2260 20\' Flat pliable', 1),
+(333, '2261 20\' Flat pliable', 1),
+(334, '2262 20\' Flat pliable', 1),
+(335, '2263 20\' Flat pliable', 1),
+(336, '2264 20\' Flat pliable', 1),
+(337, '2265 20\' Flat pliable', 1),
+(338, '2266 20\' Flat pliable', 1),
+(339, '2267 20\' Flat pliable', 1),
+(340, '2268 20\' Flat pliable', 1),
+(341, '2269 20\' Flat pliable', 1),
+(342, '2270 20\' Citerne', 1),
+(343, '2271 20\' Citerne Aliment.', 1),
+(344, '2272 20\' Citerne', 1),
+(345, '2273 20\' Citerne', 1),
+(346, '2274 20\' Citerne', 1),
+(347, '2275 20\' Citerne', 1),
+(348, '2276 20\' Citerne DGX', 1),
+(349, '2277 20\' Citerne', 1),
+(350, '2278 20\' Citerne', 1),
+(351, '2279 20\' Citerne', 1),
+(352, '2280 20\' Bulk', 1),
+(353, '2281 20\' BULK', 1),
+(354, '2282 20\' Bulk', 1),
+(355, '2283 20\' Bulk', 1),
+(356, '2284 20\' Bulk', 1),
+(357, '2285 20\' Bulk', 1),
+(358, '2286 20\' Bulk', 1),
+(359, '2287 20\' Bulk', 1),
+(360, '2288 20\' Bulk', 1),
+(361, '2289 20\' Bulk', 1),
+(362, '2299 20\'', 1),
+(363, '2300 20\'', 1),
+(364, '2310 20\'', 1),
+(365, '2670 20\' Citerne', 1),
+(366, '2828 20\' Specialisé', 1),
+(367, '20\' FLAT', 1),
+(368, '2870 20\' Citerne', 1),
+(369, '2880 20\' Citerne', 1),
+(370, '2960 20\' Bolster', 1),
+(371, '2961 20\' Bolster', 1),
+(372, '2963 20\' Bolster', 1),
+(373, 'MAFI  20', 1),
+(374, '0900 11\" dry', 1),
+(375, '12G1 10\' DRY', 1),
+(376, '20S2 20\' Pour Poisson vivant', 1),
+(377, '22A0 20\' Air/Surface', 1),
+(378, '22B0 20\' Bulk Pour Solide en vrac', 1),
+(379, '22B1 20\' Bulk Pour Solide en vrac', 1),
+(380, '22B2 20\' Bulk  pour Solide en vrac', 1),
+(381, '22G0 20\' DRY', 1),
+(382, '22G1 20\' DRY', 1),
+(383, '22G2 20\' AERE', 1),
+(384, '22H0 20\' frigo amovible', 1),
+(385, '22H1 20\'', 1),
+(386, 'CITERNE DANGEREUSE', 1),
+(387, '22P0 20\' Plate-forme', 1),
+(388, '22P1 20\' Plate-forme', 1),
+(389, '22P2 20\' flat pliable', 1),
+(390, '22P3 20\' FLAT PLIABLE', 1),
+(391, '22R0 20\' frigo autonome', 1),
+(392, '22R1 20\' frigo autonome', 1),
+(393, '22R2 20\' Frigo autonome', 1),
+(394, '22R8 20\' FRIGO', 1),
+(395, '22S0 20\' Spécialisé pour Bétail', 1),
+(396, '22S1 20\' Spécialisé pour Automobile', 1),
+(397, '22S2 20\' Spécialisé Poisson vivant', 1),
+(398, '22T0 20\' Citerne', 1),
+(399, '22T1 20\' Cit. alimentaire', 1),
+(400, '22T2 20\' Citerne réfrigéré', 1),
+(401, '22T6 20\' Citerne DGX', 1),
+(402, 'CITERNE CHIMIQUE', 1),
+(403, 'CITERNE FRIGORIFIQUE', 1),
+(404, '22U0 20\' Open Top', 1),
+(405, '22U1 20\' Open Top', 1),
+(406, '22V0 20\' Ventilé', 1),
+(407, '22V1 20\' Ventilé', 1),
+(408, '22V2 20\' Ventilé', 1),
+(409, '22V3 20\' Ventilé', 1),
+(410, '22V9 20\' Ventilé', 1),
+(411, '23U1 20\' open top', 1),
+(412, '25G1 20\' Dry High Cube', 1),
+(413, '25R1 20\' High Cube Frigo', 1),
+(414, '25U1 20\' High Cube Open Top', 1),
+(415, 'gear box 20\'', 1),
+(416, '0020 BABY TANER', 1),
+(417, '4000 40\' Dry', 1),
+(418, '4028 40\' Specialisé (Spreader)', 1),
+(419, '4033 40\' MAFI', 1),
+(420, '4051 40\'OPEN TOP', 1),
+(421, '4100 40\' DRY', 1),
+(422, '4110 40\' Dry', 1),
+(423, '4200 40\' DRY', 1),
+(424, '4210 40\' DRY', 1),
+(425, '4232 40\' FRIGO', 1),
+(426, '4240 40\' FRIGO', 1),
+(427, '4250 40\' open top', 1),
+(428, 'open top', 1),
+(429, '4260 40\' Flat', 1),
+(430, '4261 40\' FLAT', 1),
+(431, '4262 40\' Flat', 1),
+(432, '4263 40\' PLATE FORME', 1),
+(433, '4299 40\' Special', 1),
+(434, '4300 40\' DRY', 1),
+(435, '4310 40\' Dry', 1),
+(436, '4330 40\' Frigo autonome', 1),
+(437, '4332 40\' FRIGO', 1),
+(438, '4350 40\' Open top', 1),
+(439, '4351 40\' Open top', 1),
+(440, '4360 40\' Plate forme', 1),
+(441, '4361 40\' Plate forme', 1),
+(442, '4363 40\' Flat pliable', 1),
+(443, '4364 40\' Flat pliable', 1),
+(444, '4365 40\' Flat pliable', 1),
+(445, '4366 40\' Flat pliable', 1),
+(446, '4367 40\' Flat pliable', 1),
+(447, '4368 40\' Flat pliable', 1),
+(448, '4369 40\' Flat pliable', 1),
+(449, '4370 40\' Citerne', 1),
+(450, '4371 40\' Citerne', 1),
+(451, '4372 40\' Citerne Aliment.', 1),
+(452, '4373 40\' Citerne', 1),
+(453, '4374 40\' Citerne', 1),
+(454, '4375 40\' Citerne', 1),
+(455, '4376 40\' Citerne DGX', 1),
+(456, '4377 40\' Citerne', 1),
+(457, '4378 40\' Citerne', 1),
+(458, '4379 40\' Citerne', 1),
+(459, '4380 40\' Bulk', 1),
+(460, '4381 40\' Bulk', 1),
+(461, '4382 40\' Bulk', 1),
+(462, '4383 40\' Bulk', 1),
+(463, '4384 40\' Bulk', 1),
+(464, '4385 40\' Bulk', 1),
+(465, '4386 40\' Bulk', 1),
+(466, '4387 40\' Bulk', 1),
+(467, '4388 40\' Bulk', 1),
+(468, '4389 40\' Bulk', 1),
+(469, '4400 40\' DRY   High cube', 1),
+(470, '4430 40\' frigo  High cube', 1),
+(471, '4500 40\' Dry high cube', 1),
+(472, '4510 40\' Dry High cube', 1),
+(473, '40\'', 1),
+(474, '40\'', 1),
+(475, '40\'', 1),
+(476, '40\'', 1),
+(477, '40\'', 1),
+(478, '40\'', 1),
+(479, '40 \'', 1),
+(480, '40\'  high cube', 1),
+(481, '4530 40\' FRIGO high cube', 1),
+(482, '4532 40\' FRIGO  High cube', 1),
+(483, '40\' FLAT HIGH CUBE', 1),
+(484, '9900 MAFI 40', 1),
+(485, '41G0 40\' Dry', 1),
+(486, '42G0 40\' Dry', 1),
+(487, '42G1 40\' DRY', 1),
+(488, '42P1 Flat 40\'', 1),
+(489, '42P2 40\' PLTE-FORME', 1),
+(490, '42P3 40\' Plate-forme', 1),
+(491, '42R1 40\' Frigo', 1),
+(492, '42R2 40\' FRIGO', 1),
+(493, '42U0 40\' OPEN TOP', 1),
+(494, '42U1 40\' Open Top', 1),
+(495, '43A0 40\' Air/Surface', 1),
+(496, '43B0 40\' Pour Solide en vrac', 1),
+(497, '43B1 40\' Pour Solide en vrac', 1),
+(498, '43G0 40\' Dry', 1),
+(499, '43G1 40\' Dry', 1),
+(500, '43H0 40\' Frigo amovible', 1),
+(501, '43H1 40\' Frigo amovible', 1),
+(502, '43P0 40\' Plate-forme', 1),
+(503, '43P1 40\' Plate-forme', 1),
+(504, '43P3 40\' Flat pliable', 1),
+(505, '43R0 40\' Frigo autonome', 1),
+(506, '43R1 40\' Frigo autonome', 1),
+(507, '43R2 40\' Frigo autonome', 1),
+(508, '43S0 40\' Spécialisé', 1),
+(509, '43S1 40\' Spécialisé', 1),
+(510, '43T0 40\' Citerne', 1),
+(511, '43T1 40\' Cit. alimentaire', 1),
+(512, '43T2 40\' Citerne réfrigér', 1),
+(513, '43T6 40\' Citerne DGX', 1),
+(514, '43U0 40\' Open Top', 1),
+(515, '43U1 40\' Open Top', 1),
+(516, '43V1 40\' Ventilé', 1),
+(517, '43V2 40\' Ventilé', 1),
+(518, '44R0 40\' frigo High cube', 1),
+(519, '45G0 40\' Dry High Cube', 1),
+(520, '45G1 40\' Dry High Cube', 1),
+(521, '45H0 40\' Frigo High cube', 1),
+(522, '45P0 40\' Flat High cube', 1),
+(523, 'HIGH CUBE40\' Flat', 1),
+(524, '40\' FLAT HIGH CUBE', 1),
+(525, '45R0 40\' Frigo High cube', 1),
+(526, '45R1 40\' FRIGO High cube', 1),
+(527, '45R2 40\' FRIGO High cube', 1),
+(528, '40\' frigo high cube', 1),
+(529, '40\' frigo high cube', 1),
+(530, '45R7 40\' FRIGO High cube', 1),
+(531, '45R8 Frigo high cube', 1),
+(532, '45U0 40\' Open Top High cube', 1),
+(533, '45U1 40\' Open Top High cube', 1),
+(534, '40\' ventilé high cube', 1),
+(535, '40\' super high cube', 1),
+(536, '40\' FLAT', 1),
+(537, '40\' bolster', 1),
+(538, '40\' dry', 1),
+(539, 'gear box 40\'', 1),
+(540, '45\' Super high cube', 1),
+(541, '20x 9 6 Conteneur HC vrac non press', 1),
+(542, '20x 9 6 Press dech horiz / 150 kpa', 1),
+(543, 'Chassis 20\'', 1),
+(544, '20\' conteneur standard', 1),
+(545, '20\' Bolster plateforme', 1),
+(546, '20\' conteneur plateau', 1),
+(547, '20\' Avec groupe electrogene', 1),
+(548, 'Generateur mobile/portatif', 1),
+(549, '20\' ctn. hors limite en hauteur', 1),
+(550, '20x9 6 Ouvert sur une extremite', 1),
+(551, '20x9 6 Large palette march. div.', 1),
+(552, '20x8 6 Isole / Transf chaleur K=0', 1),
+(553, '20\' 4\'3\'\' Reduit', 1),
+(554, '20x8 6 Cote ouvert', 1),
+(555, '20\' conteneur ? toit ouvrant', 1),
+(556, '20\' Conteneur generateur', 1),
+(557, '20x8 6 Large palette', 1),
+(558, 'Conteneur frigorifique 20\'', 1),
+(559, '20\' conteneur frigorifique', 1),
+(560, '20x9 6 Refr. ou chauff. mecaniquemt', 1),
+(561, 'Mafi', 1),
+(562, '20x8 6 March. Div. sur barre susp.', 1),
+(563, '20x8 6 Transporteur de betail', 1),
+(564, '20\' 4\'3\" Reduit', 1),
+(565, 'Tiroirs Delmas', 1),
+(566, '20\' conteneur citerne', 1),
+(567, '20x8 6 Ventilation basse et haute', 1),
+(568, '24 Frigorifique', 1),
+(569, '25\' Frigo (chauff et refrig meca.)', 1),
+(570, '25*8*8 (Longueur*Largeur*Hauteur)', 1),
+(571, '40x8 6 Press. Dech. Horiz. 150 kpa', 1),
+(572, 'Chassis 40\'', 1),
+(573, '40\' conteneur standard', 1),
+(574, 'Bolster', 1),
+(575, '40\' conteneur plateau', 1),
+(576, '40x9 6 Transport d\'automobile', 1),
+(577, '40\' conteneur h.l. en hauteur', 1),
+(578, '40x9 6 High cube a barre suspendue', 1),
+(579, '40x9 6 Ouvert sur une extremite', 1),
+(580, '40\' ctn. Frigorif. h.l. en hauteur', 1),
+(581, '40x9 6 March. Div. / large palette', 1),
+(582, '40\' 4\'3\' Reduit', 1),
+(583, '40\' conteneur ? toit ouvrant', 1),
+(584, '40 Bolster plateforme', 1),
+(585, '40x8 6 Plateforme reduite', 1),
+(586, '40x8 6 Large palette', 1),
+(587, '40x9 6 High cube frigo Antilles', 1),
+(588, '40\' conteneur frigorifique', 1),
+(589, 'Mafi', 1),
+(590, '40x8 6 Ctn stand. a barres susp.', 1),
+(591, '40\' 4\'3\'\' Reduit', 1),
+(592, '40\' conteneur citerne', 1),
+(593, 'Chassis 45\'', 1),
+(594, '45x8 6 2 bouts complets et fixes', 1),
+(595, '45x9 6 Ventilation passive haute', 1),
+(596, '45x9 6 High cube a barre susp.', 1),
+(597, '45x9 6 High cube a large palette', 1),
+(598, '45\'  Toit ouvert 8\' 6', 1),
+(599, '45x8 6 Large palette', 1),
+(600, '45x9 6 Refroid. chauff. mecanique', 1),
+(601, '45x9 6 High cube frig. a large pale', 1),
+(602, '45x9 6 Conteneur/caisson mobile (HW', 1),
+(603, '45x8 6 Ventilation passive en haut', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `yarditemtype`
+--
+
+DROP TABLE IF EXISTS `yarditemtype`;
+CREATE TABLE IF NOT EXISTS `yarditemtype` (
+  `Id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `Label` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Déchargement des données de la table `yarditemtype`
+--
+
+INSERT INTO `yarditemtype` (`Id`, `Label`) VALUES
+(1, 'Conteneur'),
+(2, 'Vehicle'),
+(3, 'Bulk'),
+(4, 'Cistern');
+
+--
+-- Contraintes pour les tables déchargées
+--
+
+--
+-- Contraintes pour la table `area`
+--
+ALTER TABLE `area`
+  ADD CONSTRAINT `FK_area_19d4d` FOREIGN KEY (`TerminalId`) REFERENCES `terminal` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_area_TerminalId` FOREIGN KEY (`TerminalId`) REFERENCES `terminal` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `bl`
+--
+ALTER TABLE `bl`
+  ADD CONSTRAINT `FK_bl_89e87` FOREIGN KEY (`ConsigneeId`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_bl_93b5c` FOREIGN KEY (`RelatedCustomerId`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_bl_a82b1` FOREIGN KEY (`CallId`) REFERENCES `call` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_bl_CallId` FOREIGN KEY (`CallId`) REFERENCES `call` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_bl_ConsigneeId` FOREIGN KEY (`ConsigneeId`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_bl_RelatedCusto` FOREIGN KEY (`RelatedCustomerId`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `blitem`
+--
+ALTER TABLE `blitem`
+  ADD CONSTRAINT `FK_blitem_94784` FOREIGN KEY (`ItemTypeId`) REFERENCES `yarditemtype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_blitem_a43ce` FOREIGN KEY (`BlId`) REFERENCES `bl` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_blitem_acb10` FOREIGN KEY (`ItemCodeId`) REFERENCES `yarditemcode` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_blitem_BlId` FOREIGN KEY (`BlId`) REFERENCES `bl` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_blitem_ItemCodeId` FOREIGN KEY (`ItemCodeId`) REFERENCES `yarditemcode` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_blitem_ItemTypeId` FOREIGN KEY (`ItemTypeId`) REFERENCES `yarditemtype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `blitem_jobfile`
+--
+ALTER TABLE `blitem_jobfile`
+  ADD CONSTRAINT `FK_blitem_jobfi_BLItemId` FOREIGN KEY (`BLItem_Id`) REFERENCES `blitem` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_blitem_jobfi_JobFileId` FOREIGN KEY (`JobFile_Id`) REFERENCES `jobfile` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `call`
+--
+ALTER TABLE `call`
+  ADD CONSTRAINT `FK_call_b00c7` FOREIGN KEY (`ThirdPartyId`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_call_ThirdPartyId` FOREIGN KEY (`ThirdPartyId`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `cart`
+--
+ALTER TABLE `cart`
+  ADD CONSTRAINT `FK_cart_CustomerUser` FOREIGN KEY (`CustomerUserId`) REFERENCES `customerusers` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_cart_d0451` FOREIGN KEY (`CustomerUserId`) REFERENCES `customerusers` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `cartitem`
+--
+ALTER TABLE `cartitem`
+  ADD CONSTRAINT `FK_CartItem_CartId` FOREIGN KEY (`CartId`) REFERENCES `cart` (`Id`),
+  ADD CONSTRAINT `FK_cartitem_InvoiceId` FOREIGN KEY (`InvoiceId`) REFERENCES `invoice` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `commodityitem`
+--
+ALTER TABLE `commodityitem`
+  ADD CONSTRAINT `FK_commodityite_CommodityId` FOREIGN KEY (`CommodityId`) REFERENCES `commodity` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `contract`
+--
+ALTER TABLE `contract`
+  ADD CONSTRAINT `FK_contract_bd89c` FOREIGN KEY (`TaxCodeId`) REFERENCES `taxcodes` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_contract_TaxCodeId` FOREIGN KEY (`TaxCodeId`) REFERENCES `taxcodes` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `contract_eventtype`
+--
+ALTER TABLE `contract_eventtype`
+  ADD CONSTRAINT `FK_contract_e_43122` FOREIGN KEY (`EventType_Id`) REFERENCES `eventtype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_contract_e_b186f` FOREIGN KEY (`Contract_Id`) REFERENCES `contract` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_contract_eve_ContractId` FOREIGN KEY (`Contract_Id`) REFERENCES `contract` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_contract_eve_EventTypeId` FOREIGN KEY (`EventType_Id`) REFERENCES `eventtype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `customeruserblsearchhistory`
+--
+ALTER TABLE `customeruserblsearchhistory`
+  ADD CONSTRAINT `customeruserblsearchhistory_ibfk_1` FOREIGN KEY (`UserId`) REFERENCES `customerusers` (`Id`) ON DELETE SET NULL;
+
+--
+-- Contraintes pour la table `customerusers`
+--
+ALTER TABLE `customerusers`
+  ADD CONSTRAINT `FK_customer_Customer_232c02` FOREIGN KEY (`CustomerUsersTypeId`) REFERENCES `customeruserstype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_customerus_1df79` FOREIGN KEY (`CustomerUsersTypeId`) REFERENCES `customeruserstype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_customerus_4aa8b` FOREIGN KEY (`CustomerUsersStatusId`) REFERENCES `customerusersstatus` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_customeruser_CustomerUser` FOREIGN KEY (`CustomerUsersStatusId`) REFERENCES `customerusersstatus` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `customerusers_thirdparty`
+--
+ALTER TABLE `customerusers_thirdparty`
+  ADD CONSTRAINT `FK_customer_Customer_8e1bbf` FOREIGN KEY (`CustomerUsers_Id`) REFERENCES `customerusers` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_customer_ThirdPar_970666` FOREIGN KEY (`ThirdParty_Id`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_customerus_5b102` FOREIGN KEY (`CustomerUsers_Id`) REFERENCES `customerusers` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_customerus_cf0ff` FOREIGN KEY (`ThirdParty_Id`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `document`
+--
+ALTER TABLE `document`
+  ADD CONSTRAINT `FK_document_314f1` FOREIGN KEY (`JobFileId`) REFERENCES `jobfile` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_document_BlId` FOREIGN KEY (`BlId`) REFERENCES `bl` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_document_ce180` FOREIGN KEY (`BlId`) REFERENCES `bl` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_document_Document_821540` FOREIGN KEY (`DocumentTypeId`) REFERENCES `documenttype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_document_eb227` FOREIGN KEY (`DocumentTypeId`) REFERENCES `documenttype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_document_JobFileI_1aee7a` FOREIGN KEY (`JobFileId`) REFERENCES `jobfile` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `event`
+--
+ALTER TABLE `event`
+  ADD CONSTRAINT `FK_event_e3048` FOREIGN KEY (`JobFileId`) REFERENCES `jobfile` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_event_EventTyp_e8aec0` FOREIGN KEY (`EventTypeId`) REFERENCES `eventtype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_event_f13c7` FOREIGN KEY (`EventTypeId`) REFERENCES `eventtype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_event_JobFileI_f8211e` FOREIGN KEY (`JobFileId`) REFERENCES `jobfile` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `eventtype`
+--
+ALTER TABLE `eventtype`
+  ADD CONSTRAINT `FK_eventtype_f9a98` FOREIGN KEY (`FamilyId`) REFERENCES `family` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_eventtype_FamilyId` FOREIGN KEY (`FamilyId`) REFERENCES `family` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `invoiceitem`
+--
+ALTER TABLE `invoiceitem`
+  ADD CONSTRAINT `FK_invoiceitem_EventId` FOREIGN KEY (`EventId`) REFERENCES `event` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_invoiceitem_InvoiceId` FOREIGN KEY (`InvoiceId`) REFERENCES `invoice` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_invoiceitem_Subscription` FOREIGN KEY (`SubscriptionId`) REFERENCES `subscription` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `jobfile`
+--
+ALTER TABLE `jobfile`
+  ADD CONSTRAINT `FK_jobfile_PositionId` FOREIGN KEY (`PositionId`) REFERENCES `position` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `payment`
+--
+ALTER TABLE `payment`
+  ADD CONSTRAINT `FK_payment_2216b` FOREIGN KEY (`PaymentTypeId`) REFERENCES `paymenttype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_payment_4d397` FOREIGN KEY (`PaymentTypeId`) REFERENCES `paymenttype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `position`
+--
+ALTER TABLE `position`
+  ADD CONSTRAINT `FK_position_69f0e` FOREIGN KEY (`RowId`) REFERENCES `row` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_position_RowId` FOREIGN KEY (`RowId`) REFERENCES `row` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `rateperiod`
+--
+ALTER TABLE `rateperiod`
+  ADD CONSTRAINT `FK_rateperiod_8c65c` FOREIGN KEY (`RateId`) REFERENCES `rate` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_rateperiod_RateId` FOREIGN KEY (`RateId`) REFERENCES `rate` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `raterangeperiod`
+--
+ALTER TABLE `raterangeperiod`
+  ADD CONSTRAINT `FK_raterangep_2787f` FOREIGN KEY (`RatePeriodId`) REFERENCES `rateperiod` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_raterangep_64b7c` FOREIGN KEY (`RatePeriodId`) REFERENCES `rateperiod` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `row`
+--
+ALTER TABLE `row`
+  ADD CONSTRAINT `FK_row_AreaId` FOREIGN KEY (`AreaId`) REFERENCES `area` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_row_f5dc7` FOREIGN KEY (`AreaId`) REFERENCES `area` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `subscription`
+--
+ALTER TABLE `subscription`
+  ADD CONSTRAINT `FK_subscripti_06c84` FOREIGN KEY (`RateId`) REFERENCES `rate` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_subscripti_59ff3` FOREIGN KEY (`ContractId`) REFERENCES `contract` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_subscription_ContractId` FOREIGN KEY (`ContractId`) REFERENCES `contract` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_subscription_RateId` FOREIGN KEY (`RateId`) REFERENCES `rate` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `thirdparty_thirdpartytype`
+--
+ALTER TABLE `thirdparty_thirdpartytype`
+  ADD CONSTRAINT `FK_thirdparty_36f09` FOREIGN KEY (`ThirdParty_Id`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_thirdparty_3fb70` FOREIGN KEY (`ThirdPartyType_Id`) REFERENCES `thirdpartytype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_thirdparty_427f4` FOREIGN KEY (`ThirdParty_Id`) REFERENCES `thirdparty` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_thirdparty_61539` FOREIGN KEY (`ThirdPartyType_Id`) REFERENCES `thirdpartytype` (`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
